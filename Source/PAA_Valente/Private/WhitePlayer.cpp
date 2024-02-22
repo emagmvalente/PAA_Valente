@@ -19,6 +19,8 @@ AWhitePlayer::AWhitePlayer()
 	//set the camera as RootComponent
 	SetRootComponent(Camera);
 
+	PlayerNumber = 0;
+
 	GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 }
 
@@ -67,7 +69,6 @@ void AWhitePlayer::PieceClicked()
 void AWhitePlayer::TileSelection()
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	GameMode->CurrentPlayer = 0;
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 	//Structure containing information about one hit of a trace, such as point of impact and surface normal at that point
 	FHitResult Hit = FHitResult(ForceInit);
@@ -93,8 +94,6 @@ void AWhitePlayer::TileSelection()
 
 				if (CPC->SelectedPieceToMove->RelativePosition() == NewLocation)
 				{
-					IsMyTurn = false;
-
 					if (CPC->SelectedPieceToMove->Color == EColor::W)
 					{
 						(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
@@ -110,7 +109,8 @@ void AWhitePlayer::TileSelection()
 					(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
 					(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
 
-					GameMode->TurnPlayer();
+					IsMyTurn = false;
+					GameMode->TurnPlayer(this);
 
 				}
 

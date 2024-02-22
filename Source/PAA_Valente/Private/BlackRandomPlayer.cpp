@@ -3,6 +3,9 @@
 
 #include "BlackRandomPlayer.h"
 #include "Piece.h"
+
+#include "PiecePawn.h"
+
 #include "EngineUtils.h"
 
 // Sets default values
@@ -11,6 +14,8 @@ ABlackRandomPlayer::ABlackRandomPlayer()
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
+	PlayerNumber = 1;
 }
 
 // Called when the game starts or when spawned
@@ -42,51 +47,53 @@ void ABlackRandomPlayer::OnTurn()
 
 	FTimerHandle TimerHandle;
 
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
+	TArray<APiece*> OutBlackPieces;
+
+	for (TActorIterator<APiece> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		APiece* Piece = *ActorItr;
+		// Controlla se il pezzo è di colore nero
+		if (Piece && Piece->Color == EColor::B)
 		{
-			TArray<APiece*> OutBlackPieces;
+			OutBlackPieces.Add(Piece); // Aggiungi il pezzo nero all'array
+		}
+	}
 
-			for (TActorIterator<APiece> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-			{
-				APiece* Piece = *ActorItr;
-				// Controlla se il pezzo è di colore nero
-				if (Piece && Piece->Color == EColor::B)
-				{
-					OutBlackPieces.Add(Piece); // Aggiungi il pezzo nero all'array
-				}
-			}
+	// Picking a random piece
+	int32 RandIdx0 = FMath::Rand() % OutBlackPieces.Num();
+	APiece* ChosenPiece = OutBlackPieces[RandIdx0];
 
-			// Picking a random piece
-			int32 RandIdx0 = FMath::Rand() % OutBlackPieces.Num();
-			APiece* ChosenPiece = OutBlackPieces[RandIdx0];
+	// Picking his possible moves
+	FVector ActualLocation = ChosenPiece->RelativePosition();
 
-			// Picking a random tile
-			FVector ActualLocation = ChosenPiece->RelativePosition();
-			TArray<ATile*> ResultantArrayOfLegalMoves;
-			ChosenPiece->PossibleMoves(ActualLocation, ResultantArrayOfLegalMoves);
+	TArray<ATile*> ResultantArrayOfLegalMoves;
+	ChosenPiece->PossibleMoves(ActualLocation, ResultantArrayOfLegalMoves);
 
-			FString ArrayNum = FString::Printf(TEXT("%d"), ResultantArrayOfLegalMoves.Num());
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *ArrayNum);
+	// If there are moves, then set the timer
+	if (ResultantArrayOfLegalMoves.Num() > 0)
+	{
+		int32 RandIdx1 = FMath::Rand() % ResultantArrayOfLegalMoves.Num();
+		if (ResultantArrayOfLegalMoves.Num() == 1)
+		{
+			RandIdx1 = 1;
+		}
 
-			if (ResultantArrayOfLegalMoves.Num() > 0)
-			{
-				// Finding a tile to move the piece
-				int32 RandIdx1 = FMath::Rand() % ResultantArrayOfLegalMoves.Num();
-				ATile* DestinationTile = ResultantArrayOfLegalMoves[RandIdx1];
+		FString ArrayNum = FString::Printf(TEXT("%d"), RandIdx1);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *ArrayNum);
 
-				// Moving the piece
-				FVector2D RelativePositionOfTile = DestinationTile->GetGridPosition();
-				ChosenPiece->MoveToLocation(FVector(RelativePositionOfTile.X, RelativePositionOfTile.Y, 10.f));
+		// Moving the piece
+		ATile* DestinationTile = ResultantArrayOfLegalMoves[RandIdx1];
+		FVector2D RelativePositionOfTile = DestinationTile->GetGridPosition();
+		ChosenPiece->MoveToLocation(FVector(RelativePositionOfTile.X, RelativePositionOfTile.Y, 10.f));
 
-				GameMode->TurnPlayer();
-			}
-			else
-			{
-				OnTurn();
-			}
+		GameMode->TurnPlayer(this);
+	}
 
-
-		}, 3, false);
+	// Else pick another piece
+	else
+	{
+		OnTurn();
+	}
 }
 
 void ABlackRandomPlayer::OnWin()

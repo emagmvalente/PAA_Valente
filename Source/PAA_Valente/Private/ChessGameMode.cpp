@@ -12,29 +12,20 @@ AChessGameMode::AChessGameMode()
 	DefaultPawnClass = AWhitePlayer::StaticClass();
 	PlayerControllerClass = AChessPlayerController::StaticClass();
 	FieldSize = 8;
-	CurrentPlayer = 0;
+	bIsGameOver = false;
 }
 
 void AChessGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	bIsGameOver = false;
-
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 
-	// Human player = 0
-	Players.Add(HumanPlayer);
-	HumanPlayer->PlayerNumber = 0;
 	// Random Player
+	auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 
 	// MiniMax Player
 	//auto* AI = GetWorld()->SpawnActor<ATTT_MinimaxPlayer>(FVector(), FRotator());
-
-	// AI player = 1
-	Players.Add(AI);
-	AI->PlayerNumber = 1;
 
 	if (CBClass != nullptr)
 	{
@@ -53,15 +44,17 @@ void AChessGameMode::BeginPlay()
 	HumanPlayer->OnTurn();
 }
 
-void AChessGameMode::TurnPlayer()
+void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
 {
-	if (CurrentPlayer == 0)
+	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
+
+	if (Player->PlayerNumber == 0)
 	{
-		CurrentPlayer = 1;
+		AIPlayer->OnTurn();
 	}
-	else
+	else if (Player->PlayerNumber == 1)
 	{
-		CurrentPlayer = 0;
+		HumanPlayer->OnTurn();
 	}
-	Players[CurrentPlayer]->OnTurn();
 }

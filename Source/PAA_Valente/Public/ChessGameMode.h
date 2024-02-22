@@ -19,10 +19,6 @@ class PAA_VALENTE_API AChessGameMode : public AGameModeBase
 public:
 	bool bIsGameOver;
 
-	// array of player interfaces
-	TArray<IPlayerInterface*> Players;
-	int32 CurrentPlayer;
-
 	// TSubclassOf is a template class that provides UClass type safety.
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AChessboard> CBClass;
@@ -39,6 +35,6 @@ public:
 	virtual void BeginPlay() override;
 
 	// called at the end of the game turn
-	void TurnPlayer();
+	void TurnPlayer(IPlayerInterface* Player);
 
 };
