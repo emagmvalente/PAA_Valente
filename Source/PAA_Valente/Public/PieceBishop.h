@@ -27,7 +27,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	TArray<ATile*> Moves;
-	const TArray<FVector2D> Directions = { FVector2D(1, 1), FVector2D(1, -1), FVector2D(-1, 1), FVector2D(-1, -1) };
+	TArray<FVector2D> Directions = { FVector2D(1, 1), FVector2D(1, -1), FVector2D(-1, 1), FVector2D(-1, -1) };
 
 public:
 	// Called every frame

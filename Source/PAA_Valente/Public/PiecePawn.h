@@ -24,7 +24,7 @@ public:
 
 	bool bFirstMove = true;
 
-	const TArray<FVector2D> Directions = { FVector2D(1, 0) };
+	TArray<FVector2D> Directions = { FVector2D(1, 0) };
 
 protected:
 	// Called when the game starts or when spawned

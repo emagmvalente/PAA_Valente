@@ -31,7 +31,7 @@ protected:
 public:	
 
 	EColor Color;
-	const TArray<FVector2D> Directions;
+	TArray<FVector2D> Directions;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

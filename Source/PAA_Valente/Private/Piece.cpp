@@ -89,6 +89,12 @@ void APiece::PossibleMoves(FVector& ActorLocation, TArray<ATile*>& ResultantArra
 	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
 	ATile** TilePtr = GameMode->CB->TileMap.Find(TileLocation);
 
+	if (Cast<APiecePawn>(this) && Cast<APiecePawn>(this)->Color == EColor::B)
+	{
+		Directions.Reset();
+		Directions.Add({ FVector2D(-1,0) });
+	}
+
 	for (const FVector2D& Direction : Directions)
 	{
 		FVector2D NextPosition = TileLocation + Direction;
@@ -101,15 +107,24 @@ void APiece::PossibleMoves(FVector& ActorLocation, TArray<ATile*>& ResultantArra
 				(*TilePtr)->GetOccupantColor() == EOccupantColor::E)
 			{
 				ResultantArray.Add((*TilePtr));
+
+				// If the piece is a king, it can move only by one
 				if (!Cast<APieceKing>(this))
 				{
 					NextPosition += Direction;
+					break;
 				}
+
+				// If the piece is a pawn and this is his first move, it can move by two
 				if (Cast<APiecePawn>(this) && Cast<APiecePawn>(this)->bFirstMove == true)
 				{
 					NextPosition += Direction;
 					TilePtr = GameMode->CB->TileMap.Find(TileLocation);
 					ResultantArray.Add((*TilePtr));
+					break;
+				}
+				if (Cast<APiecePawn>(this) && Cast<APiecePawn>(this)->bFirstMove == false)
+				{
 					break;
 				}
 			}

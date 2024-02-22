@@ -64,14 +64,27 @@ void ABlackRandomPlayer::OnTurn()
 			FVector ActualLocation = ChosenPiece->RelativePosition();
 			TArray<ATile*> ResultantArrayOfLegalMoves;
 			ChosenPiece->PossibleMoves(ActualLocation, ResultantArrayOfLegalMoves);
-			int32 RandIdx1 = FMath::Rand() % ResultantArrayOfLegalMoves.Num();
-			ATile* DestinationTile = ResultantArrayOfLegalMoves[RandIdx1];
 
-			// Moving the piece
-			FVector2D RelativePositionOfTile = DestinationTile->GetGridPosition();
-			ChosenPiece->MoveToLocation(FVector(RelativePositionOfTile.X, RelativePositionOfTile.Y, 10.f));
+			FString ArrayNum = FString::Printf(TEXT("%d"), ResultantArrayOfLegalMoves.Num());
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *ArrayNum);
 
-			GameMode->TurnNextPlayer();
+			if (ResultantArrayOfLegalMoves.Num() > 0)
+			{
+				// Finding a tile to move the piece
+				int32 RandIdx1 = FMath::Rand() % ResultantArrayOfLegalMoves.Num();
+				ATile* DestinationTile = ResultantArrayOfLegalMoves[RandIdx1];
+
+				// Moving the piece
+				FVector2D RelativePositionOfTile = DestinationTile->GetGridPosition();
+				ChosenPiece->MoveToLocation(FVector(RelativePositionOfTile.X, RelativePositionOfTile.Y, 10.f));
+
+				GameMode->TurnPlayer();
+			}
+			else
+			{
+				OnTurn();
+			}
+
 
 		}, 3, false);
 }

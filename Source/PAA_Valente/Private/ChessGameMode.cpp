@@ -53,16 +53,15 @@ void AChessGameMode::BeginPlay()
 	HumanPlayer->OnTurn();
 }
 
-void AChessGameMode::TurnNextPlayer()
+void AChessGameMode::TurnPlayer()
 {
 	if (CurrentPlayer == 0)
 	{
 		CurrentPlayer = 1;
-		Players[CurrentPlayer]->OnTurn();
 	}
 	else
 	{
 		CurrentPlayer = 0;
-		Players[CurrentPlayer]->OnTurn();
 	}
+	Players[CurrentPlayer]->OnTurn();
 }

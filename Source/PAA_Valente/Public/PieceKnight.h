@@ -28,7 +28,7 @@ protected:
 
 	TArray<ATile*> Moves;
 
-	const TArray<FVector2D> Directions = { FVector2D(2, 1), FVector2D(2, -1), FVector2D(-2, 1), FVector2D(-2, -1),
+	TArray<FVector2D> Directions = { FVector2D(2, 1), FVector2D(2, -1), FVector2D(-2, 1), FVector2D(-2, -1),
 										   FVector2D(1, 2), FVector2D(1, -2), FVector2D(-1, 2), FVector2D(-1, -2) };
 
 public:
