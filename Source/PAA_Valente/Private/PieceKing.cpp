@@ -58,8 +58,3 @@ void APieceKing::MoveToLocation(const FVector& TargetLocation)
 		SetActorLocation(GetActorLocation());
 	}
 }
-
-void APieceKing::ColorPossibleMoves() const
-{
-}
-

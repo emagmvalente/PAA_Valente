@@ -58,9 +58,6 @@ void AWhitePlayer::PieceClicked()
 			if (CurrPiece->Color == EColor::W)
 			{
 				CPC->SelectedPieceToMove = CurrPiece;
-
-
-
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Piece Picked"));
 			}
 		}
@@ -111,6 +108,8 @@ void AWhitePlayer::TileSelection()
 
 					(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
 					(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
+
+					//GameMode->TurnNextPlayer();
 
 				}
 

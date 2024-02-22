@@ -22,17 +22,21 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* StaticMeshComponent;
 
+	bool bFirstMove = true;
+
+	const TArray<FVector2D> Directions = { FVector2D(1, 0) };
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	bool bFirstMove = true;
+	TArray<ATile*> Moves;
 
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void MoveToLocation(const FVector& TargetLocation) override;
-	virtual void ColorPossibleMoves() const override;
+	
 
 };

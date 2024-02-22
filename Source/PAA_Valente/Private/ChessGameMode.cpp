@@ -12,6 +12,7 @@ AChessGameMode::AChessGameMode()
 	DefaultPawnClass = AWhitePlayer::StaticClass();
 	PlayerControllerClass = AChessPlayerController::StaticClass();
 	FieldSize = 8;
+	CurrentPlayer = 0;
 }
 
 void AChessGameMode::BeginPlay()
@@ -50,4 +51,18 @@ void AChessGameMode::BeginPlay()
 	HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
 	HumanPlayer->OnTurn();
+}
+
+void AChessGameMode::TurnNextPlayer()
+{
+	if (CurrentPlayer == 0)
+	{
+		CurrentPlayer = 1;
+		Players[CurrentPlayer]->OnTurn();
+	}
+	else
+	{
+		CurrentPlayer = 0;
+		Players[CurrentPlayer]->OnTurn();
+	}
 }
