@@ -2,6 +2,9 @@
 
 
 #include "Piece.h"
+#include "PieceKing.h"
+#include "PiecePawn.h"
+#include "EngineUtils.h"
 
 // Sets default values
 APiece::APiece()
@@ -10,7 +13,6 @@ APiece::APiece()
 	PrimaryActorTick.bCanEverTick = true;
 
 	Color = EColor::E;
-	PossibleMoves.Empty();
 
 }
 
@@ -79,4 +81,42 @@ FVector APiece::RelativePosition() const
 	FVector2D CurrentRelativeLocation2D = GameMode->CB->GetXYPositionByRelativeLocation(GetActorLocation());
 	FVector CurrentRelativeLocation3D(CurrentRelativeLocation2D.X, CurrentRelativeLocation2D.Y, 10.f);
 	return CurrentRelativeLocation3D;
+}
+
+void APiece::PossibleMoves(FVector& ActorLocation, TArray<ATile*>& ResultantArray)
+{
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
+	ATile** TilePtr = GameMode->CB->TileMap.Find(TileLocation);
+
+	for (const FVector2D& Direction : Directions)
+	{
+		FVector2D NextPosition = TileLocation + Direction;
+		TilePtr = GameMode->CB->TileMap.Find(NextPosition);
+		bool bIsObstructed = false;
+
+		while (bIsObstructed == false)
+		{
+			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8 &&
+				(*TilePtr)->GetOccupantColor() == EOccupantColor::E)
+			{
+				ResultantArray.Add((*TilePtr));
+				if (!Cast<APieceKing>(this))
+				{
+					NextPosition += Direction;
+				}
+				if (Cast<APiecePawn>(this) && Cast<APiecePawn>(this)->bFirstMove == true)
+				{
+					NextPosition += Direction;
+					TilePtr = GameMode->CB->TileMap.Find(TileLocation);
+					ResultantArray.Add((*TilePtr));
+					break;
+				}
+			}
+			else
+			{
+				bIsObstructed = true;
+			}
+		}
+	}
 }

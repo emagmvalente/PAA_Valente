@@ -34,29 +34,16 @@ void ABlackRandomPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 }
 
-// DA PROVARE
-
 void ABlackRandomPlayer::OnTurn()
 {
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
-
-	
 
 	FTimerHandle TimerHandle;
 
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
-			TArray<ATile*> FreeCells;
-			AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
-			for (auto& CurrTile : GameMode->CB->GetTileArray())
-			{
-				if (CurrTile->GetTileStatus() == ETileStatus::EMPTY)
-				{
-					FreeCells.Add(CurrTile);
-				}
-			}
-
 			TArray<APiece*> OutBlackPieces;
 
 			for (TActorIterator<APiece> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -69,21 +56,23 @@ void ABlackRandomPlayer::OnTurn()
 				}
 			}
 
-			if (FreeCells.Num() > 0)
-			{
-				int32 RandIdx0 = FMath::Rand() % OutBlackPieces.Num();
-				int32 RandIdx1 = FMath::Rand() % FreeCells.Num();
-				FVector ActualLocation = OutBlackPieces[RandIdx1]->RelativePosition();
-				FVector DestinationLocation = GameMode->CB->GetRelativeLocationByXYPosition((FreeCells[RandIdx1])->GetGridPosition()[0], (FreeCells[RandIdx1])->GetGridPosition()[1]);
-				
-				OutBlackPieces[RandIdx1]->MoveToLocation(DestinationLocation);
-				
-				FreeCells[RandIdx1]->SetTileStatus(ETileStatus::OCCUPIED);
-				FreeCells[RandIdx1]->SetOccupantColor(EOccupantColor::B);
+			// Picking a random piece
+			int32 RandIdx0 = FMath::Rand() % OutBlackPieces.Num();
+			APiece* ChosenPiece = OutBlackPieces[RandIdx0];
 
-				// Da finire
+			// Picking a random tile
+			FVector ActualLocation = ChosenPiece->RelativePosition();
+			TArray<ATile*> ResultantArrayOfLegalMoves;
+			ChosenPiece->PossibleMoves(ActualLocation, ResultantArrayOfLegalMoves);
+			int32 RandIdx1 = FMath::Rand() % ResultantArrayOfLegalMoves.Num();
+			ATile* DestinationTile = ResultantArrayOfLegalMoves[RandIdx1];
 
-			}
+			// Moving the piece
+			FVector2D RelativePositionOfTile = DestinationTile->GetGridPosition();
+			ChosenPiece->MoveToLocation(FVector(RelativePositionOfTile.X, RelativePositionOfTile.Y, 10.f));
+
+			GameMode->TurnNextPlayer();
+
 		}, 3, false);
 }
 

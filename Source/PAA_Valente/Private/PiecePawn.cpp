@@ -62,8 +62,3 @@ void APiecePawn::MoveToLocation(const FVector& TargetLocation)
 		}
 	}
 }
-
-void APiecePawn::ColorPossibleMoves() const
-{
-}
-

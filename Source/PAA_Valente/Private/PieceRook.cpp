@@ -57,8 +57,3 @@ void APieceRook::MoveToLocation(const FVector& TargetLocation)
 		SetActorLocation(GetActorLocation());
 	}
 }
-
-void APieceRook::ColorPossibleMoves() const
-{
-}
-

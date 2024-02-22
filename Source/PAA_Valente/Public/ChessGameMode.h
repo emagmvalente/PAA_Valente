@@ -38,5 +38,8 @@ public:
 
 	virtual void BeginPlay() override;
 
+	// called at the end of the game turn
+	void TurnNextPlayer();
+
 
 };

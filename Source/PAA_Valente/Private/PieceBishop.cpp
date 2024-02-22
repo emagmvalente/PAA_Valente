@@ -57,7 +57,3 @@ void APieceBishop::MoveToLocation(const FVector& TargetLocation)
 		SetActorLocation(GetActorLocation());
 	}
 }
-
-void APieceBishop::ColorPossibleMoves() const
-{
-}

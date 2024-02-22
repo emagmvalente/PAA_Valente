@@ -55,7 +55,3 @@ void APieceKnight::MoveToLocation(const FVector& TargetLocation)
 		SetActorLocation(GetActorLocation());
 	}
 }
-
-void APieceKnight::ColorPossibleMoves() const
-{
-}
