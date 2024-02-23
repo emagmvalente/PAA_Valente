@@ -64,7 +64,8 @@ void AWhitePlayer::PieceClicked()
 				CPC->SelectedPieceToMove = CurrPiece;
 
 				// Deleting possible old colorations
-				CPC->SelectedPieceToMove->DecolorPossibleMoves();
+				CurrPiece->DecolorPossibleMoves();
+				CurrPiece->ColorPossibleMoves();
 			}
 		}
 	}
@@ -79,13 +80,6 @@ void AWhitePlayer::TileSelection()
 	// Detecting player's click
 	FHitResult Hit = FHitResult(ForceInit);
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
-
-	// If player is clicking a tile without having clicked a piece first, don't color moves
-	if (CPC)
-	{
-		CPC->SelectedPieceToMove->ColorPossibleMoves();
-	}
-
 
 	if (Hit.bBlockingHit && IsMyTurn)
 	{

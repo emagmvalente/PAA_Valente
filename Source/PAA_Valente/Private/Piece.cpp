@@ -54,15 +54,19 @@ FVector APiece::RelativePosition() const
 void APiece::ColorPossibleMoves()
 {
 	// Loading the yellow material and changing the color for every move in moves
+	// Loading the red material for eating
 
 	PossibleMoves();
 
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
+	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
 	for (int i = 0; i < Moves.Num(); i++)
 	{
-		FString MyDoubleString = FString::Printf(TEXT("%d"), Moves.Num());
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *MyDoubleString);
 		Moves[i]->ChangeMaterial(LoadYellowMaterial);
+	}
+	for (int i = 0; i < EatablePieces.Num(); i++)
+	{
+		EatablePieces[i]->ChangeMaterial(LoadRedMaterial);
 	}
 }
 
@@ -87,4 +91,17 @@ void APiece::DecolorPossibleMoves()
 			TileArray[i]->ChangeMaterial(LoadWhiteMaterial);
 		}
 	}
+}
+
+bool APiece::IsSameColorAsTileOccupant(ATile* Tile)
+{
+	if (Tile->GetOccupantColor() == EOccupantColor::B && Color == EColor::B)
+	{
+		return true;
+	}
+	if (Tile->GetOccupantColor() == EOccupantColor::W && Color == EColor::W)
+	{
+		return true;
+	}
+	return false;
 }

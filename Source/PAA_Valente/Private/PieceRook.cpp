@@ -36,6 +36,7 @@ void APieceRook::Tick(float DeltaTime)
 void APieceRook::PossibleMoves()
 {
 	Moves.Empty();
+	EatablePieces.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -52,15 +53,19 @@ void APieceRook::PossibleMoves()
 
 		while (true)
 		{
-			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8)
+			if (NextTile != nullptr)
 			{
 				if ((*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
 				{
 					Moves.Add((*NextTile));
 				}
+				else if (!IsSameColorAsTileOccupant((*NextTile)) && (*NextTile)->GetTileStatus() != ETileStatus::EMPTY)
+				{
+					EatablePieces.Add((*NextTile));
+					break;
+				}
 				else
 				{
-					// Se la tile non è vuota, interrompi il loop.
 					break;
 				}
 				NextPosition += Direction;

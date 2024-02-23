@@ -68,4 +68,26 @@ void APiecePawn::PossibleMoves()
 	{
 		Moves.Add((*NextTile));
 	}
+
+	// Eating Logic
+	EatablePieces.Empty();
+	TArray<FVector2D> EatingDirections;
+	if (Color == EColor::W)
+	{
+		EatingDirections = { FVector2D(1, -1), FVector2D(1, 1) };
+	}
+	if (Color == EColor::B)
+	{
+		EatingDirections = { FVector2D(-1, -1), FVector2D(-1, 1) };
+	}
+
+	for (const FVector2D EatingDirection : EatingDirections)
+	{
+		NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + EatingDirection;
+		NextTile = GameMode->CB->TileMap.Find(NextPosition);
+		if (NextTile != nullptr && !IsSameColorAsTileOccupant((*NextTile)) && (*NextTile)->GetTileStatus() != ETileStatus::EMPTY)
+		{
+			EatablePieces.Add((*NextTile));
+		}
+	}
 }
