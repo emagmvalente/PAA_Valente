@@ -74,21 +74,28 @@ void ABlackRandomPlayer::OnTurn()
 
 	FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(RelativePositionOfTile.X, RelativePositionOfTile.Y);
 	TilePositioning.Z = 10.0f;
-	ChosenPiece->SetActorLocation(TilePositioning);
+	if (DestinationTile->GetTileStatus() == ETileStatus::EMPTY)
+	{
+		ChosenPiece->SetActorLocation(TilePositioning);
+		if (ChosenPiece->RelativePosition() == PreviousLocation)
+		{
+			OnTurn();
+		}
+		else
+		{
+			(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
+			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
 
-	if (ChosenPiece->RelativePosition() == PreviousLocation)
+			DestinationTile->SetTileStatus(ETileStatus::OCCUPIED);
+			DestinationTile->SetOccupantColor(EOccupantColor::B);
+
+			GameMode->TurnPlayer(this);
+		}
+	}
+
+	else
 	{
 		OnTurn();
-	}
-	else 
-	{
-		(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
-		(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
-
-		DestinationTile->SetTileStatus(ETileStatus::OCCUPIED);
-		DestinationTile->SetOccupantColor(EOccupantColor::B);
-
-		GameMode->TurnPlayer(this);
 	}
 	
 }

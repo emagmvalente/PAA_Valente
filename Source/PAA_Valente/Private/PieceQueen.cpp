@@ -73,10 +73,10 @@ void APieceQueen::PossibleMoves()
 		TilePtr = GameMode->CB->TileMap.Find(NextPosition);
 		bool bIsObstructed = false;
 
-		while (bIsObstructed == false)
+		while (true)
 		{
 			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8 &&
-				(*TilePtr)->GetTileStatus() == ETileStatus::EMPTY)
+				!((*TilePtr)->GetTileStatus() == ETileStatus::OCCUPIED))
 			{
 				TilePtr = GameMode->CB->TileMap.Find(NextPosition);
 				Moves.Add((*TilePtr));
@@ -84,7 +84,7 @@ void APieceQueen::PossibleMoves()
 			}
 			else
 			{
-				bIsObstructed = true;
+				break;
 			}
 		}
 	}

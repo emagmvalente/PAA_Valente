@@ -77,9 +77,6 @@ void APiecePawn::PossibleMoves()
 
 	FVector2D NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + Direction;
 	
-	FString MyDoubleString = FString::Printf(TEXT("%f"), NextPosition.X);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *MyDoubleString);
-	
 	ATile** NextTile = GameMode->CB->TileMap.Find(NextPosition);
 
 	if (bFirstMove && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY &&
@@ -88,11 +85,12 @@ void APiecePawn::PossibleMoves()
 		Moves.Add((*NextTile));
 		NextPosition += Direction;
 
-		FString MyDoubleString2 = FString::Printf(TEXT("%f"), NextPosition.X);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *MyDoubleString2);
-
-		NextTile = GameMode->CB->TileMap.Find(NextPosition);
-		Moves.Add((*NextTile));
+		if (bFirstMove && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY &&
+			NextPosition.X >= 0 && NextPosition.X < 8) 
+		{
+			NextTile = GameMode->CB->TileMap.Find(NextPosition);
+			Moves.Add((*NextTile));
+		}
 	}
 	else if (!bFirstMove && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY &&
 		NextPosition.X >= 0 && NextPosition.X < 8)
