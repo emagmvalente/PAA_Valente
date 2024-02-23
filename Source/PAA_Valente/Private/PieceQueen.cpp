@@ -61,11 +61,11 @@ void APieceQueen::MoveToLocation(const FVector& TargetLocation)
 
 void APieceQueen::PossibleMoves()
 {
+	Moves.Empty();
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	FVector ActorLocation = RelativePosition();
 	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
 	ATile** TilePtr = GameMode->CB->TileMap.Find(TileLocation);
-	Moves.Empty();
 
 	for (const FVector2D& Direction : Directions)
 	{
@@ -76,9 +76,11 @@ void APieceQueen::PossibleMoves()
 		while (bIsObstructed == false)
 		{
 			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8 &&
-				(*TilePtr)->GetOccupantColor() == EOccupantColor::E)
+				(*TilePtr)->GetTileStatus() == ETileStatus::EMPTY)
 			{
+				TilePtr = GameMode->CB->TileMap.Find(NextPosition);
 				Moves.Add((*TilePtr));
+				NextPosition += Direction;
 			}
 			else
 			{

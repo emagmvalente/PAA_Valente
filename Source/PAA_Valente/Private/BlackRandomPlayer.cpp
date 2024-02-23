@@ -86,7 +86,7 @@ void ABlackRandomPlayer::OnTurn()
 		(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
 
 		DestinationTile->SetTileStatus(ETileStatus::OCCUPIED);
-		DestinationTile->SetOccupantColor(EOccupantColor::W);
+		DestinationTile->SetOccupantColor(EOccupantColor::B);
 
 		GameMode->TurnPlayer(this);
 	}
