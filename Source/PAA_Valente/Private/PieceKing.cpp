@@ -33,48 +33,25 @@ void APieceKing::Tick(float DeltaTime)
 
 }
 
-void APieceKing::MoveToLocation(const FVector& TargetLocation)
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FVector CurrentRelativeLocation3D = RelativePosition();
-	FVector MoveDirection = TargetLocation - CurrentRelativeLocation3D;
-
-	// If the movement is unitary it's legal
-	if ((FMath::Abs(MoveDirection.X) <= 1) && (FMath::Abs(MoveDirection.Y) <= 1))
-	{
-		FVector2D TargetTileLocation(TargetLocation.X, TargetLocation.Y);
-		if (!IsPathObstructed(FVector2D(CurrentRelativeLocation3D.X, CurrentRelativeLocation3D.Y), TargetTileLocation, MoveDirection))
-		{
-			// Moving the actor
-			FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(TargetLocation.X, TargetLocation.Y);
-			TilePositioning.Z = 10.0f;
-			SetActorLocation(TilePositioning);
-		}
-	}
-
-	// Any other movement is illegal
-	else
-	{
-		SetActorLocation(GetActorLocation());
-	}
-}
-
 void APieceKing::PossibleMoves()
 {
 	Moves.Empty();
+
+	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	FVector ActorLocation = RelativePosition();
 	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
-	ATile** TilePtr = GameMode->CB->TileMap.Find(TileLocation);
-
+	ATile** NextTile = GameMode->CB->TileMap.Find(TileLocation);
+	
+	// For every direction check if the tile is occupied, if not add a possible move
 	for (const FVector2D& Direction : Directions)
 	{
 		FVector2D NextPosition = TileLocation + Direction;
-		TilePtr = GameMode->CB->TileMap.Find(NextPosition);
-		if (TilePtr == nullptr)
+		NextTile = GameMode->CB->TileMap.Find(NextPosition);
+		if (NextTile == nullptr || (*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED)
 		{
 			continue;
 		}
-		Moves.Add((*TilePtr));
+		Moves.Add((*NextTile));
 	}
 }

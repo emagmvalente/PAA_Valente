@@ -33,52 +33,30 @@ void APieceQueen::Tick(float DeltaTime)
 
 }
 
-void APieceQueen::MoveToLocation(const FVector& TargetLocation)
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FVector CurrentRelativeLocation3D = RelativePosition();
-	FVector MoveDirection = TargetLocation - CurrentRelativeLocation3D;
-
-	// If the movement is diagonal / orizontal / vertical is legal
-	if ((FMath::Abs(MoveDirection.X) == FMath::Abs(MoveDirection.Y)) ||
-		(FMath::Abs(MoveDirection.X) == 0) || (FMath::Abs(MoveDirection.Y) == 0))
-	{
-		FVector2D TargetTileLocation(TargetLocation.X, TargetLocation.Y);
-		if (!IsPathObstructed(FVector2D(CurrentRelativeLocation3D.X, CurrentRelativeLocation3D.Y), TargetTileLocation, MoveDirection))
-		{
-			FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(TargetLocation.X, TargetLocation.Y);
-			TilePositioning.Z = 10.0f;
-			SetActorLocation(TilePositioning);
-		}
-	}
-
-	// Any other movement is illegal
-	else
-	{
-		SetActorLocation(GetActorLocation());
-	}
-}
-
 void APieceQueen::PossibleMoves()
 {
 	Moves.Empty();
+
+	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	FVector ActorLocation = RelativePosition();
 	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
-	ATile** TilePtr = GameMode->CB->TileMap.Find(TileLocation);
+	ATile** NextTile = GameMode->CB->TileMap.Find(TileLocation);
 
+	// For every direction check if the tile is occupied, if not add a possible move.
+	// By the way, if a piece interrupts a path, then stop adding moves in that direction.
 	for (const FVector2D& Direction : Directions)
 	{
 		FVector2D NextPosition = TileLocation + Direction;
-		TilePtr = GameMode->CB->TileMap.Find(NextPosition);
-		bool bIsObstructed = false;
+		NextTile = GameMode->CB->TileMap.Find(NextPosition);
 
 		while (true)
 		{
-			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8)
+			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8 &&
+				(*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
 			{
-				TilePtr = GameMode->CB->TileMap.Find(NextPosition);
-				Moves.Add((*TilePtr));
+				NextTile = GameMode->CB->TileMap.Find(NextPosition);
+				Moves.Add((*NextTile));
 				NextPosition += Direction;
 			}
 			else

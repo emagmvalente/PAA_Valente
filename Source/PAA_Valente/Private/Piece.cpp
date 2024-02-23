@@ -37,36 +37,6 @@ void APiece::ChangeMaterial(UMaterialInterface* NewMaterial)
 	}
 }
 
-bool APiece::IsPathObstructed(FVector2D CurrentTileLocation, FVector2D TargetTileLocation, FVector MoveDirection)
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FVector2D CheckTileLocation = CurrentTileLocation;
-	ATile** CheckTilePtr = GameMode->CB->TileMap.Find(CheckTileLocation);
-
-	int32 DeltaX = FMath::Sign(MoveDirection.X);
-	int32 DeltaY = FMath::Sign(MoveDirection.Y);
-
-	while (CheckTileLocation != TargetTileLocation)
-	{
-		CheckTileLocation.X += DeltaX;
-		CheckTileLocation.Y += DeltaY;
-
-		CheckTilePtr = GameMode->CB->TileMap.Find(CheckTileLocation);
-
-		// Controlla se ci sono pezzi sul percorso
-		if (CheckTilePtr != nullptr)
-		{
-			// Se la casella è occupata da un pezzo del proprio colore, il movimento non è valido
-			if (((*CheckTilePtr)->GetOccupantColor() == EOccupantColor::W && Color == EColor::W) ||
-				((*CheckTilePtr)->GetOccupantColor() == EOccupantColor::B && Color == EColor::B))
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
 void APiece::PieceCaptured()
 {
 	Destroy();
