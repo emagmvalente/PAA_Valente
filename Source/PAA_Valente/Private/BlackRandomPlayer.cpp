@@ -4,7 +4,12 @@
 #include "BlackRandomPlayer.h"
 #include "Piece.h"
 
+#include "PieceBishop.h"
+#include "PieceKing.h"
+#include "PieceKnight.h"
 #include "PiecePawn.h"
+#include "PieceQueen.h"
+#include "PieceRook.h"
 
 #include "EngineUtils.h"
 
@@ -45,55 +50,47 @@ void ABlackRandomPlayer::OnTurn()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
 
-	FTimerHandle TimerHandle;
+	APiece* ChosenPiece = nullptr;
 
-	TArray<APiece*> OutBlackPieces;
-
-	for (TActorIterator<APiece> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	do
 	{
-		APiece* Piece = *ActorItr;
-		// Controlla se il pezzo è di colore nero
-		if (Piece && Piece->Color == EColor::B)
-		{
-			OutBlackPieces.Add(Piece); // Aggiungi il pezzo nero all'array
-		}
-	}
+		int32 RandIdx0 = FMath::Rand() % GameMode->CB->BlackPieces.Num();
+		// Picking a random piece
+		ChosenPiece = GameMode->CB->BlackPieces[RandIdx0];
 
-	// Picking a random piece
-	int32 RandIdx0 = FMath::Rand() % OutBlackPieces.Num();
-	APiece* ChosenPiece = OutBlackPieces[RandIdx0];
+		// Calcolare le mosse possibili del pezzo selezionato
+		ChosenPiece->PossibleMoves();
 
-	// Picking his possible moves
-	FVector ActualLocation = ChosenPiece->RelativePosition();
+	} while (ChosenPiece->Moves.Num() == 0);
+	
+	int32 RandIdx1 = FMath::Rand() % ChosenPiece->Moves.Num();
 
-	TArray<ATile*> ResultantArrayOfLegalMoves;
-	ChosenPiece->PossibleMoves(ActualLocation, ResultantArrayOfLegalMoves);
+	FVector PreviousLocation = ChosenPiece->RelativePosition();
+	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(PreviousLocation.X, PreviousLocation.Y));
 
-	// If there are moves, then set the timer
-	if (ResultantArrayOfLegalMoves.Num() > 0)
-	{
-		int32 RandIdx1 = FMath::Rand() % ResultantArrayOfLegalMoves.Num();
-		if (ResultantArrayOfLegalMoves.Num() == 1)
-		{
-			RandIdx1 = 1;
-		}
+	// Moving the piece
+	ATile* DestinationTile = ChosenPiece->Moves[RandIdx1];
+	FVector2D RelativePositionOfTile = DestinationTile->GetGridPosition();
 
-		FString ArrayNum = FString::Printf(TEXT("%d"), RandIdx1);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *ArrayNum);
+	FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(RelativePositionOfTile.X, RelativePositionOfTile.Y);
+	TilePositioning.Z = 10.0f;
+	ChosenPiece->SetActorLocation(TilePositioning);
 
-		// Moving the piece
-		ATile* DestinationTile = ResultantArrayOfLegalMoves[RandIdx1];
-		FVector2D RelativePositionOfTile = DestinationTile->GetGridPosition();
-		ChosenPiece->MoveToLocation(FVector(RelativePositionOfTile.X, RelativePositionOfTile.Y, 10.f));
-
-		GameMode->TurnPlayer(this);
-	}
-
-	// Else pick another piece
-	else
+	if (ChosenPiece->RelativePosition() == PreviousLocation)
 	{
 		OnTurn();
 	}
+	else 
+	{
+		(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
+		(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
+
+		DestinationTile->SetTileStatus(ETileStatus::OCCUPIED);
+		DestinationTile->SetOccupantColor(EOccupantColor::W);
+
+		GameMode->TurnPlayer(this);
+	}
+	
 }
 
 void ABlackRandomPlayer::OnWin()

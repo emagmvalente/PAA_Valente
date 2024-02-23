@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-class IPlayerInterface;
 #include "Chessboard.h"
 #include "GameFramework/GameModeBase.h"
 #include "ChessGameMode.generated.h"
+
+class IPlayerInterface;
 
 /**
  * 

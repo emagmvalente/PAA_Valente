@@ -62,3 +62,41 @@ void APiecePawn::MoveToLocation(const FVector& TargetLocation)
 		}
 	}
 }
+
+void APiecePawn::PossibleMoves()
+{
+	Moves.Empty();
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	FVector ActorLocation = RelativePosition();
+	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
+
+	if (Color == EColor::B)
+	{
+		Direction = FVector2D(-1,0);
+	}
+
+	FVector2D NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + Direction;
+	
+	FString MyDoubleString = FString::Printf(TEXT("%f"), NextPosition.X);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *MyDoubleString);
+	
+	ATile** NextTile = GameMode->CB->TileMap.Find(NextPosition);
+
+	if (bFirstMove && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY &&
+		NextPosition.X >= 0 && NextPosition.X < 8)
+	{
+		Moves.Add((*NextTile));
+		NextPosition += Direction;
+
+		FString MyDoubleString2 = FString::Printf(TEXT("%f"), NextPosition.X);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *MyDoubleString2);
+
+		NextTile = GameMode->CB->TileMap.Find(NextPosition);
+		Moves.Add((*NextTile));
+	}
+	else if (!bFirstMove && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY &&
+		NextPosition.X >= 0 && NextPosition.X < 8)
+	{
+		Moves.Add((*NextTile));
+	}
+}

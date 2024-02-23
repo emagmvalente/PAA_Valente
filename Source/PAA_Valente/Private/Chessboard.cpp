@@ -83,10 +83,12 @@ void AChessboard::GenerateField()
 			if (x <= 1)
 			{
 				Obj->SetOccupantColor(EOccupantColor::W);
+				Obj->SetTileStatus(ETileStatus::OCCUPIED);
 			}
 			if (x >= 6)
 			{
 				Obj->SetOccupantColor(EOccupantColor::B);
+				Obj->SetTileStatus(ETileStatus::OCCUPIED);
 			}
 
 			const float TileScale = TileSize / 100;
@@ -128,7 +130,7 @@ void AChessboard::GeneratePieces()
 				Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
-				
+				WhitePieces.Add(Obj);
 			}
 
 			// PAWNS
@@ -138,7 +140,7 @@ void AChessboard::GeneratePieces()
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
-				
+				WhitePieces.Add(Obj);
 			}
 
 			// KING
@@ -148,7 +150,7 @@ void AChessboard::GeneratePieces()
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
-				
+				WhitePieces.Add(Obj);
 			}
 
 			// QUEEN
@@ -158,7 +160,7 @@ void AChessboard::GeneratePieces()
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
-				
+				WhitePieces.Add(Obj);
 			}
 
 			// KNIGHTS
@@ -168,7 +170,7 @@ void AChessboard::GeneratePieces()
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
-				
+				WhitePieces.Add(Obj);
 			}
 
 			// ROOKS
@@ -178,7 +180,7 @@ void AChessboard::GeneratePieces()
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
-				
+				WhitePieces.Add(Obj);
 			}
 
 
@@ -193,7 +195,7 @@ void AChessboard::GeneratePieces()
 
 				Obj->ChangeMaterial(LoadBlackBishop);
 
-				
+				BlackPieces.Add(Obj);
 			}
 
 			// PAWNS
@@ -205,7 +207,7 @@ void AChessboard::GeneratePieces()
 
 				Obj->ChangeMaterial(LoadBlackPawn);
 
-				
+				BlackPieces.Add(Obj);
 			}
 
 			// KING
@@ -217,7 +219,7 @@ void AChessboard::GeneratePieces()
 
 				Obj->ChangeMaterial(LoadBlackKing);
 
-				
+				BlackPieces.Add(Obj);
 			}
 
 			// QUEEN
@@ -229,7 +231,7 @@ void AChessboard::GeneratePieces()
 
 				Obj->ChangeMaterial(LoadBlackQueen);
 
-				
+				BlackPieces.Add(Obj);
 			}
 
 			// KNIGHTS
@@ -241,7 +243,7 @@ void AChessboard::GeneratePieces()
 
 				Obj->ChangeMaterial(LoadBlackKnight);
 
-				
+				BlackPieces.Add(Obj);
 			}
 
 			// ROOKS
@@ -253,7 +255,7 @@ void AChessboard::GeneratePieces()
 
 				Obj->ChangeMaterial(LoadBlackRook);
 
-				
+				BlackPieces.Add(Obj);
 			}
 
 		}
@@ -263,11 +265,6 @@ void AChessboard::GeneratePieces()
 FVector2D AChessboard::GetPosition(const FHitResult& Hit)
 {
 	return Cast<ATile>(Hit.GetActor())->GetGridPosition();
-}
-
-TArray<ATile*>& AChessboard::GetTileArray()
-{
-	return TileArray;
 }
 
 FVector AChessboard::GetRelativeLocationByXYPosition(const int32 InX, const int32 InY) const

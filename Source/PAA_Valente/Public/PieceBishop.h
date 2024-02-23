@@ -26,7 +26,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	TArray<ATile*> Moves;
+	
 	TArray<FVector2D> Directions = { FVector2D(1, 1), FVector2D(1, -1), FVector2D(-1, 1), FVector2D(-1, -1) };
 
 public:
@@ -34,6 +34,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void MoveToLocation(const FVector& TargetLocation) override;
-	
+	virtual void PossibleMoves() override;
 
 };

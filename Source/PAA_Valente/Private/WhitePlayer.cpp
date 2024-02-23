@@ -94,17 +94,8 @@ void AWhitePlayer::TileSelection()
 
 				if (CPC->SelectedPieceToMove->RelativePosition() == NewLocation)
 				{
-					if (CPC->SelectedPieceToMove->Color == EColor::W)
-					{
-						(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
-						(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
-					}
-
-					else if (CPC->SelectedPieceToMove->Color == EColor::B)
-					{
-						(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
-						(*ActualTilePtr)->SetOccupantColor(EOccupantColor::B);
-					}
+					(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
+					(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
 
 					(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
 					(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);

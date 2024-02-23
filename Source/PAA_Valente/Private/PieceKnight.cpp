@@ -55,3 +55,32 @@ void APieceKnight::MoveToLocation(const FVector& TargetLocation)
 		SetActorLocation(GetActorLocation());
 	}
 }
+
+void APieceKnight::PossibleMoves()
+{
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	FVector ActorLocation = RelativePosition();
+	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
+	ATile** TilePtr = GameMode->CB->TileMap.Find(TileLocation);
+	Moves.Empty();
+
+	for (const FVector2D& Direction : Directions)
+	{
+		FVector2D NextPosition = TileLocation + Direction;
+		TilePtr = GameMode->CB->TileMap.Find(NextPosition);
+		bool bIsObstructed = false;
+
+		while (bIsObstructed == false)
+		{
+			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8 &&
+				(*TilePtr)->GetOccupantColor() == EOccupantColor::E)
+			{
+				Moves.Add((*TilePtr));
+			}
+			else
+			{
+				bIsObstructed = true;
+			}
+		}
+	}
+}
