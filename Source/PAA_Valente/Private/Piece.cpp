@@ -50,3 +50,41 @@ FVector APiece::RelativePosition() const
 	FVector CurrentRelativeLocation3D(CurrentRelativeLocation2D.X, CurrentRelativeLocation2D.Y, 10.f);
 	return CurrentRelativeLocation3D;
 }
+
+void APiece::ColorPossibleMoves()
+{
+	// Loading the yellow material and changing the color for every move in moves
+
+	PossibleMoves();
+
+	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
+	for (int i = 0; i < Moves.Num(); i++)
+	{
+		FString MyDoubleString = FString::Printf(TEXT("%d"), Moves.Num());
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *MyDoubleString);
+		Moves[i]->ChangeMaterial(LoadYellowMaterial);
+	}
+}
+
+void APiece::DecolorPossibleMoves()
+{
+	// Declarations
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	TArray<ATile*> TileArray = GameMode->CB->GetTileArray();
+	UMaterialInterface* LoadWhiteMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_White"));
+	UMaterialInterface* LoadBlackMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Black"));
+
+	// Decolor every tile, it's a little bit rudimental but it's the best way to decolor
+	for (int i = 0; i < TileArray.Num(); i++)
+	{
+		FVector2D TilePosition = TileArray[i]->GetGridPosition();
+		if ((static_cast<int>(TilePosition.X) + static_cast<int>(TilePosition.Y)) % 2 == 0)
+		{
+			TileArray[i]->ChangeMaterial(LoadBlackMaterial);
+		}
+		else
+		{
+			TileArray[i]->ChangeMaterial(LoadWhiteMaterial);
+		}
+	}
+}

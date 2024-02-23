@@ -279,3 +279,8 @@ FVector2D AChessboard::GetXYPositionByRelativeLocation(const FVector& Location) 
 	// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("x=%f,y=%f"), x, y));
 	return FVector2D(x, y);
 }
+
+TArray<ATile*> AChessboard::GetTileArray() const
+{
+	return TileArray;
+}

@@ -62,6 +62,9 @@ void AWhitePlayer::PieceClicked()
 			if (CurrPiece->Color == EColor::W)
 			{
 				CPC->SelectedPieceToMove = CurrPiece;
+
+				// Deleting possible old colorations
+				CPC->SelectedPieceToMove->DecolorPossibleMoves();
 			}
 		}
 	}
@@ -77,12 +80,22 @@ void AWhitePlayer::TileSelection()
 	FHitResult Hit = FHitResult(ForceInit);
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
 
+	// If player is clicking a tile without having clicked a piece first, don't color moves
+	if (CPC)
+	{
+		CPC->SelectedPieceToMove->ColorPossibleMoves();
+	}
+
+
 	if (Hit.bBlockingHit && IsMyTurn)
 	{
 		if (ATile* CurrTile = Cast<ATile>(Hit.GetActor()))
 		{
 			if (CurrTile->GetTileStatus() == ETileStatus::EMPTY && CPC->SelectedPieceToMove != nullptr)
 			{
+				// If a tile is clicked, decolor possible moves
+				CPC->SelectedPieceToMove->DecolorPossibleMoves();
+
 				// Declarations
 				FVector PreviousLocation = CPC->SelectedPieceToMove->RelativePosition();
 				ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(PreviousLocation.X, PreviousLocation.Y));
@@ -95,6 +108,7 @@ void AWhitePlayer::TileSelection()
 				// If the selected tile is in Moves, then allow the move
 				FVector2D CurrTilePosition = CurrTile->GetGridPosition();
 				
+				// If the move is legal, move the piece
 				if (CPC->SelectedPieceToMove->Moves.Contains(CurrTile))
 				{
 					FVector ActorPositioning = GameMode->CB->GetRelativeLocationByXYPosition(CurrTilePosition.X, CurrTilePosition.Y);
@@ -109,6 +123,8 @@ void AWhitePlayer::TileSelection()
 				// Setting the actual tile occupied by a white, setting the old one empty
 				if (CPC->SelectedPieceToMove->RelativePosition() == FVector(CurrTilePosition.X, CurrTilePosition.Y, 10.f))
 				{
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Setting tile status"));
+
 					(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
 					(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
 
