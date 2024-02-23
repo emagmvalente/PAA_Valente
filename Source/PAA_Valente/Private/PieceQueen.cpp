@@ -52,12 +52,19 @@ void APieceQueen::PossibleMoves()
 
 		while (true)
 		{
-			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8 &&
-				(*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
+			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8)
 			{
-				NextTile = GameMode->CB->TileMap.Find(NextPosition);
-				Moves.Add((*NextTile));
+				if ((*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
+				{
+					Moves.Add((*NextTile));
+				}
+				else
+				{
+					// Se la tile non è vuota, interrompi il loop.
+					break;
+				}
 				NextPosition += Direction;
+				NextTile = GameMode->CB->TileMap.Find(NextPosition);
 			}
 			else
 			{

@@ -45,5 +45,8 @@ public:
 	// Returns piece's relative position with Z = 10.f
 	FVector RelativePosition() const;
 
+	void ColorPossibleMoves();
+	void DecolorPossibleMoves();
+
 	virtual void PossibleMoves() {};
 };

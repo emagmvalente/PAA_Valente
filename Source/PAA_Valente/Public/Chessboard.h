@@ -83,6 +83,8 @@ public:
 	// return (x,y) position given a relative position
 	FVector2D GetXYPositionByRelativeLocation(const FVector& Location) const;
 
+	TArray<ATile*> GetTileArray() const;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
