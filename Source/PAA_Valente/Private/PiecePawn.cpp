@@ -33,68 +33,39 @@ void APiecePawn::Tick(float DeltaTime)
 
 }
 
-void APiecePawn::MoveToLocation(const FVector& TargetLocation)
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FVector CurrentRelativeLocation3D = RelativePosition();
-	FVector MoveDirection = TargetLocation - CurrentRelativeLocation3D;
-
-	if (MoveDirection.Y == 0 && MoveDirection.X >= 0)
-	{
-		// If it's the pawn's first move then he can go through two tiles, otherwise through one
-		if ((bFirstMove == true && FMath::Abs(MoveDirection.X) <= 2) ||
-			(bFirstMove == false && FMath::Abs(MoveDirection.X) == 1))
-		{
-			FVector2D TargetTileLocation(TargetLocation.X, TargetLocation.Y);
-			if (!IsPathObstructed(FVector2D(CurrentRelativeLocation3D.X, CurrentRelativeLocation3D.Y), TargetTileLocation, MoveDirection))
-			{
-				FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(TargetLocation.X, TargetLocation.Y);
-				TilePositioning.Z = 10.0f;
-				SetActorLocation(TilePositioning);
-				bFirstMove = false;
-			}
-		}
-
-		// Any other move is illegal
-		else
-		{
-			SetActorLocation(GetActorLocation());
-		}
-	}
-}
-
 void APiecePawn::PossibleMoves()
 {
 	Moves.Empty();
+
+	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	FVector ActorLocation = RelativePosition();
 	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
+	FVector2D NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + Direction;
+	ATile** NextTile = GameMode->CB->TileMap.Find(NextPosition);
 
+	// If the pawn is black, then invert his movements
 	if (Color == EColor::B)
 	{
 		Direction = FVector2D(-1,0);
 	}
 
-	FVector2D NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + Direction;
-	
-	ATile** NextTile = GameMode->CB->TileMap.Find(NextPosition);
-
-	if (bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8)
+	// If it's pawn's first move, then add two tiles in front of him
+	if (bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8 && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
 	{
 		Moves.Add((*NextTile));
 		NextPosition += Direction;
 
-		if (NextPosition.X >= 0 && NextPosition.X < 8) 
+		if (NextPosition.X >= 0 && NextPosition.X < 8 && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("In first move"));
 			NextTile = GameMode->CB->TileMap.Find(NextPosition);
 			Moves.Add((*NextTile));
-			bFirstMove = false;
 		}
 	}
+
+	// Else add one tile in front of him
 	else if (!bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not in first move"));
 		Moves.Add((*NextTile));
 	}
 }

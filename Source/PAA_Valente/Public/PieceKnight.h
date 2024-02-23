@@ -34,9 +34,6 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	virtual void MoveToLocation(const FVector& TargetLocation) override;
-	virtual void PossibleMoves() override;
 	
-
+	virtual void PossibleMoves() override;
 };

@@ -46,10 +46,11 @@ void ABlackRandomPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 void ABlackRandomPlayer::OnTurn()
 {
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
 
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	FTimerHandle TimerHandle;
 	APiece* ChosenPiece = nullptr;
 
 	do
@@ -77,6 +78,7 @@ void ABlackRandomPlayer::OnTurn()
 	if (DestinationTile->GetTileStatus() == ETileStatus::EMPTY)
 	{
 		ChosenPiece->SetActorLocation(TilePositioning);
+
 		if (ChosenPiece->RelativePosition() == PreviousLocation)
 		{
 			OnTurn();

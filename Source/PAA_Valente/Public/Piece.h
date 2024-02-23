@@ -39,12 +39,6 @@ public:
 	// ChangeMaterial changes the skin of the piece (Default: White)
 	void ChangeMaterial(UMaterialInterface* NewMaterial);
 
-	// IsPathObstructed checks if the path to move the piece from tile to tile is obstructed by any other piece.
-	bool IsPathObstructed(FVector2D CurrentTileLocation, FVector2D TargetTileLocation, FVector MoveDirection);
-
-	// MoveToLocation moves the piece from tile to tile, it depends from the type of piece
-	virtual void MoveToLocation(const FVector& TargetLocation) {};
-
 	// Destroys the piece
 	void PieceCaptured();
 
@@ -52,5 +46,4 @@ public:
 	FVector RelativePosition() const;
 
 	virtual void PossibleMoves() {};
-
 };

@@ -3,6 +3,7 @@
 
 #include "WhitePlayer.h"
 #include "Piece.h"
+#include "PiecePawn.h"
 #include "ChessGameMode.h"
 #include "ChessPlayerController.h"
 
@@ -47,10 +48,11 @@ void AWhitePlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AWhitePlayer::PieceClicked()
 {
+	// Declarations
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
-	//Structure containing information about one hit of a trace, such as point of impact and surface normal at that point
+
+	// Detecting player's click
 	FHitResult Hit = FHitResult(ForceInit);
-	// GetHitResultUnderCursor function sends a ray from the mouse position and gives the corresponding hit results
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
 
 	if (Hit.bBlockingHit && IsMyTurn)
@@ -67,11 +69,12 @@ void AWhitePlayer::PieceClicked()
 
 void AWhitePlayer::TileSelection()
 {
+	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
-	//Structure containing information about one hit of a trace, such as point of impact and surface normal at that point
+
+	// Detecting player's click
 	FHitResult Hit = FHitResult(ForceInit);
-	// GetHitResultUnderCursor function sends a ray from the mouse position and gives the corresponding hit results
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
 
 	if (Hit.bBlockingHit && IsMyTurn)
@@ -80,16 +83,31 @@ void AWhitePlayer::TileSelection()
 		{
 			if (CurrTile->GetTileStatus() == ETileStatus::EMPTY && CPC->SelectedPieceToMove != nullptr)
 			{
+				// Declarations
 				FVector PreviousLocation = CPC->SelectedPieceToMove->RelativePosition();
 				ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(PreviousLocation.X, PreviousLocation.Y));
-
 				FVector2D TilePosition = CurrTile->GetGridPosition();
 				ATile** ActualTilePtr = GameMode->CB->TileMap.Find(TilePosition);
 
-				FVector NewLocation(TilePosition.X, TilePosition.Y, 10.f);
-				CPC->SelectedPieceToMove->MoveToLocation(NewLocation);
+				// Calculating PossibleMoves and populating Moves array
+				CPC->SelectedPieceToMove->PossibleMoves();
 
-				if (CPC->SelectedPieceToMove->RelativePosition() == NewLocation)
+				// If the selected tile is in Moves, then allow the move
+				FVector2D CurrTilePosition = CurrTile->GetGridPosition();
+				
+				if (CPC->SelectedPieceToMove->Moves.Contains(CurrTile))
+				{
+					FVector ActorPositioning = GameMode->CB->GetRelativeLocationByXYPosition(CurrTilePosition.X, CurrTilePosition.Y);
+					ActorPositioning.Z = 10.0f;
+					CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);
+					if (Cast<APiecePawn>(CPC->SelectedPieceToMove) && Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove == true)
+					{
+						Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove = false;
+					}
+				}
+
+				// Setting the actual tile occupied by a white, setting the old one empty
+				if (CPC->SelectedPieceToMove->RelativePosition() == FVector(CurrTilePosition.X, CurrTilePosition.Y, 10.f))
 				{
 					(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
 					(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
@@ -97,9 +115,9 @@ void AWhitePlayer::TileSelection()
 					(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
 					(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
 
+					// Turn ending
 					IsMyTurn = false;
 					GameMode->TurnPlayer(this);
-
 				}
 
 				CPC->SelectedPieceToMove = nullptr;
