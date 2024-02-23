@@ -7,6 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "Chessboard.generated.h"
 
+class APiece;
+
 // macro declaration for a dynamic multicast delegate
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReset);
 
@@ -19,6 +21,9 @@ public:
 	// Keeps track of the chessboard's tiles
 	UPROPERTY(Transient)
 	TArray<ATile*> TileArray;
+
+	TArray<APiece*> WhitePieces;
+	TArray<APiece*> BlackPieces;
 
 	// Given a position returns a tile
 	UPROPERTY(Transient)
@@ -69,9 +74,6 @@ public:
 
 	// return a (x,y) position given a hit (click) on a field tile
 	FVector2D GetPosition(const FHitResult& Hit);
-
-	// return the array of tile pointers
-	TArray<ATile*>& GetTileArray();
 
 	// Con "Relative Position" si intende la posizione nella griglia, con "Position" si intende la posizione nello spazio di Unreal
 

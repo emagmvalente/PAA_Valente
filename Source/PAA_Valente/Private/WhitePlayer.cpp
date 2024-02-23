@@ -60,7 +60,6 @@ void AWhitePlayer::PieceClicked()
 			if (CurrPiece->Color == EColor::W)
 			{
 				CPC->SelectedPieceToMove = CurrPiece;
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Piece Picked"));
 			}
 		}
 	}
@@ -81,8 +80,6 @@ void AWhitePlayer::TileSelection()
 		{
 			if (CurrTile->GetTileStatus() == ETileStatus::EMPTY && CPC->SelectedPieceToMove != nullptr)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Tile Clicked"));
-
 				FVector PreviousLocation = CPC->SelectedPieceToMove->RelativePosition();
 				ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(PreviousLocation.X, PreviousLocation.Y));
 
@@ -94,17 +91,8 @@ void AWhitePlayer::TileSelection()
 
 				if (CPC->SelectedPieceToMove->RelativePosition() == NewLocation)
 				{
-					if (CPC->SelectedPieceToMove->Color == EColor::W)
-					{
-						(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
-						(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
-					}
-
-					else if (CPC->SelectedPieceToMove->Color == EColor::B)
-					{
-						(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
-						(*ActualTilePtr)->SetOccupantColor(EOccupantColor::B);
-					}
+					(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
+					(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
 
 					(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
 					(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);

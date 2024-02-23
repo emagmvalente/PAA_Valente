@@ -62,3 +62,39 @@ void APiecePawn::MoveToLocation(const FVector& TargetLocation)
 		}
 	}
 }
+
+void APiecePawn::PossibleMoves()
+{
+	Moves.Empty();
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	FVector ActorLocation = RelativePosition();
+	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
+
+	if (Color == EColor::B)
+	{
+		Direction = FVector2D(-1,0);
+	}
+
+	FVector2D NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + Direction;
+	
+	ATile** NextTile = GameMode->CB->TileMap.Find(NextPosition);
+
+	if (bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8)
+	{
+		Moves.Add((*NextTile));
+		NextPosition += Direction;
+
+		if (NextPosition.X >= 0 && NextPosition.X < 8) 
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("In first move"));
+			NextTile = GameMode->CB->TileMap.Find(NextPosition);
+			Moves.Add((*NextTile));
+			bFirstMove = false;
+		}
+	}
+	else if (!bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not in first move"));
+		Moves.Add((*NextTile));
+	}
+}

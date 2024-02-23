@@ -57,3 +57,33 @@ void APieceRook::MoveToLocation(const FVector& TargetLocation)
 		SetActorLocation(GetActorLocation());
 	}
 }
+
+void APieceRook::PossibleMoves()
+{
+	Moves.Empty();
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	FVector ActorLocation = RelativePosition();
+	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
+	ATile** TilePtr = GameMode->CB->TileMap.Find(TileLocation);
+
+	for (const FVector2D& Direction : Directions)
+	{
+		FVector2D NextPosition = TileLocation + Direction;
+		TilePtr = GameMode->CB->TileMap.Find(NextPosition);
+		bool bIsObstructed = false;
+
+		while (true)
+		{
+			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8)
+			{
+				TilePtr = GameMode->CB->TileMap.Find(NextPosition);
+				Moves.Add((*TilePtr));
+				NextPosition += Direction;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+}

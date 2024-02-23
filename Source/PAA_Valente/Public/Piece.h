@@ -31,7 +31,7 @@ protected:
 public:	
 
 	EColor Color;
-	TArray<FVector2D> Directions;
+	TArray<ATile*> Moves;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -51,6 +51,6 @@ public:
 	// Returns piece's relative position with Z = 10.f
 	FVector RelativePosition() const;
 
-	void PossibleMoves(FVector& ActorLocation, TArray<ATile*>& ResultantArray);
+	virtual void PossibleMoves() {};
 
 };
