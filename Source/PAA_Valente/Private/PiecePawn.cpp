@@ -79,22 +79,22 @@ void APiecePawn::PossibleMoves()
 	
 	ATile** NextTile = GameMode->CB->TileMap.Find(NextPosition);
 
-	if (bFirstMove && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY &&
-		NextPosition.X >= 0 && NextPosition.X < 8)
+	if (bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8)
 	{
 		Moves.Add((*NextTile));
 		NextPosition += Direction;
 
-		if (bFirstMove && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY &&
-			NextPosition.X >= 0 && NextPosition.X < 8) 
+		if (NextPosition.X >= 0 && NextPosition.X < 8) 
 		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("In first move"));
 			NextTile = GameMode->CB->TileMap.Find(NextPosition);
 			Moves.Add((*NextTile));
+			bFirstMove = false;
 		}
 	}
-	else if (!bFirstMove && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY &&
-		NextPosition.X >= 0 && NextPosition.X < 8)
+	else if (!bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not in first move"));
 		Moves.Add((*NextTile));
 	}
 }

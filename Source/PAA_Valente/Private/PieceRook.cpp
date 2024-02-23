@@ -74,8 +74,7 @@ void APieceRook::PossibleMoves()
 
 		while (true)
 		{
-			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8 &&
-				!((*TilePtr)->GetTileStatus() == ETileStatus::OCCUPIED))
+			if (NextPosition.X >= 0 && NextPosition.X < 8 && NextPosition.Y >= 0 && NextPosition.Y < 8)
 			{
 				TilePtr = GameMode->CB->TileMap.Find(NextPosition);
 				Moves.Add((*TilePtr));

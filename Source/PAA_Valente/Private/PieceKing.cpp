@@ -71,7 +71,7 @@ void APieceKing::PossibleMoves()
 	{
 		FVector2D NextPosition = TileLocation + Direction;
 		TilePtr = GameMode->CB->TileMap.Find(NextPosition);
-		if (TilePtr == nullptr || (*TilePtr)->GetTileStatus() == ETileStatus::OCCUPIED)
+		if (TilePtr == nullptr)
 		{
 			continue;
 		}
