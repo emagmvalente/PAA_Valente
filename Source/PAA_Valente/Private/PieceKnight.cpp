@@ -36,6 +36,7 @@ void APieceKnight::Tick(float DeltaTime)
 void APieceKnight::PossibleMoves()
 {
 	Moves.Empty();
+	EatablePieces.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -48,11 +49,18 @@ void APieceKnight::PossibleMoves()
 	{
 		FVector2D NextPosition = TileLocation + Direction;
 		NextTile = GameMode->CB->TileMap.Find(NextPosition);
-
-		if (NextTile == nullptr || (*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED)
+		if (NextTile == nullptr || IsSameColorAsTileOccupant((*NextTile)))
 		{
 			continue;
 		}
-		Moves.Add((*NextTile));
+		else if (!IsSameColorAsTileOccupant((*NextTile)) && (*NextTile)->GetTileStatus() != ETileStatus::EMPTY)
+		{
+			EatablePieces.Add((*NextTile));
+			continue;
+		}
+		else
+		{
+			Moves.Add((*NextTile));
+		}
 	}
 }

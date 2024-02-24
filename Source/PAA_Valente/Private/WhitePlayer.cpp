@@ -57,6 +57,7 @@ void AWhitePlayer::PieceClicked()
 
 	if (Hit.bBlockingHit && IsMyTurn)
 	{
+		// Save the piece
 		if (APiece* CurrPiece = Cast<APiece>(Hit.GetActor()))
 		{
 			if (CurrPiece->Color == EColor::W)
@@ -64,7 +65,7 @@ void AWhitePlayer::PieceClicked()
 				CPC->SelectedPieceToMove = CurrPiece;
 
 				// Deleting possible old colorations
-				CPC->SelectedPieceToMove->DecolorPossibleMoves();
+				CurrPiece->DecolorPossibleMoves();
 			}
 		}
 	}
@@ -80,15 +81,15 @@ void AWhitePlayer::TileSelection()
 	FHitResult Hit = FHitResult(ForceInit);
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
 
-	// If player is clicking a tile without having clicked a piece first, don't color moves
-	if (CPC)
+	// Calculate moves and color the tiles
+	if (CPC->SelectedPieceToMove != nullptr)
 	{
 		CPC->SelectedPieceToMove->ColorPossibleMoves();
 	}
 
-
 	if (Hit.bBlockingHit && IsMyTurn)
 	{
+		// Movement tile to tile logic
 		if (ATile* CurrTile = Cast<ATile>(Hit.GetActor()))
 		{
 			if (CurrTile->GetTileStatus() == ETileStatus::EMPTY && CPC->SelectedPieceToMove != nullptr)
@@ -123,8 +124,6 @@ void AWhitePlayer::TileSelection()
 				// Setting the actual tile occupied by a white, setting the old one empty
 				if (CPC->SelectedPieceToMove->RelativePosition() == FVector(CurrTilePosition.X, CurrTilePosition.Y, 10.f))
 				{
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Setting tile status"));
-
 					(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
 					(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
 
@@ -137,6 +136,47 @@ void AWhitePlayer::TileSelection()
 				}
 
 				CPC->SelectedPieceToMove = nullptr;
+			}
+		}
+
+		// Eating logic
+		if (APiece* PieceToEat = Cast<APiece>(Hit.GetActor()))
+		{
+			if (PieceToEat->Color == EColor::B)
+			{
+				// If a tile is clicked, decolor possible moves
+				CPC->SelectedPieceToMove->DecolorPossibleMoves();
+
+				// Declarations
+				FVector PreviousLocation = CPC->SelectedPieceToMove->RelativePosition();
+				ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(PreviousLocation.X, PreviousLocation.Y));
+				FVector ActualLocation = PieceToEat->RelativePosition();
+				ATile** ActualTilePtr = GameMode->CB->TileMap.Find(FVector2D(ActualLocation.X, ActualLocation.Y));
+
+				// Calculating PossibleMoves and populating Moves array
+				CPC->SelectedPieceToMove->PossibleMoves();
+
+				if (CPC->SelectedPieceToMove->EatablePieces.Contains((*ActualTilePtr)))
+				{
+					PieceToEat->PieceCaptured();
+					
+					FVector ActorPositioning = GameMode->CB->GetRelativeLocationByXYPosition(ActualLocation.X, ActualLocation.Y);
+					ActorPositioning.Z = 10.0f;
+					CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);
+
+					(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
+					(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
+
+					(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
+					(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
+
+					// Turn ending
+					IsMyTurn = false;
+					GameMode->CB->BlackPieces.Remove(PieceToEat);
+					CPC->SelectedPieceToMove = nullptr;
+					GameMode->TurnPlayer(this);
+
+				}
 			}
 		}
 	}
