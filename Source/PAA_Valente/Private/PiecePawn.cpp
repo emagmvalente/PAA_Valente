@@ -35,6 +35,7 @@ void APiecePawn::Tick(float DeltaTime)
 
 void APiecePawn::PossibleMoves()
 {
+	// Movement Logic
 	Moves.Empty();
 
 	// Declarations
@@ -55,16 +56,15 @@ void APiecePawn::PossibleMoves()
 	{
 		Moves.Add((*NextTile));
 		NextPosition += Direction;
-
+		NextTile = GameMode->CB->TileMap.Find(NextPosition);
 		if (NextPosition.X >= 0 && NextPosition.X < 8 && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
 		{
-			NextTile = GameMode->CB->TileMap.Find(NextPosition);
 			Moves.Add((*NextTile));
 		}
 	}
 
 	// Else add one tile in front of him
-	else if (!bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8)
+	else if (!bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8 && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
 	{
 		Moves.Add((*NextTile));
 	}
