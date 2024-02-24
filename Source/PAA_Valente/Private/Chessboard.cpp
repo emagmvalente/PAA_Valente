@@ -36,6 +36,10 @@ void AChessboard::BeginPlay()
 	Super::BeginPlay();
 	GenerateField();
 	GeneratePieces();
+
+	FString RandomString = "3qkbn1/1Pp1n3/1pP5/p3P3/3P4/2B3p1/1b2P1P1/R3K2r";
+
+	GeneratePositionsFromString(RandomString);
 }
 
 void AChessboard::ResetField()
@@ -260,6 +264,209 @@ void AChessboard::GeneratePieces()
 
 		}
 	}
+}
+
+void AChessboard::GenerateStringFromPositions()
+{
+}
+
+void AChessboard::GeneratePositionsFromString(FString& String)
+{
+	for (int i = 0; i < WhitePieces.Num(); i++)
+	{
+		WhitePieces[i]->Destroy();
+		BlackPieces[i]->Destroy();
+	}
+	WhitePieces.Empty();
+	BlackPieces.Empty();
+	
+	UMaterialInterface* LoadBlackBishop = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BBishop"));
+	UMaterialInterface* LoadBlackPawn = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BPawn"));
+	UMaterialInterface* LoadBlackKing = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKing"));
+	UMaterialInterface* LoadBlackQueen = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BQueen"));
+	UMaterialInterface* LoadBlackKnight = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKnight"));
+	UMaterialInterface* LoadBlackRook = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BRook"));
+
+	APiece* Obj = nullptr;
+	int32 TempNum = 0;
+	int32 TempJ = 0;
+
+	for (int i = 0; i < String.Len(); i++)
+	{
+		for (int j = TileArray.Num() - 1 ; j >= 0; j--)
+		{
+			FVector2D Location2D = TileArray[i]->GetGridPosition();
+			FVector Location = GetRelativeLocationByXYPosition(Location2D.X, Location2D.Y);
+			Location.Z = 10.f;
+
+			if (Alphabet.Contains(String[i]))
+			{
+				if (FChar::IsUpper(String[i]))
+				{
+					TileArray[j]->SetTileStatus(ETileStatus::OCCUPIED);
+					TileArray[j]->SetOccupantColor(EOccupantColor::W);
+
+					if (String[i] == 'B')
+					{
+						UBlueprint* BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
+						Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::W;
+
+						WhitePieces.Add(Obj);
+					}
+					else if (String[i] == 'K')
+					{
+						UBlueprint* KingBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_King"));
+						Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::W;
+
+						WhitePieces.Add(Obj);
+					}
+					else if (String[i] == 'N')
+					{
+						UBlueprint* KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
+						Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::W;
+
+						WhitePieces.Add(Obj);
+					}
+					else if (String[i] == 'P')
+					{
+						UBlueprint* PawnBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Pawn"));
+						Obj = GetWorld()->SpawnActor<APiecePawn>(PawnBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::W;
+
+						WhitePieces.Add(Obj);
+					}
+					else if (String[i] == 'Q')
+					{
+						UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
+						Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::W;
+
+						WhitePieces.Add(Obj);
+					}
+					else if (String[i] == 'R')
+					{
+						UBlueprint* RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
+						Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::W;
+
+						WhitePieces.Add(Obj);
+					}
+				}
+				else if (FChar::IsLower(String[i]))
+				{
+					TileArray[j]->SetTileStatus(ETileStatus::OCCUPIED);
+					TileArray[j]->SetOccupantColor(EOccupantColor::B);
+
+					if (String[i] == 'b')
+					{
+						UBlueprint* BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
+						Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::B;
+
+						Obj->ChangeMaterial(LoadBlackBishop);
+
+						BlackPieces.Add(Obj);
+					}
+					else if (String[i] == 'k')
+					{
+						UBlueprint* KingBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_King"));
+						Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::B;
+
+						Obj->ChangeMaterial(LoadBlackKing);
+
+						BlackPieces.Add(Obj);
+					}
+					else if (String[i] == 'n')
+					{
+						UBlueprint* KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
+						Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::B;
+
+						Obj->ChangeMaterial(LoadBlackKnight);
+
+						BlackPieces.Add(Obj);
+					}
+					else if (String[i] == 'p')
+					{
+						UBlueprint* PawnBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Pawn"));
+						Obj = GetWorld()->SpawnActor<APiecePawn>(PawnBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::B;
+
+						Obj->ChangeMaterial(LoadBlackPawn);
+
+						BlackPieces.Add(Obj);
+					}
+					else if (String[i] == 'q')
+					{
+						UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
+						Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::B;
+
+						Obj->ChangeMaterial(LoadBlackQueen);
+
+						BlackPieces.Add(Obj);
+					}
+					else if (String[i] == 'r')
+					{
+						UBlueprint* RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
+						Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+						Obj->Color = EColor::B;
+
+						Obj->ChangeMaterial(LoadBlackRook);
+
+						BlackPieces.Add(Obj);
+					}
+				}
+				else if (FChar::IsDigit(String[i]))
+				{
+					if (FChar::IsDigit(String[i + 1]))
+					{
+						int32 Dozens = FCString::Atoi(*String.Mid(i + 1, 1));
+						int32 Units = FCString::Atoi(*String.Mid(i, 1));
+						TempNum = Dozens * 10 + Units;
+						if (TempNum + j > 63)
+						{
+							TempJ = j;
+							break;
+						}
+						i += 1;
+					}
+					else
+					{
+						int32 Units = FCString::Atoi(*String.Mid(i, 1));
+						TempNum = Units;
+					}
+					j -= TempNum;
+					continue;
+				}
+				else if (String[i] == '/')
+				{
+					continue;
+				}
+			}
+			else
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Invalid string."));
+				UE_LOG(LogTemp, Error, TEXT("Error: Invalid string."));
+			}
+		}
+
+		if (TempNum + TempJ > 63)
+		{
+			break;
+		}
+	}
+
+	if (TempNum + TempJ > 63)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Invalid string."));
+		UE_LOG(LogTemp, Error, TEXT("Error: Invalid string."));
+	}
+	
 }
 
 FVector2D AChessboard::GetPosition(const FHitResult& Hit)
