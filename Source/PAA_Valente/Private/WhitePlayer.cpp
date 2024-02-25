@@ -57,11 +57,11 @@ void AWhitePlayer::PieceClicked()
 
 	if (Hit.bBlockingHit && IsMyTurn)
 	{
-		// Save the piece
 		if (APiece* CurrPiece = Cast<APiece>(Hit.GetActor()))
 		{
 			if (CurrPiece->Color == EColor::W)
 			{
+				// Save the piece
 				CPC->SelectedPieceToMove = CurrPiece;
 
 				// Deleting possible old colorations
@@ -142,7 +142,7 @@ void AWhitePlayer::TileSelection()
 		// Eating logic
 		if (APiece* PieceToEat = Cast<APiece>(Hit.GetActor()))
 		{
-			if (PieceToEat->Color == EColor::B)
+			if (PieceToEat->Color == EColor::B && CPC->SelectedPieceToMove != nullptr)
 			{
 				// If a tile is clicked, decolor possible moves
 				CPC->SelectedPieceToMove->DecolorPossibleMoves();
@@ -159,7 +159,7 @@ void AWhitePlayer::TileSelection()
 				if (CPC->SelectedPieceToMove->EatablePieces.Contains((*ActualTilePtr)))
 				{
 					PieceToEat->PieceCaptured();
-					
+
 					FVector ActorPositioning = GameMode->CB->GetRelativeLocationByXYPosition(ActualLocation.X, ActualLocation.Y);
 					ActorPositioning.Z = 10.0f;
 					CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);

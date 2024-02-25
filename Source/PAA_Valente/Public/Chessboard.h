@@ -25,6 +25,8 @@ public:
 	TArray<APiece*> WhitePieces;
 	TArray<APiece*> BlackPieces;
 
+	TArray<FString*> HistoryOfMoves;
+
 	// Given a position returns a tile
 	UPROPERTY(Transient)
 	TMap<FVector2D, ATile*> TileMap;
@@ -69,10 +71,7 @@ public:
 	// generate an empty game field
 	void GenerateField();
 
-	// generate an empty game field
-	void GeneratePieces();
-
-	void GenerateStringFromPositions();
+	FString GenerateStringFromPositions();
 	void GeneratePositionsFromString(FString& String);
 
 	// return a (x,y) position given a hit (click) on a field tile
