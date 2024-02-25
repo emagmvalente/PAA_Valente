@@ -25,6 +25,8 @@ public:
 	TArray<APiece*> WhitePieces;
 	TArray<APiece*> BlackPieces;
 
+	TArray<FString*> HistoryOfMoves;
+
 	// Given a position returns a tile
 	UPROPERTY(Transient)
 	TMap<FVector2D, ATile*> TileMap;
@@ -69,8 +71,8 @@ public:
 	// generate an empty game field
 	void GenerateField();
 
-	// generate an empty game field
-	void GeneratePieces();
+	FString GenerateStringFromPositions();
+	void GeneratePositionsFromString(FString& String);
 
 	// return a (x,y) position given a hit (click) on a field tile
 	FVector2D GetPosition(const FHitResult& Hit);
@@ -88,5 +90,9 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	TArray<TCHAR> Alphabet = { 'B', 'K', 'N', 'P', 'Q', 'R', 'b', 'k', 'n', 'p', 'q', 'r',
+							  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/' };
+
 
 };
