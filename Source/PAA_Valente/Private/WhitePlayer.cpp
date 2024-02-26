@@ -115,6 +115,14 @@ void AWhitePlayer::TileSelection()
 					FVector ActorPositioning = GameMode->CB->GetRelativeLocationByXYPosition(CurrTilePosition.X, CurrTilePosition.Y);
 					ActorPositioning.Z = 10.0f;
 					CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);
+
+					GameMode->CB->PieceMap.Remove(PreviousLocation);
+					GameMode->CB->PieceMap.Add(ActorPositioning, CPC->SelectedPieceToMove);
+					FString LastMove = GameMode->CB->GenerateStringFromPositions();
+
+					GameMode->CB->HistoryOfMoves.Add(LastMove);
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
+
 					if (Cast<APiecePawn>(CPC->SelectedPieceToMove) && Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove == true)
 					{
 						Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove = false;
@@ -163,6 +171,13 @@ void AWhitePlayer::TileSelection()
 					FVector ActorPositioning = GameMode->CB->GetRelativeLocationByXYPosition(ActualLocation.X, ActualLocation.Y);
 					ActorPositioning.Z = 10.0f;
 					CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);
+
+					GameMode->CB->PieceMap.Remove(PreviousLocation);
+					GameMode->CB->PieceMap.Add(ActorPositioning, CPC->SelectedPieceToMove);
+					FString LastMove = GameMode->CB->GenerateStringFromPositions();
+
+					GameMode->CB->HistoryOfMoves.Add(LastMove);
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
 
 					(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
 					(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);

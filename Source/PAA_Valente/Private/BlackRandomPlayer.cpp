@@ -78,6 +78,12 @@ void ABlackRandomPlayer::OnTurn()
 	if (DestinationTile->GetTileStatus() == ETileStatus::EMPTY)
 	{
 		ChosenPiece->SetActorLocation(TilePositioning);
+		GameMode->CB->PieceMap.Remove(PreviousLocation);
+		GameMode->CB->PieceMap.Add(TilePositioning, ChosenPiece);
+		FString LastMove = GameMode->CB->GenerateStringFromPositions();
+
+		GameMode->CB->HistoryOfMoves.Add(LastMove);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
 
 		if (ChosenPiece->RelativePosition() == PreviousLocation)
 		{
