@@ -116,16 +116,20 @@ void AWhitePlayer::TileSelection()
 					ActorPositioning.Z = 10.0f;
 					CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);
 
-					GameMode->CB->PieceMap.Remove(PreviousLocation);
-					GameMode->CB->PieceMap.Add(ActorPositioning, CPC->SelectedPieceToMove);
-					FString LastMove = GameMode->CB->GenerateStringFromPositions();
-
-					GameMode->CB->HistoryOfMoves.Add(LastMove);
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
-
 					if (Cast<APiecePawn>(CPC->SelectedPieceToMove) && Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove == true)
 					{
 						Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove = false;
+					}
+
+					GameMode->CB->PieceMap.Remove(PreviousLocation);
+					GameMode->CB->PieceMap.Add(ActorPositioning, CPC->SelectedPieceToMove);
+
+					if (GameMode->CB->PieceMap.Find(PreviousLocation) == nullptr)
+					{
+						FString LastMove = GameMode->CB->GenerateStringFromPositions();
+
+						GameMode->CB->HistoryOfMoves.Add(LastMove);
+						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
 					}
 				}
 
@@ -172,18 +176,22 @@ void AWhitePlayer::TileSelection()
 					ActorPositioning.Z = 10.0f;
 					CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);
 
-					GameMode->CB->PieceMap.Remove(PreviousLocation);
-					GameMode->CB->PieceMap.Add(ActorPositioning, CPC->SelectedPieceToMove);
-					FString LastMove = GameMode->CB->GenerateStringFromPositions();
-
-					GameMode->CB->HistoryOfMoves.Add(LastMove);
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
-
 					(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
 					(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
 
 					(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
 					(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
+
+					GameMode->CB->PieceMap.Remove(PreviousLocation);
+					GameMode->CB->PieceMap.Add(ActorPositioning, CPC->SelectedPieceToMove);
+
+					if (GameMode->CB->PieceMap.Find(PreviousLocation) == nullptr)
+					{
+						FString LastMove = GameMode->CB->GenerateStringFromPositions();
+
+						GameMode->CB->HistoryOfMoves.Add(LastMove);
+						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
+					}
 
 					// Turn ending
 					IsMyTurn = false;
