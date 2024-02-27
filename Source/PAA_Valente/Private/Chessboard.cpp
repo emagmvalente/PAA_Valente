@@ -114,15 +114,14 @@ FString AChessboard::GenerateStringFromPositions()
 		for (int32 Col = 0; Col < 8; ++Col)
 		{
 			ATile** CurrentTile = TileMap.Find(FVector2D(Row, Col));
-			if ((*CurrentTile)->GetTileStatus() == ETileStatus::OCCUPIED &&
-				(*CurrentTile)->GetOccupantColor() == EOccupantColor::W)
+			if ((*CurrentTile)->GetTileStatus() == ETileStatus::OCCUPIED && (*CurrentTile)->GetOccupantColor() == EOccupantColor::W)
 			{
 				for (int32 i = 0; i < WhitePieces.Num(); ++i)
 				{
-					FVector Location = GetRelativeLocationByXYPosition(Row, Col);
-					Location.Z = 10.f;
+					FVector Location(Row, Col, 10.f);
 					APiece* PieceFound = WhitePieces[i];
-					if (Cast<APiecePawn>(PieceFound) && Cast<APiecePawn>(PieceFound)->RelativePosition() == Location)
+
+					if (Cast<APiecePawn>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -132,7 +131,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('P');
 						break;
 					}
-					else if (Cast<APieceKing>(PieceFound) && Cast<APieceKing>(PieceFound)->RelativePosition() == Location)
+					else if (Cast<APieceKing>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -143,7 +142,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('K');
 						break;
 					}
-					else if (Cast<APieceKnight>(PieceFound) && Cast<APieceKnight>(PieceFound)->RelativePosition() == Location)
+					else if (Cast<APieceKnight>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -153,7 +152,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('N');
 						break;
 					}
-					else if (Cast<APieceQueen>(PieceFound) && Cast<APieceQueen>(PieceFound)->RelativePosition() == Location)
+					else if (Cast<APieceQueen>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -163,7 +162,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('Q');
 						break;
 					}
-					else if (Cast<APieceRook>(PieceFound) && Cast<APieceRook>(PieceFound)->RelativePosition() == Location)
+					else if (Cast<APieceRook>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -173,7 +172,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('R');
 						break;
 					}
-					else if (Cast<APieceBishop>(PieceFound) && Cast<APieceBishop>(PieceFound)->RelativePosition() == Location)
+					else if (Cast<APieceBishop>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -185,15 +184,14 @@ FString AChessboard::GenerateStringFromPositions()
 					}
 				}
 			}
-			else if ((*CurrentTile)->GetTileStatus() == ETileStatus::OCCUPIED &&
-				(*CurrentTile)->GetOccupantColor() == EOccupantColor::B)
+			else if ((*CurrentTile)->GetTileStatus() == ETileStatus::OCCUPIED && (*CurrentTile)->GetOccupantColor() == EOccupantColor::B)
 			{
 				for (int32 i = 0; i < BlackPieces.Num(); ++i)
 				{
-					FVector Location = GetRelativeLocationByXYPosition(Row, Col);
-					Location.Z = 10.f;
+					FVector Location(Row, Col, 10.f);
 					APiece* PieceFound = BlackPieces[i];
-					if (Cast<APiecePawn>(PieceFound) && Cast<APiecePawn>(PieceFound)->RelativePosition() == Location)
+
+					if (Cast<APiecePawn>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -203,7 +201,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('p');
 						break;
 					}
-					else if (Cast<APieceKing>(PieceFound) && Cast<APieceKing>(PieceFound)->RelativePosition() == Location)
+					else if (Cast<APieceKing>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -213,7 +211,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('k');
 						break;
 					}
-					else if (Cast<APieceKnight>(PieceFound) && Cast<APieceKnight>(PieceFound)->RelativePosition() == Location)
+					else if (Cast<APieceKnight>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -223,7 +221,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('n');
 						break;
 					}
-					else if (Cast<APieceQueen>(PieceFound) && Cast<APieceQueen>(PieceFound)->RelativePosition() == Location)
+					else if (Cast<APieceQueen>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -233,7 +231,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('q');
 						break;
 					}
-					else if (Cast<APieceRook>(PieceFound) && Cast<APieceRook>(PieceFound)->RelativePosition() == Location)
+					else if (Cast<APieceRook>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -243,7 +241,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('r');
 						break;
 					}
-					else if (Cast<APieceBishop>(PieceFound) && Cast<APieceBishop>(PieceFound)->RelativePosition() == Location)
+					else if (Cast<APieceBishop>(PieceFound) && PieceFound->RelativePosition() == Location)
 					{
 						if (EmptyCount > 0)
 						{
@@ -255,7 +253,6 @@ FString AChessboard::GenerateStringFromPositions()
 					}
 				}
 			}
-
 			else
 			{
 				++EmptyCount;
@@ -271,145 +268,6 @@ FString AChessboard::GenerateStringFromPositions()
 		}
 	}
 
-	/*
-	for (int32 Row = 7; Row >= 0; --Row)
-	{
-		int32 EmptyCount = 0;
-		for (int32 Col = 0; Col < 8; ++Col)
-		{
-			FVector Location = GetRelativeLocationByXYPosition(Row, Col);
-			Location.Z = 10.f;
-			APiece** PieceFound = nullptr;
-
-			if (PieceMap.Find(Location) != nullptr)
-			{
-				PieceFound = PieceMap.Find(Location);
-				if (Cast<APiecePawn>(*PieceFound) && (*PieceFound)->Color == EColor::W)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('P');
-				}
-				else if (Cast<APieceKing>(*PieceFound) && (*PieceFound)->Color == EColor::W)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('K');
-				}
-				else if (Cast<APieceKnight>(*PieceFound) && (*PieceFound)->Color == EColor::W)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('N');
-				}
-				else if (Cast<APieceQueen>(*PieceFound) && (*PieceFound)->Color == EColor::W)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('Q');
-				}
-				else if (Cast<APieceRook>(*PieceFound) && (*PieceFound)->Color == EColor::W)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('R');
-				}
-				else if (Cast<APieceBishop>(*PieceFound) && (*PieceFound)->Color == EColor::W)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('B');
-				}
-
-				else if (Cast<APiecePawn>(*PieceFound) && (*PieceFound)->Color == EColor::B)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('p');
-				}
-				else if (Cast<APieceKing>(*PieceFound) && (*PieceFound)->Color == EColor::B)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('k');
-				}
-				else if (Cast<APieceKnight>(*PieceFound) && (*PieceFound)->Color == EColor::B)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('n');
-				}
-				else if (Cast<APieceQueen>(*PieceFound) && (*PieceFound)->Color == EColor::B)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('q');
-				}
-				else if (Cast<APieceRook>(*PieceFound) && (*PieceFound)->Color == EColor::B)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('r');
-				}
-				else if (Cast<APieceBishop>(*PieceFound) && (*PieceFound)->Color == EColor::B)
-				{
-					if (EmptyCount > 0)
-					{
-						ResultantString.AppendInt(EmptyCount);
-						EmptyCount = 0;
-					}
-					ResultantString.AppendChar('b');
-				}
-			}
-			else
-			{
-				++EmptyCount;
-			}
-		}
-		if (EmptyCount > 0)
-		{
-			ResultantString.AppendInt(EmptyCount);
-		}
-		if (Row > 0)
-		{
-			ResultantString.AppendChar('/');
-		}
-	}
-	*/
 	return ResultantString;
 }
 
@@ -487,9 +345,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
-
 				WhitePieces.Add(Obj);
 				break;
 
@@ -497,9 +352,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
-
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
 
 				WhitePieces.Add(Obj);
 				break;
@@ -509,9 +361,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
-
 				WhitePieces.Add(Obj);
 				break;
 
@@ -519,9 +368,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
-
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
 
 				WhitePieces.Add(Obj);
 				break;
@@ -531,9 +377,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
-
 				WhitePieces.Add(Obj);
 				break;
 
@@ -541,9 +384,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				KingBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_King"));
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
-
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
 
 				WhitePieces.Add(Obj);
 				break;
@@ -555,9 +395,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
 				
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
-
 				Obj->ChangeMaterial(LoadBlackPawn);
 
 				BlackPieces.Add(Obj);
@@ -567,9 +404,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
-
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
 
 				Obj->ChangeMaterial(LoadBlackKnight);
 
@@ -581,9 +415,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
 
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
-
 				Obj->ChangeMaterial(LoadBlackBishop);
 
 				BlackPieces.Add(Obj);
@@ -593,9 +424,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
-
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
 
 				Obj->ChangeMaterial(LoadBlackRook);
 
@@ -607,9 +435,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
 
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
-
 				Obj->ChangeMaterial(LoadBlackQueen);
 
 				BlackPieces.Add(Obj);
@@ -619,9 +444,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				KingBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_King"));
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
-
-				PieceMap.Remove(Location);
-				PieceMap.Add(Location, Obj);
 
 				Obj->ChangeMaterial(LoadBlackKing);
 

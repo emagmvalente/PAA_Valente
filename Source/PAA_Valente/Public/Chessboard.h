@@ -31,8 +31,6 @@ public:
 	UPROPERTY(Transient)
 	TMap<FVector2D, ATile*> TileMap;
 
-	TMap<FVector, APiece*> PieceMap;
-
 	// Spazio prefissato che c'è tra una cella e l'altra, indipendentemente dalla grandezza delle tile
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float NormalizedCellPadding;
