@@ -81,15 +81,6 @@ void ABlackRandomPlayer::OnTurn()
 
 		if (ChosenPiece->RelativePosition() == PreviousLocation)
 		{
-			GameMode->CB->PieceMap.Remove(PreviousLocation);
-			GameMode->CB->PieceMap.Add(TilePositioning, ChosenPiece);
-			if (GameMode->CB->PieceMap.Find(PreviousLocation) == nullptr)
-			{
-				FString LastMove = GameMode->CB->GenerateStringFromPositions();
-
-				GameMode->CB->HistoryOfMoves.Add(LastMove);
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
-			}
 			OnTurn();
 		}
 		else
@@ -99,6 +90,11 @@ void ABlackRandomPlayer::OnTurn()
 
 			DestinationTile->SetTileStatus(ETileStatus::OCCUPIED);
 			DestinationTile->SetOccupantColor(EOccupantColor::B);
+
+			FString LastMove = GameMode->CB->GenerateStringFromPositions();
+
+			GameMode->CB->HistoryOfMoves.Add(LastMove);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
 
 			GameMode->TurnPlayer(this);
 		}
