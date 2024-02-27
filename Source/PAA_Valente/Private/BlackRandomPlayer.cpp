@@ -49,53 +49,109 @@ void ABlackRandomPlayer::OnTurn()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
 
+	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	FTimerHandle TimerHandle;
 	APiece* ChosenPiece = nullptr;
 
 	do
 	{
-		int32 RandIdx0 = FMath::Rand() % GameMode->CB->BlackPieces.Num();
 		// Picking a random piece
+		int32 RandIdx0 = FMath::Rand() % GameMode->CB->BlackPieces.Num();
 		ChosenPiece = GameMode->CB->BlackPieces[RandIdx0];
 
-		// Calcolare le mosse possibili del pezzo selezionato
+		// Calculate piece's possible moves.
 		ChosenPiece->PossibleMoves();
 
 	} while (ChosenPiece->Moves.Num() == 0);
 	
-	int32 RandIdx1 = FMath::Rand() % ChosenPiece->Moves.Num();
-
+	// Getting previous tile
 	FVector PreviousLocation = ChosenPiece->RelativePosition();
 	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(PreviousLocation.X, PreviousLocation.Y));
 
-	// Moving the piece
-	ATile* DestinationTile = ChosenPiece->Moves[RandIdx1];
-	FVector2D RelativePositionOfTile = DestinationTile->GetGridPosition();
+	// Merging the array of moves and the array of eatable pieces
+	TArray MovesAndEatablePieces = ChosenPiece->Moves;
+	MovesAndEatablePieces.Append(ChosenPiece->EatablePieces);
 
+	FString DebugMessage1 = FString::Printf(TEXT("Numero di mosse %d"), ChosenPiece->Moves.Num());
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *DebugMessage1);
+
+	FString DebugMessage2 = FString::Printf(TEXT("Numero di pezzi mangiabili %d"), ChosenPiece->EatablePieces.Num());
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *DebugMessage2);
+
+	FString DebugMessage3 = FString::Printf(TEXT("Numero di mosse + numero di pezzi mangiabili %d"), MovesAndEatablePieces.Num());
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *DebugMessage3);
+
+	// Moving the piece and getting the new tile
+	int32 RandIdx1 = FMath::Rand() % MovesAndEatablePieces.Num();
+	ATile* DestinationTile = MovesAndEatablePieces[RandIdx1];
+	FVector2D RelativePositionOfTile = DestinationTile->GetGridPosition();
 	FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(RelativePositionOfTile.X, RelativePositionOfTile.Y);
 	TilePositioning.Z = 10.0f;
+
+	// Spawning actor if the tile is empty or if there's an eatable piece
 	if (DestinationTile->GetTileStatus() == ETileStatus::EMPTY)
 	{
 		ChosenPiece->SetActorLocation(TilePositioning);
 
 		if (ChosenPiece->RelativePosition() == PreviousLocation)
 		{
+			// If the move wasn't legal and the piece is still on the previous position, then recall the function
 			OnTurn();
 		}
 		else
 		{
+			// Setting the actual tile occupied by a black, setting the old one empty
 			(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
 			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
 
 			DestinationTile->SetTileStatus(ETileStatus::OCCUPIED);
 			DestinationTile->SetOccupantColor(EOccupantColor::B);
 
+			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameMode->CB->GenerateStringFromPositions();
-
 			GameMode->CB->HistoryOfMoves.Add(LastMove);
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
 
+			// Turn ending
+			GameMode->TurnPlayer(this);
+		}
+	}
+
+	else if (DestinationTile->GetTileStatus() == ETileStatus::OCCUPIED && DestinationTile->GetOccupantColor() == EOccupantColor::W)
+	{
+		ChosenPiece->SetActorLocation(TilePositioning);
+
+		if (ChosenPiece->RelativePosition() == PreviousLocation)
+		{
+			// If the move wasn't legal and the piece is still on the previous position, then recall the function
+			OnTurn();
+		}
+		else
+		{
+			// Search the white piece who occupies the tile and capture it
+			for (int32 i = 0; i < GameMode->CB->WhitePieces.Num(); ++i)
+			{
+				if (GameMode->CB->WhitePieces[i]->GetActorLocation() == TilePositioning)
+				{
+					GameMode->CB->WhitePieces[i]->PieceCaptured();
+					break;
+				}
+			}
+
+			// Setting the actual tile occupied by a black, setting the old one empty
+			(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
+			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
+
+			DestinationTile->SetTileStatus(ETileStatus::OCCUPIED);
+			DestinationTile->SetOccupantColor(EOccupantColor::B);
+
+			// Generate the FEN string and add it to the history of moves for replays
+			FString LastMove = GameMode->CB->GenerateStringFromPositions();
+			GameMode->CB->HistoryOfMoves.Add(LastMove);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
+
+			// Turn ending
 			GameMode->TurnPlayer(this);
 		}
 	}

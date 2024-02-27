@@ -131,8 +131,8 @@ void AWhitePlayer::TileSelection()
 					(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
 					(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
 
+					// Generate the FEN string and add it to the history of moves for replays
 					FString LastMove = GameMode->CB->GenerateStringFromPositions();
-
 					GameMode->CB->HistoryOfMoves.Add(LastMove);
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
 
@@ -164,20 +164,23 @@ void AWhitePlayer::TileSelection()
 
 				if (CPC->SelectedPieceToMove->EatablePieces.Contains((*ActualTilePtr)))
 				{
+					// Delete the captured piece
 					PieceToEat->PieceCaptured();
 
+					// Move the piece on the new tile
 					FVector ActorPositioning = GameMode->CB->GetRelativeLocationByXYPosition(ActualLocation.X, ActualLocation.Y);
 					ActorPositioning.Z = 10.0f;
 					CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);
 
+					// Setting the actual tile occupied by a white, setting the old one empty
 					(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
 					(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
 
 					(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
 					(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
 
+					// Generate the FEN string and add it to the history of moves for replays
 					FString LastMove = GameMode->CB->GenerateStringFromPositions();
-
 					GameMode->CB->HistoryOfMoves.Add(LastMove);
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
 

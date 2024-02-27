@@ -106,8 +106,6 @@ FString AChessboard::GenerateStringFromPositions()
 {
 	FString ResultantString = TEXT("");
 
-	int32 MaxDimension = FMath::Max(WhitePieces.Num(), BlackPieces.Num());
-
 	for (int32 Row = 7; Row >= 0; --Row)
 	{
 		int32 EmptyCount = 0;
@@ -313,13 +311,13 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 		TCHAR Char = String[i];
 
 		// Slash case
-		if (Char == '/') // Slash indicates the end of a row
+		if (Char == '/')
 		{
 			--Row; // Move to the next row
 			Col = 0; // Reset the column
 		}
 		// Digit case
-		else if (FChar::IsDigit(Char)) // Digit indicates empty squares
+		else if (FChar::IsDigit(Char))
 		{
 			if (Char - '0' > 8)
 			{
@@ -329,7 +327,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			Col += Char - '0'; // Increment the column by the number of empty squares
 		}
 		// Letter case
-		else // Piece character
+		else
 		{
 			APiece* Obj = nullptr;
 
@@ -449,7 +447,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 
 				BlackPieces.Add(Obj);
 				break;
-
 
 			default:
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Invalid String."));
