@@ -3,6 +3,7 @@
 
 #include "ChessGameMode.h"
 #include "WhitePlayer.h"
+#include "PieceKing.h"
 #include "ChessPlayerController.h"
 #include "BlackRandomPlayer.h"
 #include "EngineUtils.h"
@@ -41,7 +42,43 @@ void AChessGameMode::BeginPlay()
 	FVector CameraPos(CameraPosX, CameraPosX, 1000.0f);
 	HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
+	SetEnemyKing();
 	HumanPlayer->OnTurn();
+}
+
+void AChessGameMode::SetEnemyKing()
+{
+	APiece* WhiteKing = nullptr;
+	APiece* BlackKing = nullptr;
+
+	// Finds WhiteKing
+	for (int32 i = 0; i < CB->WhitePieces.Num(); i++)
+	{
+		if (Cast<APieceKing>(CB->WhitePieces[i]))
+		{
+			WhiteKing = CB->WhitePieces[i];
+			break;
+		}
+	}
+	// Finds BlackKing
+	for (int32 i = 0; i < CB->BlackPieces.Num(); i++)
+	{
+		if (Cast<APieceKing>(CB->BlackPieces[i]))
+		{
+			BlackKing = CB->BlackPieces[i];
+			break;
+		}
+	}
+
+	// Sets the enemy king for each piece
+	for (int32 i = 0; i < CB->WhitePieces.Num(); i++)
+	{
+		CB->WhitePieces[i]->EnemyKing = BlackKing;
+	}
+	for (int32 i = 0; i < CB->BlackPieces.Num(); i++)
+	{
+		CB->BlackPieces[i]->EnemyKing = WhiteKing;
+	}
 }
 
 void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
