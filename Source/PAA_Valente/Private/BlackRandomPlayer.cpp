@@ -135,6 +135,7 @@ void ABlackRandomPlayer::OnTurn()
 				if (GameMode->CB->WhitePieces[i]->GetActorLocation() == TilePositioning)
 				{
 					GameMode->CB->WhitePieces[i]->PieceCaptured();
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Il pezzo occupato è stato trovato e cancellato"));
 					break;
 				}
 			}

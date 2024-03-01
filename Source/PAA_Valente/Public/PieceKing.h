@@ -22,6 +22,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* StaticMeshComponent;
 
+	bool bIsOnCheck;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -36,4 +38,6 @@ public:
 	virtual void Tick(float DeltaTime) override;	
 	
 	virtual void PossibleMoves() override;
+
+	void Escape();
 };

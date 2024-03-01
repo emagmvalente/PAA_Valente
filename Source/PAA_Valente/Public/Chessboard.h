@@ -89,6 +89,8 @@ public:
 
 	TArray<ATile*> GetTileArray() const;
 
+	void SetEnemyKing();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

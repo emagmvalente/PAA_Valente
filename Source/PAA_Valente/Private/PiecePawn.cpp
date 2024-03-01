@@ -42,14 +42,15 @@ void APiecePawn::PossibleMoves()
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	FVector ActorLocation = RelativePosition();
 	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
-	FVector2D NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + Direction;
-	ATile** NextTile = GameMode->CB->TileMap.Find(NextPosition);
 
 	// If the pawn is black, then invert his movements
 	if (Color == EColor::B)
 	{
 		Direction = FVector2D(-1,0);
 	}
+
+	FVector2D NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + Direction;
+	ATile** NextTile = GameMode->CB->TileMap.Find(NextPosition);
 
 	// If it's pawn's first move, then add two tiles in front of him
 	if (bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8 && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)

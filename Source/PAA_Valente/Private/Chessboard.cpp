@@ -39,6 +39,8 @@ void AChessboard::BeginPlay()
 	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 	GeneratePositionsFromString(GeneratingString);
 
+	SetEnemyKing();
+
 	// Setting the status of the tiles
 	for (int32 i = 0; i < 16; i++)
 	{
@@ -479,4 +481,40 @@ FVector2D AChessboard::GetXYPositionByRelativeLocation(const FVector& Location) 
 TArray<ATile*> AChessboard::GetTileArray() const
 {
 	return TileArray;
+}
+
+void AChessboard::SetEnemyKing()
+{
+	APiece* WhiteKing = nullptr;
+	APiece* BlackKing = nullptr;
+
+	// Finds WhiteKing
+	for (int32 i = 0; i < WhitePieces.Num(); i++)
+	{
+		if (WhitePieces[i] = Cast<APieceKing>(this))
+		{
+			WhiteKing = WhitePieces[i];
+			break;
+		}
+	}
+	// Finds BlackKing
+	for (int32 i = 0; i < BlackPieces.Num(); i++)
+	{
+		if (BlackPieces[i] = Cast<APieceKing>(this))
+		{
+			BlackKing = BlackPieces[i];
+			break;
+		}
+	}
+
+	// Sets the enemy king for each piece
+
+	for (int32 i = 0; i < WhitePieces.Num(); i++)
+	{
+		WhitePieces[i]->EnemyKing = BlackKing;
+	}
+	for (int32 i = 0; i < BlackPieces.Num(); i++)
+	{
+		BlackPieces[i]->EnemyKing = WhiteKing;
+	}
 }
