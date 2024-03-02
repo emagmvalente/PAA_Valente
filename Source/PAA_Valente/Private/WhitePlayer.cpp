@@ -134,7 +134,6 @@ void AWhitePlayer::TileSelection()
 					// Generate the FEN string and add it to the history of moves for replays
 					FString LastMove = GameMode->CB->GenerateStringFromPositions();
 					GameMode->CB->HistoryOfMoves.Add(LastMove);
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
 
 					// Turn ending
 					IsMyTurn = false;
@@ -172,6 +171,11 @@ void AWhitePlayer::TileSelection()
 					ActorPositioning.Z = 10.0f;
 					CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);
 
+					if (Cast<APiecePawn>(CPC->SelectedPieceToMove) && Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove == true)
+					{
+						Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove = false;
+					}
+
 					// Setting the actual tile occupied by a white, setting the old one empty
 					(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
 					(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
@@ -182,7 +186,6 @@ void AWhitePlayer::TileSelection()
 					// Generate the FEN string and add it to the history of moves for replays
 					FString LastMove = GameMode->CB->GenerateStringFromPositions();
 					GameMode->CB->HistoryOfMoves.Add(LastMove);
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, LastMove);
 
 					// Turn ending
 					IsMyTurn = false;
@@ -216,3 +219,7 @@ void AWhitePlayer::OnLose()
 	GameInstance->SetTurnMessage(TEXT("Human Loses!"));
 }
 
+bool AWhitePlayer::IsCheckStatus()
+{
+	return false;
+}

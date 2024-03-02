@@ -49,14 +49,44 @@ void APieceKing::PossibleMoves()
 	{
 		FVector2D NextPosition = TileLocation + Direction;
 		NextTile = GameMode->CB->TileMap.Find(NextPosition);
-		if (NextTile == nullptr || ((*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED && (*NextTile)->GetOccupantColor() == EOccupantColor::W))
+
+		// Next tile not valid or occupied case
+		if (NextTile == nullptr || ((*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED && IsSameColorAsTileOccupant((*NextTile))))
 		{
 			continue;
 		}
-		else if (NextTile != nullptr && !IsSameColorAsTileOccupant((*NextTile)) && (*NextTile)->GetTileStatus() != ETileStatus::EMPTY)
+		// Next tile occupied by an enemy piece case
+		else if (NextTile != nullptr && !IsSameColorAsTileOccupant((*NextTile)) && (*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED)
 		{
 			EatablePieces.Add((*NextTile));
 		}
+		// Check case
+		else if (bIsOnCheck == true)
+		{
+			if (this->Color == EColor::W)
+			{
+				// Check if any enemy piece sees the king
+				for (APiece* EnemyPiece : GameMode->CB->BlackPieces)
+				{
+					if (!(EnemyPiece->EatablePieces.Contains(*NextTile)))
+					{
+						Moves.Add((*NextTile));
+					}
+				}
+			}
+			else
+			{
+				// Check if any enemy piece sees the king
+				for (APiece* EnemyPiece : GameMode->CB->WhitePieces)
+				{
+					if (!(EnemyPiece->EatablePieces.Contains(*NextTile)))
+					{
+						Moves.Add((*NextTile));
+					}
+				}
+			}
+		}
+		// Default case
 		else
 		{
 			Moves.Add((*NextTile));

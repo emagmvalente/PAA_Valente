@@ -33,7 +33,11 @@ public:
 	EColor Color;
 	TArray<ATile*> Moves;
 	TArray<ATile*> EatablePieces;
-	APiece* EnemyKing;
+
+	APiece* WhiteKing;
+	APiece* BlackKing;
+
+	bool bIsOnCheck;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -49,8 +53,6 @@ public:
 
 	void ColorPossibleMoves();
 	void DecolorPossibleMoves();
-
-	void Defend();
 
 	bool IsSameColorAsTileOccupant(ATile* Tile);
 

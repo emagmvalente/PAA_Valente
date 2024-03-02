@@ -35,7 +35,7 @@ public:
 
 	virtual void BeginPlay() override;
 
-	void SetEnemyKing();
+	void SetKings();
 
 	// called at the end of the game turn
 	void TurnPlayer(IPlayerInterface* Player);

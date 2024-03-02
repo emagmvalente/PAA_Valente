@@ -42,17 +42,19 @@ void AChessGameMode::BeginPlay()
 	FVector CameraPos(CameraPosX, CameraPosX, 1000.0f);
 	HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
-	SetEnemyKing();
+	SetKings();
 	HumanPlayer->OnTurn();
 }
 
-void AChessGameMode::SetEnemyKing()
+void AChessGameMode::SetKings()
 {
 	APiece* WhiteKing = nullptr;
 	APiece* BlackKing = nullptr;
 
+	int32 InitNumberOfPieces = 16;
+
 	// Finds WhiteKing
-	for (int32 i = 0; i < CB->WhitePieces.Num(); i++)
+	for (int32 i = 0; i < InitNumberOfPieces; i++)
 	{
 		if (Cast<APieceKing>(CB->WhitePieces[i]))
 		{
@@ -61,7 +63,7 @@ void AChessGameMode::SetEnemyKing()
 		}
 	}
 	// Finds BlackKing
-	for (int32 i = 0; i < CB->BlackPieces.Num(); i++)
+	for (int32 i = 0; i < InitNumberOfPieces; i++)
 	{
 		if (Cast<APieceKing>(CB->BlackPieces[i]))
 		{
@@ -71,13 +73,13 @@ void AChessGameMode::SetEnemyKing()
 	}
 
 	// Sets the enemy king for each piece
-	for (int32 i = 0; i < CB->WhitePieces.Num(); i++)
+	for (int32 i = 0; i < InitNumberOfPieces; i++)
 	{
-		CB->WhitePieces[i]->EnemyKing = BlackKing;
-	}
-	for (int32 i = 0; i < CB->BlackPieces.Num(); i++)
-	{
-		CB->BlackPieces[i]->EnemyKing = WhiteKing;
+		CB->WhitePieces[i]->WhiteKing = WhiteKing;
+		CB->WhitePieces[i]->BlackKing = BlackKing;
+
+		CB->BlackPieces[i]->WhiteKing = WhiteKing;
+		CB->BlackPieces[i]->BlackKing = BlackKing;
 	}
 }
 
