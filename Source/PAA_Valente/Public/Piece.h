@@ -37,8 +37,6 @@ public:
 	APiece* WhiteKing;
 	APiece* BlackKing;
 
-	bool bIsOnCheck;
-
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

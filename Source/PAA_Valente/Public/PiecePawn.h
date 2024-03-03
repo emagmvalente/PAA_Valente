@@ -25,6 +25,7 @@ public:
 	bool bFirstMove = true;
 
 	FVector2D Direction = FVector2D(1, 0);
+	TArray<FVector2D> EatingDirections = { FVector2D(1, -1), FVector2D(1, 1) };;
 
 protected:
 	// Called when the game starts or when spawned

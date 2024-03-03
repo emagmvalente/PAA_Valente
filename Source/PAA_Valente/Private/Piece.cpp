@@ -11,7 +11,6 @@ APiece::APiece()
 	PrimaryActorTick.bCanEverTick = false;
 
 	Color = EColor::E;
-	bIsOnCheck = false;
 }
 
 // Called when the game starts or when spawned

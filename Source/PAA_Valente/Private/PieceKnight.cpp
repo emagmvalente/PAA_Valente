@@ -49,18 +49,18 @@ void APieceKnight::PossibleMoves()
 	{
 		FVector2D NextPosition = TileLocation + Direction;
 		NextTile = GameMode->CB->TileMap.Find(NextPosition);
-		if (NextTile == nullptr || IsSameColorAsTileOccupant((*NextTile)))
+		if (NextTile == nullptr || IsSameColorAsTileOccupant(*NextTile))
 		{
 			continue;
 		}
-		else if (!IsSameColorAsTileOccupant((*NextTile)) && (*NextTile)->GetTileStatus() != ETileStatus::EMPTY)
+		else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED)
 		{
-			EatablePieces.Add((*NextTile));
+			EatablePieces.Add(*NextTile);
 			continue;
 		}
 		else
 		{
-			Moves.Add((*NextTile));
+			Moves.Add(*NextTile);
 		}
 	}
 }

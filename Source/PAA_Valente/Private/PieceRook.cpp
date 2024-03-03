@@ -57,11 +57,11 @@ void APieceRook::PossibleMoves()
 			{
 				if ((*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
 				{
-					Moves.Add((*NextTile));
+					Moves.Add(*NextTile);
 				}
-				else if (!IsSameColorAsTileOccupant((*NextTile)) && (*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED)
+				else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED)
 				{
-					EatablePieces.Add((*NextTile));
+					EatablePieces.Add(*NextTile);
 					break;
 				}
 				else

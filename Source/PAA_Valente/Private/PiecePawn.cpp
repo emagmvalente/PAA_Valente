@@ -35,8 +35,8 @@ void APiecePawn::Tick(float DeltaTime)
 
 void APiecePawn::PossibleMoves()
 {
-	// Movement Logic
 	Moves.Empty();
+	EatablePieces.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -47,48 +47,36 @@ void APiecePawn::PossibleMoves()
 	if (Color == EColor::B)
 	{
 		Direction = FVector2D(-1,0);
-	}
-
-	FVector2D NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + Direction;
-	ATile** NextTile = GameMode->CB->TileMap.Find(NextPosition);
-
-	// If it's pawn's first move, then add two tiles in front of him
-	if (bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8 && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
-	{
-		Moves.Add((*NextTile));
-		NextPosition += Direction;
-		NextTile = GameMode->CB->TileMap.Find(NextPosition);
-		if (NextPosition.X >= 0 && NextPosition.X < 8 && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
-		{
-			Moves.Add((*NextTile));
-		}
-	}
-
-	// Else add one tile in front of him
-	else if (!bFirstMove && NextPosition.X >= 0 && NextPosition.X < 8 && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
-	{
-		Moves.Add((*NextTile));
-	}
-
-	// Eating Logic
-	EatablePieces.Empty();
-	TArray<FVector2D> EatingDirections;
-	if (Color == EColor::W)
-	{
-		EatingDirections = { FVector2D(1, -1), FVector2D(1, 1) };
-	}
-	if (Color == EColor::B)
-	{
 		EatingDirections = { FVector2D(-1, -1), FVector2D(-1, 1) };
 	}
 
+	// More Declarations
+	FVector2D NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + Direction;
+	ATile** NextTile = GameMode->CB->TileMap.Find(NextPosition);
+
+	// Movement logic
+	if ((*NextTile) != nullptr && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
+	{
+		// If is not pawn's first move, add only one tile in front of him
+		Moves.Add(*NextTile);
+
+		// Else add another tile in front of him
+		if (bFirstMove && (*NextTile) != nullptr && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
+		{
+			NextPosition += Direction;
+			NextTile = GameMode->CB->TileMap.Find(NextPosition);
+			Moves.Add(*NextTile);
+		}
+	}
+
+	// Eating logic
 	for (const FVector2D EatingDirection : EatingDirections)
 	{
 		NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + EatingDirection;
 		NextTile = GameMode->CB->TileMap.Find(NextPosition);
-		if (NextTile != nullptr && !IsSameColorAsTileOccupant((*NextTile)) && (*NextTile)->GetTileStatus() != ETileStatus::EMPTY)
+		if (NextTile != nullptr && !IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED)
 		{
-			EatablePieces.Add((*NextTile));
+			EatablePieces.Add(*NextTile);
 		}
 	}
 }
