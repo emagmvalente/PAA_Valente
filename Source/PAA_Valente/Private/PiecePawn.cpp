@@ -59,12 +59,12 @@ void APiecePawn::PossibleMoves()
 	{
 		// If is not pawn's first move, add only one tile in front of him
 		Moves.Add(*NextTile);
+		NextPosition += Direction;
+		NextTile = GameMode->CB->TileMap.Find(NextPosition);
 
 		// Else add another tile in front of him
 		if (bFirstMove && (*NextTile) != nullptr && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
 		{
-			NextPosition += Direction;
-			NextTile = GameMode->CB->TileMap.Find(NextPosition);
 			Moves.Add(*NextTile);
 		}
 	}

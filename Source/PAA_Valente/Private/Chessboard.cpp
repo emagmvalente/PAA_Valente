@@ -38,6 +38,7 @@ void AChessboard::BeginPlay()
 
 	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 	GeneratePositionsFromString(GeneratingString);
+	HistoryOfMoves.Add(GeneratingString);
 
 	// Setting the status of the tiles
 	for (int32 i = 0; i < 16; i++)

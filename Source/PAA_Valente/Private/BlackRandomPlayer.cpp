@@ -44,7 +44,6 @@ void ABlackRandomPlayer::OnTurn()
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FTimerHandle TimerHandle;
 	APiece* ChosenPiece = nullptr;
 
 	do
@@ -59,8 +58,7 @@ void ABlackRandomPlayer::OnTurn()
 	} while (ChosenPiece->Moves.Num() == 0);
 	
 	// Getting previous tile
-	FVector PreviousLocation = ChosenPiece->RelativePosition();
-	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(PreviousLocation.X, PreviousLocation.Y));
+	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(ChosenPiece->RelativePosition().X, ChosenPiece->RelativePosition().Y));
 
 	// Merging the array of moves and the array of eatable pieces
 	TArray MovesAndEatablePieces = ChosenPiece->Moves;
@@ -69,8 +67,7 @@ void ABlackRandomPlayer::OnTurn()
 	// Getting the new tile and the new position
 	int32 RandIdx1 = FMath::Rand() % MovesAndEatablePieces.Num();
 	ATile* DestinationTile = MovesAndEatablePieces[RandIdx1];
-	FVector2D RelativePositionOfTile = DestinationTile->GetGridPosition();
-	FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(RelativePositionOfTile.X, RelativePositionOfTile.Y);
+	FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(DestinationTile->GetGridPosition().X, DestinationTile->GetGridPosition().Y);
 	TilePositioning.Z = 10.0f;
 
 	// Moving the piece
