@@ -13,7 +13,6 @@
 #include "PlayerInterface.h"
 #include "EngineUtils.h"
 
-// Sets default values
 AChessboard::AChessboard()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -30,7 +29,6 @@ void AChessboard::OnConstruction(const FTransform& Transform)
 	NormalizedCellPadding = FMath::RoundToDouble(((TileSize + CellPadding) / TileSize) * 100) / 100;
 }
 
-// Called when the game starts or when spawned
 void AChessboard::BeginPlay()
 {
 	Super::BeginPlay();
