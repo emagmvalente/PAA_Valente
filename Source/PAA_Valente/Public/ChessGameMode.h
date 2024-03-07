@@ -19,6 +19,8 @@ class PAA_VALENTE_API AChessGameMode : public AGameModeBase
 
 public:
 	bool bIsGameOver;
+	bool bIsWhiteOnCheck;
+	bool bIsBlackOnCheck;
 
 	// TSubclassOf is a template class that provides UClass type safety.
 	UPROPERTY(EditDefaultsOnly)
@@ -36,6 +38,7 @@ public:
 	virtual void BeginPlay() override;
 
 	void SetKings();
+	void VerifyCheck();
 
 	// called at the end of the game turn
 	void TurnPlayer(IPlayerInterface* Player);

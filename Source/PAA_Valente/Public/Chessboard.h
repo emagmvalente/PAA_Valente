@@ -25,6 +25,7 @@ public:
 	// Array of white pieces and black pieces currently on the board
 	TArray<APiece*> WhitePieces;
 	TArray<APiece*> BlackPieces;
+	TArray<APiece*> Kings;
 
 	// History of old moves for replays
 	TArray<FString> HistoryOfMoves;

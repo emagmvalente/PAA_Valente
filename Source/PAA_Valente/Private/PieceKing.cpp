@@ -56,7 +56,7 @@ void APieceKing::PossibleMoves()
 			continue;
 		}
 		// Next tile occupied by an enemy piece case
-		else if (NextTile != nullptr && !IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED)
+		else if (NextTile != nullptr && !IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
 		{
 			EatablePieces.Add(*NextTile);
 		}

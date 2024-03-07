@@ -45,24 +45,32 @@ void ABlackRandomPlayer::OnTurn()
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	APiece* ChosenPiece = nullptr;
+	TArray<ATile*> MovesAndEatablePieces;
+
+	if (GameMode->bIsBlackOnCheck)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Black is on Check!"));
+	}
 
 	do
 	{
+		MovesAndEatablePieces.Empty();
+
 		// Picking a random piece
 		int32 RandIdx0 = FMath::Rand() % GameMode->CB->BlackPieces.Num();
 		ChosenPiece = GameMode->CB->BlackPieces[RandIdx0];
 
 		// Calculate piece's possible moves.
 		ChosenPiece->PossibleMoves();
+		ChosenPiece->FilterOnlyLegalMoves();
 
-	} while (ChosenPiece->Moves.Num() == 0);
+		MovesAndEatablePieces = ChosenPiece->Moves;
+		MovesAndEatablePieces.Append(ChosenPiece->EatablePieces);
+
+	} while (MovesAndEatablePieces.Num() == 0);
 	
 	// Getting previous tile
 	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(ChosenPiece->RelativePosition().X, ChosenPiece->RelativePosition().Y));
-
-	// Merging the array of moves and the array of eatable pieces
-	TArray MovesAndEatablePieces = ChosenPiece->Moves;
-	MovesAndEatablePieces.Append(ChosenPiece->EatablePieces);
 
 	// Getting the new tile and the new position
 	int32 RandIdx1 = FMath::Rand() % MovesAndEatablePieces.Num();
@@ -78,7 +86,7 @@ void ABlackRandomPlayer::OnTurn()
 	}
 
 	// If it's an eating move, then delete the white piece
-	if (DestinationTile->GetTileStatus() == ETileStatus::OCCUPIED && DestinationTile->GetOccupantColor() == EOccupantColor::W)
+	if (DestinationTile->GetOccupantColor() == EOccupantColor::W)
 	{
 		// Search the white piece who occupies the tile and capture it
 		for (int32 i = 0; i < GameMode->CB->WhitePieces.Num(); ++i)
@@ -92,9 +100,7 @@ void ABlackRandomPlayer::OnTurn()
 	}
 
 	// Setting the actual tile occupied by a black, setting the old one empty
-	(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
 	(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
-	DestinationTile->SetTileStatus(ETileStatus::OCCUPIED);
 	DestinationTile->SetOccupantColor(EOccupantColor::B);
 
 	// Generate the FEN string and add it to the history of moves for replays

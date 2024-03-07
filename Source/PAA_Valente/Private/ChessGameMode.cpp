@@ -14,6 +14,8 @@ AChessGameMode::AChessGameMode()
 	PlayerControllerClass = AChessPlayerController::StaticClass();
 	FieldSize = 8;
 	bIsGameOver = false;
+	bIsWhiteOnCheck = false;
+	bIsBlackOnCheck = false;
 }
 
 void AChessGameMode::BeginPlay()
@@ -48,38 +50,49 @@ void AChessGameMode::BeginPlay()
 
 void AChessGameMode::SetKings()
 {
-	APiece* WhiteKing = nullptr;
-	APiece* BlackKing = nullptr;
-
-	int32 InitNumberOfPieces = 16;
-
 	// Finds WhiteKing
-	for (int32 i = 0; i < InitNumberOfPieces; i++)
+	for (APiece* WhitePiece : CB->WhitePieces)
 	{
-		if (Cast<APieceKing>(CB->WhitePieces[i]))
+		if (Cast<APieceKing>(WhitePiece))
 		{
-			WhiteKing = CB->WhitePieces[i];
+			CB->Kings[0] = WhitePiece;
 			break;
 		}
 	}
 	// Finds BlackKing
-	for (int32 i = 0; i < InitNumberOfPieces; i++)
+	for (APiece* BlackPiece : CB->BlackPieces)
 	{
-		if (Cast<APieceKing>(CB->BlackPieces[i]))
+		if (Cast<APieceKing>(BlackPiece))
 		{
-			BlackKing = CB->BlackPieces[i];
+			CB->Kings[1] = BlackPiece;
+			break;
+		}
+	}
+}
+
+void AChessGameMode::VerifyCheck()
+{
+	ATile** WhiteKingTile = CB->TileMap.Find(FVector2D(CB->Kings[0]->RelativePosition().X, CB->Kings[0]->RelativePosition().Y));
+	ATile** BlackKingTile = CB->TileMap.Find(FVector2D(CB->Kings[1]->RelativePosition().X, CB->Kings[1]->RelativePosition().Y));
+	
+	for (APiece* WhitePiece : CB->WhitePieces)
+	{
+		WhitePiece->PossibleMoves();
+		if (WhitePiece->EatablePieces.Contains(*BlackKingTile))
+		{
+			bIsBlackOnCheck = true;
 			break;
 		}
 	}
 
-	// Sets the enemy king for each piece
-	for (int32 i = 0; i < InitNumberOfPieces; i++)
+	for (APiece* BlackPiece : CB->BlackPieces)
 	{
-		CB->WhitePieces[i]->WhiteKing = WhiteKing;
-		CB->WhitePieces[i]->BlackKing = BlackKing;
-
-		CB->BlackPieces[i]->WhiteKing = WhiteKing;
-		CB->BlackPieces[i]->BlackKing = BlackKing;
+		BlackPiece->PossibleMoves();
+		if (BlackPiece->EatablePieces.Contains(*WhiteKingTile))
+		{
+			bIsWhiteOnCheck = true;
+			break;
+		}
 	}
 }
 
@@ -90,10 +103,12 @@ void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
 
 	if (Player->PlayerNumber == 0)
 	{
+		VerifyCheck();
 		AIPlayer->OnTurn();
 	}
 	else if (Player->PlayerNumber == 1)
 	{
+		VerifyCheck();
 		HumanPlayer->OnTurn();
 	}
 }

@@ -53,7 +53,7 @@ void APieceKnight::PossibleMoves()
 		{
 			continue;
 		}
-		else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED)
+		else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
 		{
 			EatablePieces.Add(*NextTile);
 			continue;

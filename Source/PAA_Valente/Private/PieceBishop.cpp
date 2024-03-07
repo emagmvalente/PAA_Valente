@@ -55,11 +55,11 @@ void APieceBishop::PossibleMoves()
 		{
 			if (NextTile != nullptr)
 			{
-				if ((*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
+				if ((*NextTile)->GetOccupantColor() == EOccupantColor::E)
 				{
 					Moves.Add((*NextTile));
 				}
-				else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED)
+				else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
 				{
 					EatablePieces.Add(*NextTile);
 					break;

@@ -56,6 +56,7 @@ void APiece::ColorPossibleMoves()
 	// Loading the red material for eating
 
 	PossibleMoves();
+	FilterOnlyLegalMoves();
 
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
@@ -103,4 +104,69 @@ bool APiece::IsSameColorAsTileOccupant(ATile* Tile)
 		return true;
 	}
 	return false;
+}
+
+void APiece::FilterOnlyLegalMoves()
+{
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	TArray<ATile*> MovesAndEatablePieces = Moves;
+	MovesAndEatablePieces.Append(EatablePieces);
+
+	ATile** PreviousTile = GameMode->CB->TileMap.Find(FVector2D(RelativePosition().X, RelativePosition().Y));
+
+	if (Color == EColor::W)
+	{
+		(*PreviousTile)->SetOccupantColor(EOccupantColor::E);
+		for (ATile* Move : MovesAndEatablePieces)
+		{
+			EOccupantColor ActualOccupantColor = Move->GetOccupantColor();
+			Move->SetOccupantColor(EOccupantColor::W);
+			GameMode->VerifyCheck();
+			if (GameMode->bIsWhiteOnCheck)
+			{
+				if (ActualOccupantColor == EOccupantColor::E)
+				{
+					Moves.Remove(Move);
+				}
+				else
+				{
+					EatablePieces.Remove(Move);
+				}
+			}
+			else
+			{
+				GameMode->bIsWhiteOnCheck = false;
+			}
+			Move->SetOccupantColor(ActualOccupantColor);
+		}
+		(*PreviousTile)->SetOccupantColor(EOccupantColor::W);
+	}
+	else
+	{
+		(*PreviousTile)->SetOccupantColor(EOccupantColor::E);
+		for (ATile* Move : MovesAndEatablePieces)
+		{
+			EOccupantColor ActualOccupantColor = Move->GetOccupantColor();
+			Move->SetOccupantColor(EOccupantColor::B);
+			GameMode->VerifyCheck();
+			if (GameMode->bIsBlackOnCheck)
+			{
+				if (ActualOccupantColor == EOccupantColor::E)
+				{
+					Moves.Remove(Move);
+				}
+				else
+				{
+					EatablePieces.Remove(Move);
+				}
+			}
+			else
+			{
+				GameMode->bIsBlackOnCheck = false;
+			}
+
+			Move->SetOccupantColor(ActualOccupantColor);
+		}
+		(*PreviousTile)->SetOccupantColor(EOccupantColor::B);
+	}
 }

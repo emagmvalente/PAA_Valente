@@ -53,6 +53,11 @@ void AWhitePlayer::PieceSelection()
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 	FString LastMoveDone = GameMode->CB->HistoryOfMoves.Last();
 
+	if (GameMode->bIsWhiteOnCheck)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("White is on Check!"));
+	}
+
 	// Detecting player's click
 	FHitResult Hit = FHitResult(ForceInit);
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
@@ -86,7 +91,6 @@ void AWhitePlayer::PieceSelection()
 				{
 					GameMode->CB->BlackPieces.Remove(PieceClicked);
 					PieceClicked->PieceCaptured();
-					(*TilePtr)->SetTileStatus(ETileStatus::EMPTY);
 					(*TilePtr)->SetOccupantColor(EOccupantColor::E);
 					TileSelection(*TilePtr);
 				}
@@ -110,7 +114,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(CPC->SelectedPieceToMove->RelativePosition().X, CPC->SelectedPieceToMove->RelativePosition().Y));
 	ATile** ActualTilePtr = GameMode->CB->TileMap.Find(CurrTile->GetGridPosition());
 
-	if (CurrTile->GetTileStatus() == ETileStatus::EMPTY)
+	if (CurrTile->GetOccupantColor() == EOccupantColor::E)
 	{
 		// If a tile is clicked, decolor possible moves
 		CPC->SelectedPieceToMove->DecolorPossibleMoves();
@@ -131,10 +135,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 		// Setting the actual tile occupied by a white, setting the old one empty
 		if (CPC->SelectedPieceToMove->RelativePosition() == FVector(CurrTile->GetGridPosition().X, CurrTile->GetGridPosition().Y, 10.f))
 		{
-			(*ActualTilePtr)->SetTileStatus(ETileStatus::OCCUPIED);
 			(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
-
-			(*PreviousTilePtr)->SetTileStatus(ETileStatus::EMPTY);
 			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
 
 			// Generate the FEN string and add it to the history of moves for replays

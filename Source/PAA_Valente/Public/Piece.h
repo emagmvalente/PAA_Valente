@@ -34,9 +34,6 @@ public:
 	TArray<ATile*> Moves;
 	TArray<ATile*> EatablePieces;
 
-	APiece* WhiteKing;
-	APiece* BlackKing;
-
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -55,5 +52,6 @@ public:
 	bool IsSameColorAsTileOccupant(ATile* Tile);
 
 	virtual void PossibleMoves() {};
+	void FilterOnlyLegalMoves();
 
 };

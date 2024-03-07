@@ -55,7 +55,7 @@ void APiecePawn::PossibleMoves()
 	ATile** NextTile = GameMode->CB->TileMap.Find(NextPosition);
 
 	// Movement logic
-	if ((*NextTile) != nullptr && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
+	if ((*NextTile) != nullptr && (*NextTile)->GetOccupantColor() == EOccupantColor::E)
 	{
 		// If is not pawn's first move, add only one tile in front of him
 		Moves.Add(*NextTile);
@@ -63,7 +63,7 @@ void APiecePawn::PossibleMoves()
 		NextTile = GameMode->CB->TileMap.Find(NextPosition);
 
 		// Else add another tile in front of him
-		if (bFirstMove && (*NextTile) != nullptr && (*NextTile)->GetTileStatus() == ETileStatus::EMPTY)
+		if (bFirstMove && (*NextTile) != nullptr && (*NextTile)->GetOccupantColor() == EOccupantColor::E)
 		{
 			Moves.Add(*NextTile);
 		}
@@ -74,7 +74,7 @@ void APiecePawn::PossibleMoves()
 	{
 		NextPosition = FVector2D(ActorLocation.X, ActorLocation.Y) + EatingDirection;
 		NextTile = GameMode->CB->TileMap.Find(NextPosition);
-		if (NextTile != nullptr && !IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED)
+		if (NextTile != nullptr && !IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
 		{
 			EatablePieces.Add(*NextTile);
 		}

@@ -20,6 +20,7 @@ AChessboard::AChessboard()
 	Size = 8;
 	TileSize = 120;
 	CellPadding = 0;
+	Kings.SetNum(2);
 }
 
 void AChessboard::OnConstruction(const FTransform& Transform)
@@ -42,31 +43,15 @@ void AChessboard::BeginPlay()
 	for (int32 i = 0; i < 16; i++)
 	{
 		TileArray[i]->SetOccupantColor(EOccupantColor::W);
-		TileArray[i]->SetTileStatus(ETileStatus::OCCUPIED);
 	}
 	for (int32 i = 63; i >= 48; i--)
 	{
 		TileArray[i]->SetOccupantColor(EOccupantColor::B);
-		TileArray[i]->SetTileStatus(ETileStatus::OCCUPIED);
 	}
 }
 
 void AChessboard::ResetField()
 {
-	/*
-		for (ATile* Obj : TileArray)
-		{
-			Obj->SetTileStatus(NOT_ASSIGNED, ETileStatus::EMPTY);
-		}
-
-		// send broadcast event to registered objects
-		OnResetEvent.Broadcast();
-
-		AGameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
-		GameMode->IsGameOver = false;
-		GameMode->MoveCounter = 0;
-		GameMode->ChoosePlayerAndStartGame();
-	*/
 }
 
 void AChessboard::GenerateField()
@@ -111,7 +96,7 @@ FString AChessboard::GenerateStringFromPositions()
 		for (int32 Col = 0; Col < 8; ++Col)
 		{
 			ATile** CurrentTile = TileMap.Find(FVector2D(Row, Col));
-			if ((*CurrentTile)->GetTileStatus() == ETileStatus::OCCUPIED && (*CurrentTile)->GetOccupantColor() == EOccupantColor::W)
+			if ((*CurrentTile)->GetOccupantColor() == EOccupantColor::W)
 			{
 				for (int32 i = 0; i < WhitePieces.Num(); ++i)
 				{
@@ -181,7 +166,7 @@ FString AChessboard::GenerateStringFromPositions()
 					}
 				}
 			}
-			else if ((*CurrentTile)->GetTileStatus() == ETileStatus::OCCUPIED && (*CurrentTile)->GetOccupantColor() == EOccupantColor::B)
+			else if ((*CurrentTile)->GetOccupantColor() == EOccupantColor::B)
 			{
 				for (int32 i = 0; i < BlackPieces.Num(); ++i)
 				{
@@ -279,7 +264,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 	for (int32 i = 0; i < TileArray.Num(); i++)
 	{
 		TileArray[i]->SetOccupantColor(EOccupantColor::E);
-		TileArray[i]->SetTileStatus(ETileStatus::EMPTY);
 	}
 	WhitePieces.Empty();
 	BlackPieces.Empty();
