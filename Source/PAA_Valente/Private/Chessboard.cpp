@@ -36,6 +36,7 @@ void AChessboard::BeginPlay()
 	GenerateField();
 
 	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
 	GeneratePositionsFromString(GeneratingString);
 	HistoryOfMoves.Add(GeneratingString);
 

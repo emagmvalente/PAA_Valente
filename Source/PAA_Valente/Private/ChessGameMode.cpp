@@ -70,28 +70,34 @@ void AChessGameMode::SetKings()
 	}
 }
 
-void AChessGameMode::VerifyCheck()
+void AChessGameMode::VerifyCheck(APiece* Piece)
 {
 	ATile** WhiteKingTile = CB->TileMap.Find(FVector2D(CB->Kings[0]->RelativePosition().X, CB->Kings[0]->RelativePosition().Y));
 	ATile** BlackKingTile = CB->TileMap.Find(FVector2D(CB->Kings[1]->RelativePosition().X, CB->Kings[1]->RelativePosition().Y));
 	
-	for (APiece* WhitePiece : CB->WhitePieces)
+	if (Piece->Color == EColor::B)
 	{
-		WhitePiece->PossibleMoves();
-		if (WhitePiece->EatablePieces.Contains(*BlackKingTile))
+		for (APiece* WhitePiece : CB->WhitePieces)
 		{
-			bIsBlackOnCheck = true;
-			break;
+			WhitePiece->PossibleMoves();
+			if (WhitePiece->EatablePieces.Contains(*BlackKingTile))
+			{
+				bIsBlackOnCheck = true;
+				break;
+			}
 		}
 	}
 
-	for (APiece* BlackPiece : CB->BlackPieces)
+	else if (Piece->Color == EColor::W)
 	{
-		BlackPiece->PossibleMoves();
-		if (BlackPiece->EatablePieces.Contains(*WhiteKingTile))
+		for (APiece* BlackPiece : CB->BlackPieces)
 		{
-			bIsWhiteOnCheck = true;
-			break;
+			BlackPiece->PossibleMoves();
+			if (BlackPiece->EatablePieces.Contains(*WhiteKingTile))
+			{
+				bIsWhiteOnCheck = true;
+				break;
+			}
 		}
 	}
 }
@@ -103,12 +109,12 @@ void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
 
 	if (Player->PlayerNumber == 0)
 	{
-		VerifyCheck();
+		VerifyCheck(CB->Kings[1]);
 		AIPlayer->OnTurn();
 	}
 	else if (Player->PlayerNumber == 1)
 	{
-		VerifyCheck();
+		VerifyCheck(CB->Kings[0]);
 		HumanPlayer->OnTurn();
 	}
 }

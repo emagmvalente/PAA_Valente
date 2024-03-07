@@ -38,7 +38,7 @@ public:
 	virtual void BeginPlay() override;
 
 	void SetKings();
-	void VerifyCheck();
+	void VerifyCheck(APiece* Piece);
 
 	// called at the end of the game turn
 	void TurnPlayer(IPlayerInterface* Player);

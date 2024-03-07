@@ -60,6 +60,10 @@ void APiece::ColorPossibleMoves()
 
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
+
+	FString MyDoubleString = FString::Printf(TEXT("%d"), EatablePieces.Num());
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, MyDoubleString);
+
 	for (int i = 0; i < Moves.Num(); i++)
 	{
 		Moves[i]->ChangeMaterial(LoadYellowMaterial);
@@ -111,6 +115,7 @@ void APiece::FilterOnlyLegalMoves()
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	TArray<ATile*> MovesAndEatablePieces = Moves;
 	MovesAndEatablePieces.Append(EatablePieces);
+	APiece* PieceToHide = nullptr;
 
 	ATile** PreviousTile = GameMode->CB->TileMap.Find(FVector2D(RelativePosition().X, RelativePosition().Y));
 
@@ -120,10 +125,23 @@ void APiece::FilterOnlyLegalMoves()
 		for (ATile* Move : MovesAndEatablePieces)
 		{
 			EOccupantColor ActualOccupantColor = Move->GetOccupantColor();
+			if (ActualOccupantColor == EOccupantColor::B)
+			{
+				for (APiece* BlackPiece : GameMode->CB->BlackPieces)
+				{
+					if (BlackPiece->RelativePosition() == FVector(Move->GetGridPosition().X, Move->GetGridPosition().Y, 10.f))
+					{
+						PieceToHide = BlackPiece;
+						break;
+					}
+				}
+				PieceToHide->SetActorHiddenInGame(true);
+			}
 			Move->SetOccupantColor(EOccupantColor::W);
-			GameMode->VerifyCheck();
+			GameMode->VerifyCheck(this);
 			if (GameMode->bIsWhiteOnCheck)
 			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("It would be check for whites"));
 				if (ActualOccupantColor == EOccupantColor::E)
 				{
 					Moves.Remove(Move);
@@ -138,6 +156,11 @@ void APiece::FilterOnlyLegalMoves()
 				GameMode->bIsWhiteOnCheck = false;
 			}
 			Move->SetOccupantColor(ActualOccupantColor);
+
+			if (PieceToHide != nullptr)
+			{
+				PieceToHide->SetActorHiddenInGame(false);
+			}
 		}
 		(*PreviousTile)->SetOccupantColor(EOccupantColor::W);
 	}
@@ -147,10 +170,23 @@ void APiece::FilterOnlyLegalMoves()
 		for (ATile* Move : MovesAndEatablePieces)
 		{
 			EOccupantColor ActualOccupantColor = Move->GetOccupantColor();
+			if (ActualOccupantColor == EOccupantColor::W)
+			{
+				for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+				{
+					if (WhitePiece->RelativePosition() == FVector(Move->GetGridPosition().X, Move->GetGridPosition().Y, 10.f))
+					{
+						PieceToHide = WhitePiece;
+						break;
+					}
+				}
+				PieceToHide->SetActorHiddenInGame(true);
+			}
 			Move->SetOccupantColor(EOccupantColor::B);
-			GameMode->VerifyCheck();
+			GameMode->VerifyCheck(this);
 			if (GameMode->bIsBlackOnCheck)
 			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("It would be check for blacks"));
 				if (ActualOccupantColor == EOccupantColor::E)
 				{
 					Moves.Remove(Move);
@@ -166,6 +202,11 @@ void APiece::FilterOnlyLegalMoves()
 			}
 
 			Move->SetOccupantColor(ActualOccupantColor);
+
+			if (PieceToHide != nullptr)
+			{
+				PieceToHide->SetActorHiddenInGame(false);
+			}
 		}
 		(*PreviousTile)->SetOccupantColor(EOccupantColor::B);
 	}
