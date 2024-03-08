@@ -52,6 +52,8 @@ FVector APiece::RelativePosition() const
 
 void APiece::ColorPossibleMoves()
 {
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+
 	// Loading the yellow material and changing the color for every move in moves
 	// Loading the red material for eating
 
@@ -61,7 +63,11 @@ void APiece::ColorPossibleMoves()
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
 
-	FString MyDoubleString = FString::Printf(TEXT("%d"), EatablePieces.Num());
+	UMaterialInterface* LoadE = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_E"));
+	UMaterialInterface* LoadB = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_B"));
+	UMaterialInterface* LoadW = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_W"));
+
+	FString MyDoubleString = FString::Printf(TEXT("Moves: %d, EatablePieces: %d"), Moves.Num(), EatablePieces.Num());
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, MyDoubleString);
 
 	for (int i = 0; i < Moves.Num(); i++)
@@ -71,6 +77,22 @@ void APiece::ColorPossibleMoves()
 	for (int i = 0; i < EatablePieces.Num(); i++)
 	{
 		EatablePieces[i]->ChangeMaterial(LoadRedMaterial);
+	}
+
+	for (ATile* Tile : GameMode->CB->TileArray)
+	{
+		if (Tile->GetOccupantColor() == EOccupantColor::E)
+		{
+			Tile->ChangeMaterial(LoadE);
+		}
+		else if (Tile->GetOccupantColor() == EOccupantColor::W)
+		{
+			Tile->ChangeMaterial(LoadW);
+		}
+		else
+		{
+			Tile->ChangeMaterial(LoadB);
+		}
 	}
 }
 
@@ -115,107 +137,81 @@ void APiece::FilterOnlyLegalMoves()
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	TArray<ATile*> MovesAndEatablePieces = Moves;
 	MovesAndEatablePieces.Append(EatablePieces);
-	APiece* PieceToHide = nullptr;
 
-	ATile** PreviousTile = GameMode->CB->TileMap.Find(FVector2D(RelativePosition().X, RelativePosition().Y));
+	ATile** StartTile = GameMode->CB->TileMap.Find(FVector2D(RelativePosition().X, RelativePosition().Y));
+
+	ATile** WhiteKingTile = GameMode->CB->TileMap.Find(FVector2D(GameMode->CB->Kings[0]->RelativePosition().X, GameMode->CB->Kings[0]->RelativePosition().Y));
+	ATile** BlackKingTile = GameMode->CB->TileMap.Find(FVector2D(GameMode->CB->Kings[1]->RelativePosition().X, GameMode->CB->Kings[1]->RelativePosition().Y));
 
 	if (Color == EColor::W)
 	{
-		(*PreviousTile)->SetOccupantColor(EOccupantColor::E);
+		(*StartTile)->SetOccupantColor(EOccupantColor::E);
 		for (ATile* Move : MovesAndEatablePieces)
 		{
 			EOccupantColor ActualOccupantColor = Move->GetOccupantColor();
-			if (ActualOccupantColor == EOccupantColor::B)
+			Move->SetOccupantColor(EOccupantColor::W);
+			for (APiece* BlackPiece : GameMode->CB->BlackPieces)
 			{
-				for (APiece* BlackPiece : GameMode->CB->BlackPieces)
+				BlackPiece->PossibleMoves();
+				if (BlackPiece->EatablePieces.Contains(*WhiteKingTile))
 				{
-					if (BlackPiece->RelativePosition() == FVector(Move->GetGridPosition().X, Move->GetGridPosition().Y, 10.f))
+					if (Moves.Contains(Move))
 					{
-						PieceToHide = BlackPiece;
-						PieceToHide->SetActorHiddenInGame(true);
-						GameMode->CB->BlackPieces.Remove(PieceToHide);
+						Moves.Remove(Move);
+						break;
+					}
+					else if (EatablePieces.Contains(Move))
+					{
+						EatablePieces.Remove(Move);
 						break;
 					}
 				}
-			}
-			Move->SetOccupantColor(EOccupantColor::W);
-			GameMode->VerifyCheck(this);
-			if (GameMode->bIsWhiteOnCheck)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("It would be check for whites"));
 				if (ActualOccupantColor == EOccupantColor::E)
 				{
-					Moves.Remove(Move);
+					Move->SetOccupantColor(EOccupantColor::E);
 				}
 				else
 				{
-					EatablePieces.Remove(Move);
+					Move->SetOccupantColor(EOccupantColor::B);
 				}
 			}
-			else
-			{
-				GameMode->bIsWhiteOnCheck = false;
-			}
-			Move->SetOccupantColor(ActualOccupantColor);
-
-			if (PieceToHide != nullptr)
-			{
-				GameMode->CB->BlackPieces.Add(PieceToHide);
-				PieceToHide->SetActorHiddenInGame(false);
-			}
 		}
-		(*PreviousTile)->SetOccupantColor(EOccupantColor::W);
+		(*StartTile)->SetOccupantColor(EOccupantColor::W);
 	}
-
-
 
 	else
 	{
-		(*PreviousTile)->SetOccupantColor(EOccupantColor::E);
+		(*StartTile)->SetOccupantColor(EOccupantColor::E);
 		for (ATile* Move : MovesAndEatablePieces)
 		{
 			EOccupantColor ActualOccupantColor = Move->GetOccupantColor();
-			if (ActualOccupantColor == EOccupantColor::W)
+			Move->SetOccupantColor(EOccupantColor::B);
+			for (APiece* WhitePiece : GameMode->CB->WhitePieces)
 			{
-				for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+				WhitePiece->PossibleMoves();
+				if (WhitePiece->EatablePieces.Contains(*BlackKingTile))
 				{
-					if (WhitePiece->RelativePosition() == FVector(Move->GetGridPosition().X, Move->GetGridPosition().Y, 10.f))
+					if (Moves.Contains(Move))
 					{
-						PieceToHide = WhitePiece;
-						PieceToHide->SetActorHiddenInGame(true);
-						GameMode->CB->WhitePieces.Remove(PieceToHide);
+						Moves.Remove(Move);
+						break;
+					}
+					else if (EatablePieces.Contains(Move))
+					{
+						EatablePieces.Remove(Move);
 						break;
 					}
 				}
-				PieceToHide->SetActorHiddenInGame(true);
-			}
-			Move->SetOccupantColor(EOccupantColor::B);
-			GameMode->VerifyCheck(this);
-			if (GameMode->bIsBlackOnCheck)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("It would be check for blacks"));
 				if (ActualOccupantColor == EOccupantColor::E)
 				{
-					Moves.Remove(Move);
+					Move->SetOccupantColor(EOccupantColor::E);
 				}
 				else
 				{
-					EatablePieces.Remove(Move);
+					Move->SetOccupantColor(EOccupantColor::W);
 				}
 			}
-			else
-			{
-				GameMode->bIsBlackOnCheck = false;
-			}
-
-			Move->SetOccupantColor(ActualOccupantColor);
-
-			if (PieceToHide != nullptr)
-			{
-				GameMode->CB->WhitePieces.Add(PieceToHide);
-				PieceToHide->SetActorHiddenInGame(false);
-			}
 		}
-		(*PreviousTile)->SetOccupantColor(EOccupantColor::B);
+		(*StartTile)->SetOccupantColor(EOccupantColor::B);
 	}
 }

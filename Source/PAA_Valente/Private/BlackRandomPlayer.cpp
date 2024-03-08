@@ -77,26 +77,28 @@ void ABlackRandomPlayer::OnTurn()
 	ATile* DestinationTile = MovesAndEatablePieces[RandIdx1];
 	FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(DestinationTile->GetGridPosition().X, DestinationTile->GetGridPosition().Y);
 	TilePositioning.Z = 10.0f;
+	APiece* PieceToCapture = nullptr;
+
+	// If it's an eating move, then delete the white piece
+	if (DestinationTile->GetOccupantColor() == EOccupantColor::W)
+	{
+		// Search the white piece who occupies the tile and capture it
+		for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+		{
+			if (WhitePiece->GetActorLocation() == TilePositioning)
+			{
+				GameMode->CB->WhitePieces.Remove(WhitePiece);
+				WhitePiece->PieceCaptured();
+				break;
+			}
+		}
+	}
 
 	// Moving the piece
 	ChosenPiece->SetActorLocation(TilePositioning);
 	if (Cast<APiecePawn>(ChosenPiece) && Cast<APiecePawn>(ChosenPiece)->bFirstMove == true)
 	{
 		Cast<APiecePawn>(ChosenPiece)->bFirstMove = false;
-	}
-
-	// If it's an eating move, then delete the white piece
-	if (DestinationTile->GetOccupantColor() == EOccupantColor::W)
-	{
-		// Search the white piece who occupies the tile and capture it
-		for (int32 i = 0; i < GameMode->CB->WhitePieces.Num(); ++i)
-		{
-			if (GameMode->CB->WhitePieces[i]->GetActorLocation() == TilePositioning)
-			{
-				GameMode->CB->WhitePieces[i]->PieceCaptured();
-				break;
-			}
-		}
 	}
 
 	// Setting the actual tile occupied by a black, setting the old one empty
