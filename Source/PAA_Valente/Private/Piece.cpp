@@ -132,10 +132,11 @@ void APiece::FilterOnlyLegalMoves()
 					if (BlackPiece->RelativePosition() == FVector(Move->GetGridPosition().X, Move->GetGridPosition().Y, 10.f))
 					{
 						PieceToHide = BlackPiece;
+						PieceToHide->SetActorHiddenInGame(true);
+						GameMode->CB->BlackPieces.Remove(PieceToHide);
 						break;
 					}
 				}
-				PieceToHide->SetActorHiddenInGame(true);
 			}
 			Move->SetOccupantColor(EOccupantColor::W);
 			GameMode->VerifyCheck(this);
@@ -159,11 +160,15 @@ void APiece::FilterOnlyLegalMoves()
 
 			if (PieceToHide != nullptr)
 			{
+				GameMode->CB->BlackPieces.Add(PieceToHide);
 				PieceToHide->SetActorHiddenInGame(false);
 			}
 		}
 		(*PreviousTile)->SetOccupantColor(EOccupantColor::W);
 	}
+
+
+
 	else
 	{
 		(*PreviousTile)->SetOccupantColor(EOccupantColor::E);
@@ -177,6 +182,8 @@ void APiece::FilterOnlyLegalMoves()
 					if (WhitePiece->RelativePosition() == FVector(Move->GetGridPosition().X, Move->GetGridPosition().Y, 10.f))
 					{
 						PieceToHide = WhitePiece;
+						PieceToHide->SetActorHiddenInGame(true);
+						GameMode->CB->WhitePieces.Remove(PieceToHide);
 						break;
 					}
 				}
@@ -205,6 +212,7 @@ void APiece::FilterOnlyLegalMoves()
 
 			if (PieceToHide != nullptr)
 			{
+				GameMode->CB->WhitePieces.Add(PieceToHide);
 				PieceToHide->SetActorHiddenInGame(false);
 			}
 		}

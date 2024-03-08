@@ -40,14 +40,25 @@ void AChessboard::BeginPlay()
 	GeneratePositionsFromString(GeneratingString);
 	HistoryOfMoves.Add(GeneratingString);
 
-	// Setting the status of the tiles
-	for (int32 i = 0; i < 16; i++)
+	for (ATile* Tile : TileArray)
 	{
-		TileArray[i]->SetOccupantColor(EOccupantColor::W);
-	}
-	for (int32 i = 63; i >= 48; i--)
-	{
-		TileArray[i]->SetOccupantColor(EOccupantColor::B);
+		for (APiece* WhitePiece : WhitePieces)
+		{
+			if (WhitePiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
+			{
+				Tile->SetOccupantColor(EOccupantColor::W);
+				break;
+			}
+		}
+
+		for (APiece* BlackPiece : BlackPieces)
+		{
+			if (BlackPiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
+			{
+				Tile->SetOccupantColor(EOccupantColor::B);
+				break;
+			}
+		}
 	}
 }
 

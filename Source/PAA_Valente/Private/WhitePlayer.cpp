@@ -62,6 +62,9 @@ void AWhitePlayer::PieceSelection()
 	FHitResult Hit = FHitResult(ForceInit);
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
 
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, GameMode->CB->GenerateStringFromPositions());
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, LastMoveDone);
+
 	if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() == LastMoveDone))
 	{
 		if (APiece* PieceClicked = Cast<APiece>(Hit.GetActor()))
