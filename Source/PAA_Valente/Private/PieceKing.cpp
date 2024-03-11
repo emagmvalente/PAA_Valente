@@ -8,7 +8,7 @@
 APieceKing::APieceKing()
 {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	// template function that creates a components
 	Scene = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
@@ -49,17 +49,21 @@ void APieceKing::PossibleMoves()
 	{
 		FVector2D NextPosition = TileLocation + Direction;
 		NextTile = GameMode->CB->TileMap.Find(NextPosition);
-		if (NextTile == nullptr || ((*NextTile)->GetTileStatus() == ETileStatus::OCCUPIED && (*NextTile)->GetOccupantColor() == EOccupantColor::W))
+
+		// Next tile not valid or occupied case
+		if (NextTile == nullptr || IsSameColorAsTileOccupant(*NextTile))
 		{
 			continue;
 		}
-		else if (NextTile != nullptr && !IsSameColorAsTileOccupant((*NextTile)) && (*NextTile)->GetTileStatus() != ETileStatus::EMPTY)
+		// Next tile occupied by an enemy piece case
+		else if (NextTile != nullptr && !IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
 		{
-			EatablePieces.Add((*NextTile));
+			EatablePieces.Add(*NextTile);
 		}
+		// Default case
 		else
 		{
-			Moves.Add((*NextTile));
+			Moves.Add(*NextTile);
 		}
 	}
 }

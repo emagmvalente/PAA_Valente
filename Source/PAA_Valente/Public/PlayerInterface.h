@@ -27,4 +27,6 @@ public:
 	virtual void OnTurn() {};
 	virtual void OnWin() {};
 	virtual void OnLose() {};
+	virtual bool IsCheckStatus() { return false; };
+
 };

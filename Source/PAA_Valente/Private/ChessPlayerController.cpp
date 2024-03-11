@@ -9,21 +9,12 @@ AChessPlayerController::AChessPlayerController()
 	bEnableClickEvents = true;
 }
 
-void AChessPlayerController::PickAPiece()
+void AChessPlayerController::ClickOnBoard()
 {
 	const auto HumanPlayer = Cast<AWhitePlayer>(GetPawn());
 	if (IsValid(HumanPlayer))
 	{
-		HumanPlayer->PieceClicked();
-	}
-}
-
-void AChessPlayerController::PickATile()
-{
-	const auto HumanPlayer = Cast<AWhitePlayer>(GetPawn());
-	if (IsValid(HumanPlayer))
-	{
-		HumanPlayer->TileSelection();
+		HumanPlayer->PieceSelection();
 	}
 }
 
@@ -44,7 +35,6 @@ void AChessPlayerController::SetupInputComponent()
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
 	{
-		EnhancedInputComponent->BindAction(PickAPieceAction, ETriggerEvent::Triggered, this, &AChessPlayerController::PickAPiece);
-		EnhancedInputComponent->BindAction(DropOnATileAction, ETriggerEvent::Triggered, this, &AChessPlayerController::PickATile);
+		EnhancedInputComponent->BindAction(Click, ETriggerEvent::Triggered, this, &AChessPlayerController::ClickOnBoard);
 	}
 }

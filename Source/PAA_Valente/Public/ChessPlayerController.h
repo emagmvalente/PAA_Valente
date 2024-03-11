@@ -26,15 +26,11 @@ public:
 	UInputMappingContext* ChessContext;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* PickAPieceAction;
-
-	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* DropOnATileAction;
+	UInputAction* Click;
 
 	APiece* SelectedPieceToMove = nullptr;
 
-	void PickAPiece();
-	void PickATile();
+	void ClickOnBoard();
 
 protected:
 	virtual void BeginPlay() override;

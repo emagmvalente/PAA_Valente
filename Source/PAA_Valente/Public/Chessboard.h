@@ -22,10 +22,13 @@ public:
 	UPROPERTY(Transient)
 	TArray<ATile*> TileArray;
 
+	// Array of white pieces and black pieces currently on the board
 	TArray<APiece*> WhitePieces;
 	TArray<APiece*> BlackPieces;
+	TArray<APiece*> Kings;
 
-	TArray<FString*> HistoryOfMoves;
+	// History of old moves for replays
+	TArray<FString> HistoryOfMoves;
 
 	// Given a position returns a tile
 	UPROPERTY(Transient)
@@ -90,9 +93,5 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	TArray<TCHAR> Alphabet = { 'B', 'K', 'N', 'P', 'Q', 'R', 'b', 'k', 'n', 'p', 'q', 'r',
-							  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/' };
-
 
 };

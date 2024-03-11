@@ -18,15 +18,9 @@ ATile::ATile()
 	SetRootComponent(Scene);
 	StaticMeshComponent->SetupAttachment(Scene);
 
-	Status = ETileStatus::EMPTY;
 	OccupantColor = EOccupantColor::E;
 	TileGridPosition = FVector2D(0, 0);
 
-}
-
-ETileStatus ATile::GetTileStatus()
-{
-	return Status;
 }
 
 EOccupantColor ATile::GetOccupantColor()
@@ -51,11 +45,6 @@ void ATile::ChangeMaterial(UMaterialInterface* NewMaterial)
 	{
 		MeshComponent->SetMaterial(0, NewMaterial);
 	}
-}
-
-void ATile::SetTileStatus(const ETileStatus TileStatus)
-{
-	Status = TileStatus;
 }
 
 void ATile::SetOccupantColor(const EOccupantColor Color)

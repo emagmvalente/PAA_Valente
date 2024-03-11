@@ -3,6 +3,7 @@
 
 #include "ChessGameMode.h"
 #include "WhitePlayer.h"
+#include "PieceKing.h"
 #include "ChessPlayerController.h"
 #include "BlackRandomPlayer.h"
 #include "EngineUtils.h"
@@ -13,6 +14,8 @@ AChessGameMode::AChessGameMode()
 	PlayerControllerClass = AChessPlayerController::StaticClass();
 	FieldSize = 8;
 	bIsGameOver = false;
+	bIsWhiteOnCheck = false;
+	bIsBlackOnCheck = false;
 }
 
 void AChessGameMode::BeginPlay()
@@ -41,7 +44,70 @@ void AChessGameMode::BeginPlay()
 	FVector CameraPos(CameraPosX, CameraPosX, 1000.0f);
 	HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
+	SetKings();
 	HumanPlayer->OnTurn();
+}
+
+void AChessGameMode::SetKings()
+{
+	// Finds WhiteKing
+	for (APiece* WhitePiece : CB->WhitePieces)
+	{
+		if (Cast<APieceKing>(WhitePiece))
+		{
+			CB->Kings[0] = WhitePiece;
+			break;
+		}
+	}
+	// Finds BlackKing
+	for (APiece* BlackPiece : CB->BlackPieces)
+	{
+		if (Cast<APieceKing>(BlackPiece))
+		{
+			CB->Kings[1] = BlackPiece;
+			break;
+		}
+	}
+}
+
+void AChessGameMode::VerifyCheck(APiece* Piece)
+{
+	ATile** WhiteKingTile = CB->TileMap.Find(FVector2D(CB->Kings[0]->RelativePosition().X, CB->Kings[0]->RelativePosition().Y));
+	ATile** BlackKingTile = CB->TileMap.Find(FVector2D(CB->Kings[1]->RelativePosition().X, CB->Kings[1]->RelativePosition().Y));
+	
+	if (Piece->Color == EColor::B)
+	{
+		for (APiece* WhitePiece : CB->WhitePieces)
+		{
+			WhitePiece->PossibleMoves();
+			if (WhitePiece->EatablePieces.Contains(*BlackKingTile))
+			{
+				bIsBlackOnCheck = true;
+				break;
+			}
+			else
+			{
+				bIsBlackOnCheck = false;
+			}
+		}
+	}
+
+	else if (Piece->Color == EColor::W)
+	{
+		for (APiece* BlackPiece : CB->BlackPieces)
+		{
+			BlackPiece->PossibleMoves();
+			if (BlackPiece->EatablePieces.Contains(*WhiteKingTile))
+			{
+				bIsWhiteOnCheck = true;
+				break;
+			}
+			else
+			{
+				bIsWhiteOnCheck = false;
+			}
+		}
+	}
 }
 
 void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
@@ -51,10 +117,12 @@ void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
 
 	if (Player->PlayerNumber == 0)
 	{
+		VerifyCheck(CB->Kings[1]);
 		AIPlayer->OnTurn();
 	}
 	else if (Player->PlayerNumber == 1)
 	{
+		VerifyCheck(CB->Kings[0]);
 		HumanPlayer->OnTurn();
 	}
 }

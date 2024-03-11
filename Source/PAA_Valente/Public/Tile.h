@@ -7,13 +7,6 @@
 #include "Tile.generated.h"
 
 UENUM()
-enum class ETileStatus : uint8
-{
-	EMPTY		UMETA(DisplayName = "Empty"),
-	OCCUPIED    UMETA(DisplayName = "Occupied"),
-};
-
-UENUM()
 enum class EOccupantColor : uint8
 {
 	W,
@@ -30,13 +23,7 @@ public:
 	// Sets default values for this actor's properties
 	ATile();
 
-	// get the tile status
-	ETileStatus GetTileStatus();
-
 	EOccupantColor GetOccupantColor();
-
-	// set the player owner and the status of a tile
-	void SetTileStatus(const ETileStatus TileStatus);
 
 	// set the player owner and the status of a tile
 	void SetOccupantColor(const EOccupantColor Color);
@@ -60,9 +47,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* StaticMeshComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	ETileStatus Status;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	EOccupantColor OccupantColor;

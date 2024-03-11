@@ -36,4 +36,6 @@ public:
 	virtual void Tick(float DeltaTime) override;	
 	
 	virtual void PossibleMoves() override;
+
+	void Escape();
 };

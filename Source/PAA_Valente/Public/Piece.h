@@ -52,4 +52,6 @@ public:
 	bool IsSameColorAsTileOccupant(ATile* Tile);
 
 	virtual void PossibleMoves() {};
+	void FilterOnlyLegalMoves();
+
 };

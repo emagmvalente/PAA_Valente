@@ -13,7 +13,6 @@
 #include "PlayerInterface.h"
 #include "EngineUtils.h"
 
-// Sets default values
 AChessboard::AChessboard()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -21,6 +20,7 @@ AChessboard::AChessboard()
 	Size = 8;
 	TileSize = 120;
 	CellPadding = 0;
+	Kings.SetNum(2);
 }
 
 void AChessboard::OnConstruction(const FTransform& Transform)
@@ -30,44 +30,40 @@ void AChessboard::OnConstruction(const FTransform& Transform)
 	NormalizedCellPadding = FMath::RoundToDouble(((TileSize + CellPadding) / TileSize) * 100) / 100;
 }
 
-// Called when the game starts or when spawned
 void AChessboard::BeginPlay()
 {
 	Super::BeginPlay();
 	GenerateField();
 
 	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-	GeneratePositionsFromString(GeneratingString);
 
-	// Setting the status of the tiles
-	for (int32 i = 0; i < 16; i++)
+	GeneratePositionsFromString(GeneratingString);
+	HistoryOfMoves.Add(GeneratingString);
+
+	for (ATile* Tile : TileArray)
 	{
-		TileArray[i]->SetOccupantColor(EOccupantColor::W);
-		TileArray[i]->SetTileStatus(ETileStatus::OCCUPIED);
-	}
-	for (int32 i = 63; i >= 48; i--)
-	{
-		TileArray[i]->SetOccupantColor(EOccupantColor::B);
-		TileArray[i]->SetTileStatus(ETileStatus::OCCUPIED);
+		for (APiece* WhitePiece : WhitePieces)
+		{
+			if (WhitePiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
+			{
+				Tile->SetOccupantColor(EOccupantColor::W);
+				break;
+			}
+		}
+
+		for (APiece* BlackPiece : BlackPieces)
+		{
+			if (BlackPiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
+			{
+				Tile->SetOccupantColor(EOccupantColor::B);
+				break;
+			}
+		}
 	}
 }
 
 void AChessboard::ResetField()
 {
-	/*
-		for (ATile* Obj : TileArray)
-		{
-			Obj->SetTileStatus(NOT_ASSIGNED, ETileStatus::EMPTY);
-		}
-
-		// send broadcast event to registered objects
-		OnResetEvent.Broadcast();
-
-		AGameMode* GameMode = Cast<AChess_GameMode>(GetWorld()->GetAuthGameMode());
-		GameMode->IsGameOver = false;
-		GameMode->MoveCounter = 0;
-		GameMode->ChoosePlayerAndStartGame();
-	*/
 }
 
 void AChessboard::GenerateField()
@@ -104,7 +100,169 @@ void AChessboard::GenerateField()
 
 FString AChessboard::GenerateStringFromPositions()
 {
-	return FString("Null");
+	FString ResultantString = TEXT("");
+
+	for (int32 Row = 7; Row >= 0; --Row)
+	{
+		int32 EmptyCount = 0;
+		for (int32 Col = 0; Col < 8; ++Col)
+		{
+			ATile** CurrentTile = TileMap.Find(FVector2D(Row, Col));
+			if ((*CurrentTile)->GetOccupantColor() == EOccupantColor::W)
+			{
+				for (int32 i = 0; i < WhitePieces.Num(); ++i)
+				{
+					FVector Location(Row, Col, 10.f);
+					APiece* PieceFound = WhitePieces[i];
+
+					if (Cast<APiecePawn>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('P');
+						break;
+					}
+					else if (Cast<APieceKing>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('K');
+						break;
+					}
+					else if (Cast<APieceKnight>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('N');
+						break;
+					}
+					else if (Cast<APieceQueen>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('Q');
+						break;
+					}
+					else if (Cast<APieceRook>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('R');
+						break;
+					}
+					else if (Cast<APieceBishop>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('B');
+						break;
+					}
+				}
+			}
+			else if ((*CurrentTile)->GetOccupantColor() == EOccupantColor::B)
+			{
+				for (int32 i = 0; i < BlackPieces.Num(); ++i)
+				{
+					FVector Location(Row, Col, 10.f);
+					APiece* PieceFound = BlackPieces[i];
+
+					if (Cast<APiecePawn>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('p');
+						break;
+					}
+					else if (Cast<APieceKing>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('k');
+						break;
+					}
+					else if (Cast<APieceKnight>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('n');
+						break;
+					}
+					else if (Cast<APieceQueen>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('q');
+						break;
+					}
+					else if (Cast<APieceRook>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('r');
+						break;
+					}
+					else if (Cast<APieceBishop>(PieceFound) && PieceFound->RelativePosition() == Location)
+					{
+						if (EmptyCount > 0)
+						{
+							ResultantString.AppendInt(EmptyCount);
+							EmptyCount = 0;
+						}
+						ResultantString.AppendChar('b');
+						break;
+					}
+				}
+			}
+			else
+			{
+				++EmptyCount;
+			}
+		}
+		if (EmptyCount > 0)
+		{
+			ResultantString.AppendInt(EmptyCount);
+		}
+		if (Row > 0)
+		{
+			ResultantString.AppendChar('/');
+		}
+	}
+
+	return ResultantString;
 }
 
 void AChessboard::GeneratePositionsFromString(FString& String)
@@ -118,7 +276,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 	for (int32 i = 0; i < TileArray.Num(); i++)
 	{
 		TileArray[i]->SetOccupantColor(EOccupantColor::E);
-		TileArray[i]->SetTileStatus(ETileStatus::EMPTY);
 	}
 	WhitePieces.Empty();
 	BlackPieces.Empty();
@@ -132,12 +289,12 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 	UMaterialInterface* LoadBlackRook = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BRook"));
 
 	// Blueprint declarations
-	UBlueprint* PawnsBlueprint;
-	UBlueprint* BishopBlueprint;
-	UBlueprint* KingBlueprint;
-	UBlueprint* QueenBlueprint;
-	UBlueprint* KnightBlueprint;
-	UBlueprint* RookBlueprint;
+	UBlueprint* PawnsBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Pawn"));
+	UBlueprint* BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
+	UBlueprint* KingBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_King"));
+	UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
+	UBlueprint* KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
+	UBlueprint* RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
 
 	// Rows and Columns indexes
 	int32 Row = 7;
@@ -149,13 +306,13 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 		TCHAR Char = String[i];
 
 		// Slash case
-		if (Char == '/') // Slash indicates the end of a row
+		if (Char == '/')
 		{
 			--Row; // Move to the next row
 			Col = 0; // Reset the column
 		}
 		// Digit case
-		else if (FChar::IsDigit(Char)) // Digit indicates empty squares
+		else if (FChar::IsDigit(Char))
 		{
 			if (Char - '0' > 8)
 			{
@@ -164,11 +321,10 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			}
 			Col += Char - '0'; // Increment the column by the number of empty squares
 		}
-		// Letter case
-		else // Piece character
+		// Char case
+		else
 		{
 			APiece* Obj = nullptr;
-
 			FVector Location = AChessboard::GetRelativeLocationByXYPosition(Row, Col);
 			Location.Z = 10.f;
 
@@ -177,7 +333,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			{
 			// WHITE PIECES
 			case 'P':
-				PawnsBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Pawn"));
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
@@ -185,7 +340,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				break;
 
 			case 'N':
-				KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
@@ -193,7 +347,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				break;
 
 			case 'B':
-				BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
 				Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
@@ -201,7 +354,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				break;
 
 			case 'R':
-				RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
@@ -209,7 +361,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				break;
 
 			case 'Q':
-				QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
@@ -217,7 +368,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				break;
 
 			case 'K':
-				KingBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_King"));
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
@@ -227,17 +377,15 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			
 			// BLACK PIECES
 			case 'p':
-				PawnsBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Pawn"));
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
-
+				
 				Obj->ChangeMaterial(LoadBlackPawn);
 
 				BlackPieces.Add(Obj);
 				break;
 
 			case 'n':
-				KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
 
@@ -247,7 +395,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				break;
 
 			case 'b':
-				BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
 				Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
 
@@ -257,7 +404,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				break;
 
 			case 'r':
-				RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
 
@@ -267,7 +413,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				break;
 
 			case 'q':
-				QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
 
@@ -277,7 +422,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				break;
 
 			case 'k':
-				KingBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_King"));
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
 
@@ -285,7 +429,6 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 
 				BlackPieces.Add(Obj);
 				break;
-
 
 			default:
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Invalid String."));
