@@ -69,11 +69,12 @@ void AWhitePlayer::PieceSelection()
 	{
 		if (APiece* PieceClicked = Cast<APiece>(Hit.GetActor()))
 		{
-			// Calculate moves and color the tiles
+			/* Calculate moves and color the tiles
 			if (CPC->SelectedPieceToMove != nullptr)
 			{
 				CPC->SelectedPieceToMove->ColorPossibleMoves();
 			}
+			*/
 
 			// Ally Piece
 			if (PieceClicked->Color == EColor::W)

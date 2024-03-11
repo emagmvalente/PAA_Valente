@@ -85,6 +85,10 @@ void AChessGameMode::VerifyCheck(APiece* Piece)
 				bIsBlackOnCheck = true;
 				break;
 			}
+			else
+			{
+				bIsBlackOnCheck = false;
+			}
 		}
 	}
 
@@ -97,6 +101,10 @@ void AChessGameMode::VerifyCheck(APiece* Piece)
 			{
 				bIsWhiteOnCheck = true;
 				break;
+			}
+			else
+			{
+				bIsWhiteOnCheck = false;
 			}
 		}
 	}
