@@ -6,6 +6,7 @@
 #include "PieceKing.h"
 #include "ChessPlayerController.h"
 #include "BlackRandomPlayer.h"
+#include "PlayerInterface.h"
 #include "EngineUtils.h"
 
 AChessGameMode::AChessGameMode()
@@ -110,6 +111,38 @@ void AChessGameMode::VerifyCheck(APiece* Piece)
 	}
 }
 
+void AChessGameMode::VerifyWin()
+{
+	for (APiece* WhitePiece : CB->WhitePieces)
+	{
+		WhitePiece->PossibleMoves();
+		WhitePiece->FilterOnlyLegalMoves();
+		if (WhitePiece->Moves.Num() > 0 || WhitePiece->EatablePieces.Num() > 0)
+		{
+			continue;
+		}
+		else
+		{
+			bIsGameOver = true;
+			break;
+		}
+	}
+	for (APiece* BlackPiece : CB->BlackPieces)
+	{
+		BlackPiece->PossibleMoves();
+		BlackPiece->FilterOnlyLegalMoves();
+		if (BlackPiece->Moves.Num() > 0 || BlackPiece->EatablePieces.Num() > 0)
+		{
+			continue;
+		}
+		else
+		{
+			bIsGameOver = true;
+			break;
+		}
+	}
+}
+
 void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
 {
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
@@ -118,11 +151,31 @@ void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
 	if (Player->PlayerNumber == 0)
 	{
 		VerifyCheck(CB->Kings[1]);
-		AIPlayer->OnTurn();
+		VerifyWin();
+		if (!bIsGameOver)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's not over!"));
+			AIPlayer->OnTurn();
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's over!"));
+			HumanPlayer->OnWin();
+		}
 	}
 	else if (Player->PlayerNumber == 1)
 	{
 		VerifyCheck(CB->Kings[0]);
-		HumanPlayer->OnTurn();
+		VerifyWin();
+		if (!bIsGameOver)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's not over!"));
+			HumanPlayer->OnTurn();
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's over!"));
+			AIPlayer->OnWin();
+		}
 	}
 }

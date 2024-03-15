@@ -31,6 +31,8 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	void PromoteThisPawn();
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

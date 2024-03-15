@@ -147,8 +147,8 @@ void APiece::FilterOnlyLegalMoves()
 	ATile** StartTile = GameMode->CB->TileMap.Find(Relative2DPosition());
 	
 	ATile** KingTile = nullptr;
-	EOccupantColor AllyColor;
-	EOccupantColor EnemyColor;
+	EOccupantColor AllyColor = EOccupantColor::E;
+	EOccupantColor EnemyColor = EOccupantColor::E;
 	TArray<APiece*> EnemyPieces;
 
 	// Assignments

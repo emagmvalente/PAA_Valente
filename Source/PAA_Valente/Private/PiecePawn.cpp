@@ -2,6 +2,8 @@
 
 
 #include "PiecePawn.h"
+#include "ChessPlayerController.h"
+#include "PawnPromotion.h"
 #include "EngineUtils.h"
 
 // Sets default values
@@ -24,6 +26,26 @@ void APiecePawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void APiecePawn::PromoteThisPawn()
+{
+	if (Relative2DPosition().X == 7 && Color == EColor::W)
+	{
+		AChessPlayerController* ChessPlayerController = Cast<AChessPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+
+		if (ChessPlayerController)
+		{
+			// Creating the widget
+			UPawnPromotion* WidgetInstance = CreateWidget<UPawnPromotion>(ChessPlayerController, UPawnPromotion::StaticClass());
+
+			if (WidgetInstance)
+			{
+				// Adding the widget to the viewport
+				WidgetInstance->AddToViewport();
+			}
+		}
+	}
 }
 
 // Called every frame
@@ -79,7 +101,7 @@ void APiecePawn::PossibleMoves()
 		}
 		else
 		{
-			break;
+			continue;
 		}
 	}
 }

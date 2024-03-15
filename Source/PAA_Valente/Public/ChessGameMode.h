@@ -39,6 +39,7 @@ public:
 
 	void SetKings();
 	void VerifyCheck(APiece* Piece);
+	void VerifyWin();
 
 	// called at the end of the game turn
 	void TurnPlayer(IPlayerInterface* Player);
