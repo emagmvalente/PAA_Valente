@@ -17,6 +17,7 @@ AChessGameMode::AChessGameMode()
 	bIsGameOver = false;
 	bIsWhiteOnCheck = false;
 	bIsBlackOnCheck = false;
+	bIsBlackThinking = false;
 }
 
 void AChessGameMode::BeginPlay()
@@ -111,35 +112,33 @@ void AChessGameMode::VerifyCheck(APiece* Piece)
 	}
 }
 
-void AChessGameMode::VerifyWin()
+void AChessGameMode::VerifyWin(APiece* Piece)
 {
-	for (APiece* WhitePiece : CB->WhitePieces)
+	int32 NumberOfPiecesWithoutLegalMoves = 0;
+	TArray<APiece*> AllyPieces;
+
+	if (Piece->Color == EColor::W)
 	{
-		WhitePiece->PossibleMoves();
-		WhitePiece->FilterOnlyLegalMoves();
-		if (WhitePiece->Moves.Num() > 0 || WhitePiece->EatablePieces.Num() > 0)
+		AllyPieces = CB->WhitePieces;
+	}
+	else
+	{
+		AllyPieces = CB->BlackPieces;
+	}
+
+	for (APiece* AllyPiece : AllyPieces)
+	{
+		AllyPiece->PossibleMoves();
+		AllyPiece->FilterOnlyLegalMoves();
+		if (AllyPiece->Moves.Num() == 0 && AllyPiece->EatablePieces.Num() == 0)
 		{
-			continue;
-		}
-		else
-		{
-			bIsGameOver = true;
-			break;
+			NumberOfPiecesWithoutLegalMoves++;
 		}
 	}
-	for (APiece* BlackPiece : CB->BlackPieces)
+
+	if (NumberOfPiecesWithoutLegalMoves == AllyPieces.Num())
 	{
-		BlackPiece->PossibleMoves();
-		BlackPiece->FilterOnlyLegalMoves();
-		if (BlackPiece->Moves.Num() > 0 || BlackPiece->EatablePieces.Num() > 0)
-		{
-			continue;
-		}
-		else
-		{
-			bIsGameOver = true;
-			break;
-		}
+		bIsGameOver = true;
 	}
 }
 
@@ -151,7 +150,7 @@ void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
 	if (Player->PlayerNumber == 0)
 	{
 		VerifyCheck(CB->Kings[1]);
-		VerifyWin();
+		VerifyWin(CB->Kings[1]);
 		if (!bIsGameOver)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's not over!"));
@@ -166,7 +165,7 @@ void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
 	else if (Player->PlayerNumber == 1)
 	{
 		VerifyCheck(CB->Kings[0]);
-		VerifyWin();
+		VerifyWin(CB->Kings[0]);
 		if (!bIsGameOver)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's not over!"));

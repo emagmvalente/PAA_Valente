@@ -11,6 +11,7 @@
 #include "PieceQueen.h"
 #include "PieceRook.h"
 #include "PlayerInterface.h"
+#include "WhitePlayer.h"
 #include "EngineUtils.h"
 
 AChessboard::AChessboard()
@@ -65,6 +66,47 @@ void AChessboard::BeginPlay()
 
 void AChessboard::ResetField()
 {
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	
+	if (!GameMode->bIsBlackThinking)
+	{
+		OnResetEvent.Broadcast();
+		HistoryOfMoves.Empty();
+
+		// Using FEN notation to generate every piece
+		FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+		GeneratePositionsFromString(GeneratingString);
+		// Using FEN notation for the replay mechanic too
+		HistoryOfMoves.Add(GeneratingString);
+
+		for (ATile* Tile : TileArray)
+		{
+			for (APiece* WhitePiece : WhitePieces)
+			{
+				if (WhitePiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
+				{
+					Tile->SetOccupantColor(EOccupantColor::W);
+					break;
+				}
+			}
+
+			for (APiece* BlackPiece : BlackPieces)
+			{
+				if (BlackPiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
+				{
+					Tile->SetOccupantColor(EOccupantColor::B);
+					break;
+				}
+			}
+		}
+		GameMode->SetKings();
+
+		GameMode->bIsGameOver = false;
+		GameMode->bIsWhiteOnCheck = false;
+		GameMode->bIsBlackOnCheck = false;
+		AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+		HumanPlayer->OnTurn();
+	}
 }
 
 void AChessboard::GenerateField()

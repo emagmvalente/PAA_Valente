@@ -21,6 +21,7 @@ public:
 	bool bIsGameOver;
 	bool bIsWhiteOnCheck;
 	bool bIsBlackOnCheck;
+	bool bIsBlackThinking;
 
 	// TSubclassOf is a template class that provides UClass type safety.
 	UPROPERTY(EditDefaultsOnly)
@@ -39,7 +40,7 @@ public:
 
 	void SetKings();
 	void VerifyCheck(APiece* Piece);
-	void VerifyWin();
+	void VerifyWin(APiece* Piece);
 
 	// called at the end of the game turn
 	void TurnPlayer(IPlayerInterface* Player);
