@@ -11,6 +11,7 @@
 #include "PieceQueen.h"
 #include "PieceRook.h"
 #include "PlayerInterface.h"
+#include "WhitePlayer.h"
 #include "EngineUtils.h"
 
 AChessboard::AChessboard()
@@ -35,9 +36,10 @@ void AChessboard::BeginPlay()
 	Super::BeginPlay();
 	GenerateField();
 
+	// Using FEN notation to generate every piece
 	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-
 	GeneratePositionsFromString(GeneratingString);
+	// Using FEN notation for the replay mechanic too
 	HistoryOfMoves.Add(GeneratingString);
 
 	for (ATile* Tile : TileArray)
@@ -64,6 +66,47 @@ void AChessboard::BeginPlay()
 
 void AChessboard::ResetField()
 {
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	
+	if (!GameMode->bIsBlackThinking)
+	{
+		OnResetEvent.Broadcast();
+		HistoryOfMoves.Empty();
+
+		// Using FEN notation to generate every piece
+		FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+		GeneratePositionsFromString(GeneratingString);
+		// Using FEN notation for the replay mechanic too
+		HistoryOfMoves.Add(GeneratingString);
+
+		for (ATile* Tile : TileArray)
+		{
+			for (APiece* WhitePiece : WhitePieces)
+			{
+				if (WhitePiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
+				{
+					Tile->SetOccupantColor(EOccupantColor::W);
+					break;
+				}
+			}
+
+			for (APiece* BlackPiece : BlackPieces)
+			{
+				if (BlackPiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
+				{
+					Tile->SetOccupantColor(EOccupantColor::B);
+					break;
+				}
+			}
+		}
+		GameMode->SetKings();
+
+		GameMode->bIsGameOver = false;
+		GameMode->bIsWhiteOnCheck = false;
+		GameMode->bIsBlackOnCheck = false;
+		AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+		HumanPlayer->OnTurn();
+	}
 }
 
 void AChessboard::GenerateField()
@@ -76,7 +119,6 @@ void AChessboard::GenerateField()
 		for (int32 y = 0; y < Size; y++)
 		{
 			FVector Location = AChessboard::GetRelativeLocationByXYPosition(x, y);
-			// La spawnactor fallisce se l'oggetto collide con un altro
 			ATile* Obj = GetWorld()->SpawnActor<ATile>(TileClass, Location, FRotator::ZeroRotator);
 
 			// Setting the color of the tile (b/w)
@@ -100,14 +142,19 @@ void AChessboard::GenerateField()
 
 FString AChessboard::GenerateStringFromPositions()
 {
+	// This function generates a FEN string depending on pieces' position 
 	FString ResultantString = TEXT("");
 
+	// FEN's logic counts from the last row to the first
 	for (int32 Row = 7; Row >= 0; --Row)
 	{
+		// Counter to increment if a tile's empty
 		int32 EmptyCount = 0;
 		for (int32 Col = 0; Col < 8; ++Col)
 		{
 			ATile** CurrentTile = TileMap.Find(FVector2D(Row, Col));
+
+			// White piece case
 			if ((*CurrentTile)->GetOccupantColor() == EOccupantColor::W)
 			{
 				for (int32 i = 0; i < WhitePieces.Num(); ++i)
@@ -178,6 +225,8 @@ FString AChessboard::GenerateStringFromPositions()
 					}
 				}
 			}
+
+			// Black piece case
 			else if ((*CurrentTile)->GetOccupantColor() == EOccupantColor::B)
 			{
 				for (int32 i = 0; i < BlackPieces.Num(); ++i)
@@ -247,15 +296,19 @@ FString AChessboard::GenerateStringFromPositions()
 					}
 				}
 			}
+
+			// Empty tile case
 			else
 			{
 				++EmptyCount;
 			}
 		}
+		// Append the number of empty tile before passing to the next row
 		if (EmptyCount > 0)
 		{
 			ResultantString.AppendInt(EmptyCount);
 		}
+		// Add a slash at the end of the row
 		if (Row > 0)
 		{
 			ResultantString.AppendChar('/');
@@ -308,8 +361,8 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 		// Slash case
 		if (Char == '/')
 		{
-			--Row; // Move to the next row
-			Col = 0; // Reset the column
+			--Row;
+			Col = 0;
 		}
 		// Digit case
 		else if (FChar::IsDigit(Char))
@@ -319,7 +372,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Invalid String."));
 				break;
 			}
-			Col += Char - '0'; // Increment the column by the number of empty squares
+			Col += Char - '0';
 		}
 		// Char case
 		else
@@ -435,7 +488,8 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				break;
 			}
 
-			++Col; // Move to the next column
+			// Move to the next column
+			++Col; 
 		}
 	}
 }

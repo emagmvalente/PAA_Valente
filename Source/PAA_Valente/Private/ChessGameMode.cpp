@@ -6,6 +6,7 @@
 #include "PieceKing.h"
 #include "ChessPlayerController.h"
 #include "BlackRandomPlayer.h"
+#include "PlayerInterface.h"
 #include "EngineUtils.h"
 
 AChessGameMode::AChessGameMode()
@@ -16,6 +17,7 @@ AChessGameMode::AChessGameMode()
 	bIsGameOver = false;
 	bIsWhiteOnCheck = false;
 	bIsBlackOnCheck = false;
+	bIsBlackThinking = false;
 }
 
 void AChessGameMode::BeginPlay()
@@ -110,6 +112,36 @@ void AChessGameMode::VerifyCheck(APiece* Piece)
 	}
 }
 
+void AChessGameMode::VerifyWin(APiece* Piece)
+{
+	int32 NumberOfPiecesWithoutLegalMoves = 0;
+	TArray<APiece*> AllyPieces;
+
+	if (Piece->Color == EColor::W)
+	{
+		AllyPieces = CB->WhitePieces;
+	}
+	else
+	{
+		AllyPieces = CB->BlackPieces;
+	}
+
+	for (APiece* AllyPiece : AllyPieces)
+	{
+		AllyPiece->PossibleMoves();
+		AllyPiece->FilterOnlyLegalMoves();
+		if (AllyPiece->Moves.Num() == 0 && AllyPiece->EatablePieces.Num() == 0)
+		{
+			NumberOfPiecesWithoutLegalMoves++;
+		}
+	}
+
+	if (NumberOfPiecesWithoutLegalMoves == AllyPieces.Num())
+	{
+		bIsGameOver = true;
+	}
+}
+
 void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
 {
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
@@ -118,11 +150,31 @@ void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
 	if (Player->PlayerNumber == 0)
 	{
 		VerifyCheck(CB->Kings[1]);
-		AIPlayer->OnTurn();
+		VerifyWin(CB->Kings[1]);
+		if (!bIsGameOver)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's not over!"));
+			AIPlayer->OnTurn();
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's over!"));
+			HumanPlayer->OnWin();
+		}
 	}
 	else if (Player->PlayerNumber == 1)
 	{
 		VerifyCheck(CB->Kings[0]);
-		HumanPlayer->OnTurn();
+		VerifyWin(CB->Kings[0]);
+		if (!bIsGameOver)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's not over!"));
+			HumanPlayer->OnTurn();
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's over!"));
+			AIPlayer->OnWin();
+		}
 	}
 }

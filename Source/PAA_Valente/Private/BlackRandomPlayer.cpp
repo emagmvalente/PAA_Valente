@@ -41,77 +41,87 @@ void ABlackRandomPlayer::OnTurn()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
-
-	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	APiece* ChosenPiece = nullptr;
-	TArray<ATile*> MovesAndEatablePieces;
-
 	if (GameMode->bIsBlackOnCheck)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Black is on Check!"));
 	}
 
-	do
-	{
-		MovesAndEatablePieces.Empty();
+	FTimerHandle TimerHandle;
 
-		// Picking a random piece
-		int32 RandIdx0 = FMath::Rand() % GameMode->CB->BlackPieces.Num();
-		ChosenPiece = GameMode->CB->BlackPieces[RandIdx0];
+	GameMode->bIsBlackThinking = true;
 
-		// Calculate piece's possible moves.
-		ChosenPiece->PossibleMoves();
-		ChosenPiece->FilterOnlyLegalMoves();
-
-		MovesAndEatablePieces = ChosenPiece->Moves;
-		MovesAndEatablePieces.Append(ChosenPiece->EatablePieces);
-
-	} while (MovesAndEatablePieces.Num() == 0);
-	
-	// Getting previous tile
-	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(ChosenPiece->RelativePosition().X, ChosenPiece->RelativePosition().Y));
-
-	// Getting the new tile and the new position
-	int32 RandIdx1 = FMath::Rand() % MovesAndEatablePieces.Num();
-	ATile* DestinationTile = MovesAndEatablePieces[RandIdx1];
-	FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(DestinationTile->GetGridPosition().X, DestinationTile->GetGridPosition().Y);
-	TilePositioning.Z = 10.0f;
-	APiece* PieceToCapture = nullptr;
-
-	// If it's an eating move, then delete the white piece
-	if (DestinationTile->GetOccupantColor() == EOccupantColor::W)
-	{
-		// Search the white piece who occupies the tile and capture it
-		for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
-			if (WhitePiece->GetActorLocation() == TilePositioning)
+			// Declarations
+
+			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+			APiece* ChosenPiece = nullptr;
+			TArray<ATile*> MovesAndEatablePieces;
+
+			do
 			{
-				GameMode->CB->WhitePieces.Remove(WhitePiece);
-				WhitePiece->PieceCaptured();
-				break;
+				MovesAndEatablePieces.Empty();
+
+				// Picking a random piece
+				int32 RandIdx0 = FMath::Rand() % GameModeCallback->CB->BlackPieces.Num();
+				ChosenPiece = GameModeCallback->CB->BlackPieces[RandIdx0];
+
+				// Calculate piece's possible moves.
+				ChosenPiece->PossibleMoves();
+				ChosenPiece->FilterOnlyLegalMoves();
+
+				MovesAndEatablePieces = ChosenPiece->Moves;
+				MovesAndEatablePieces.Append(ChosenPiece->EatablePieces);
+
+			} while (MovesAndEatablePieces.Num() == 0);
+
+			// Getting previous tile
+			ATile** PreviousTilePtr = GameModeCallback->CB->TileMap.Find(ChosenPiece->Relative2DPosition());
+
+			// Getting the new tile and the new position
+			int32 RandIdx1 = FMath::Rand() % MovesAndEatablePieces.Num();
+			ATile* DestinationTile = MovesAndEatablePieces[RandIdx1];
+			FVector TilePositioning = GameModeCallback->CB->GetRelativeLocationByXYPosition(DestinationTile->GetGridPosition().X, DestinationTile->GetGridPosition().Y);
+			TilePositioning.Z = 10.0f;
+			APiece* PieceToCapture = nullptr;
+
+			// If it's an eating move, then delete the white piece
+			if (DestinationTile->GetOccupantColor() == EOccupantColor::W)
+			{
+				// Search the white piece who occupies the tile and capture it
+				for (APiece* WhitePiece : GameModeCallback->CB->WhitePieces)
+				{
+					if (WhitePiece->GetActorLocation() == TilePositioning)
+					{
+						GameModeCallback->CB->WhitePieces.Remove(WhitePiece);
+						WhitePiece->PieceCaptured();
+						break;
+					}
+				}
 			}
-		}
-	}
 
-	// Moving the piece
-	ChosenPiece->SetActorLocation(TilePositioning);
-	if (Cast<APiecePawn>(ChosenPiece) && Cast<APiecePawn>(ChosenPiece)->bFirstMove == true)
-	{
-		Cast<APiecePawn>(ChosenPiece)->bFirstMove = false;
-	}
+			// Moving the piece
+			ChosenPiece->SetActorLocation(TilePositioning);
+			if (Cast<APiecePawn>(ChosenPiece) && Cast<APiecePawn>(ChosenPiece)->bFirstMove == true)
+			{
+				Cast<APiecePawn>(ChosenPiece)->bFirstMove = false;
+			}
 
-	// Setting the actual tile occupied by a black, setting the old one empty
-	(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
-	DestinationTile->SetOccupantColor(EOccupantColor::B);
+			// Setting the actual tile occupied by a black, setting the old one empty
+			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
+			DestinationTile->SetOccupantColor(EOccupantColor::B);
 
-	// Generate the FEN string and add it to the history of moves for replays
-	FString LastMove = GameMode->CB->GenerateStringFromPositions();
-	GameMode->CB->HistoryOfMoves.Add(LastMove);
+			// Generate the FEN string and add it to the history of moves for replays
+			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
+			GameModeCallback->CB->HistoryOfMoves.Add(LastMove);
 
-	// Turn ending
-	GameMode->TurnPlayer(this);
+			// Turn ending
+			GameModeCallback->bIsBlackThinking = false;
+			GameModeCallback->TurnPlayer(this);
 
+
+		}, 3, false);
 }
 
 void ABlackRandomPlayer::OnWin()

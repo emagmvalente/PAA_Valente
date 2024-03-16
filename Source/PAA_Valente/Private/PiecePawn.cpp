@@ -2,6 +2,7 @@
 
 
 #include "PiecePawn.h"
+#include "ChessPlayerController.h"
 #include "EngineUtils.h"
 
 // Sets default values
@@ -79,7 +80,7 @@ void APiecePawn::PossibleMoves()
 		}
 		else
 		{
-			break;
+			continue;
 		}
 	}
 }
