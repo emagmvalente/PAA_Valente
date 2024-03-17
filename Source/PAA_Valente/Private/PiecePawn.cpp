@@ -2,6 +2,10 @@
 
 
 #include "PiecePawn.h"
+#include "PieceQueen.h"
+#include "PieceRook.h"
+#include "PieceBishop.h"
+#include "PieceKnight.h"
 #include "ChessPlayerController.h"
 #include "EngineUtils.h"
 
@@ -25,6 +29,99 @@ void APiecePawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void APiecePawn::PromoteToQueen()
+{
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
+	FVector Location = GetActorLocation();
+
+	GameMode->CB->WhitePieces.Remove(this);
+	this->Destroy();
+
+	if (PawnPromotionWidgetInstance)
+	{
+		PawnPromotionWidgetInstance->RemoveFromViewport();
+	}
+	
+	APiece* Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+	Obj->Color = EColor::W;
+
+	GameMode->CB->WhitePieces.Add(Obj);
+}
+
+void APiecePawn::PromoteToRook()
+{
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	UBlueprint* RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
+	FVector Location = GetActorLocation();
+
+	GameMode->CB->WhitePieces.Remove(this);
+	this->Destroy();
+
+	if (PawnPromotionWidgetInstance)
+	{
+		PawnPromotionWidgetInstance->RemoveFromViewport();
+	}
+
+	APiece* Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+	Obj->Color = EColor::W;
+
+	GameMode->CB->WhitePieces.Add(Obj);
+}
+
+void APiecePawn::PromoteToBishop()
+{
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	UBlueprint* BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
+	FVector Location = GetActorLocation();
+
+	GameMode->CB->WhitePieces.Remove(this);
+	this->Destroy();
+
+	if (PawnPromotionWidgetInstance)
+	{
+		PawnPromotionWidgetInstance->RemoveFromViewport();
+	}
+
+	APiece* Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+	Obj->Color = EColor::W;
+
+	GameMode->CB->WhitePieces.Add(Obj);
+}
+
+void APiecePawn::PromoteToKnight()
+{
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	UBlueprint* KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
+	FVector Location = GetActorLocation();
+
+	GameMode->CB->WhitePieces.Remove(this);
+	this->Destroy();
+
+	if (PawnPromotionWidgetInstance)
+	{
+		PawnPromotionWidgetInstance->RemoveFromViewport();
+	}
+
+	APiece* Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+	Obj->Color = EColor::W;
+
+	GameMode->CB->WhitePieces.Add(Obj);
+}
+
+void APiecePawn::Promote()
+{
+	PawnPromotionWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), PawnPromotionWidgetClass);
+
+	if (Color == EColor::W && RelativePosition().X == 7)
+	{
+		if (PawnPromotionWidgetInstance)
+		{
+			PawnPromotionWidgetInstance->AddToViewport();
+		}
+	}
 }
 
 // Called every frame
@@ -65,7 +162,7 @@ void APiecePawn::PossibleMoves()
 				NextPosition += Direction;
 				NextTile = GameMode->CB->TileMap.Find(NextPosition);
 
-				if (Direction == Directions[0] && bFirstMove && (*NextTile)->GetOccupantColor() == EOccupantColor::E)
+				if (NextTile != nullptr && Direction == Directions[0] && bFirstMove && (*NextTile)->GetOccupantColor() == EOccupantColor::E)
 				{
 					Moves.Add(*NextTile);
 				}

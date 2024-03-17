@@ -120,9 +120,15 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 			ActorPositioning.Z = 10.0f;
 			CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);
 
-			if (Cast<APiecePawn>(CPC->SelectedPieceToMove) && Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove == true)
+			if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
 			{
-				Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove = false;
+				// Checks if the pawn could be promoted
+				Cast<APiecePawn>(CPC->SelectedPieceToMove)->Promote();
+				// Disables the first move variable if it's true
+				if (Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove == true)
+				{
+					Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove = false;
+				}
 			}
 		}
 
