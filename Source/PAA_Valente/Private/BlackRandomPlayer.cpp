@@ -103,9 +103,13 @@ void ABlackRandomPlayer::OnTurn()
 
 			// Moving the piece
 			ChosenPiece->SetActorLocation(TilePositioning);
-			if (Cast<APiecePawn>(ChosenPiece) && Cast<APiecePawn>(ChosenPiece)->bFirstMove == true)
+			if (Cast<APiecePawn>(ChosenPiece))
 			{
-				Cast<APiecePawn>(ChosenPiece)->bFirstMove = false;
+				Cast<APiecePawn>(ChosenPiece)->Promote();
+				if (Cast<APiecePawn>(ChosenPiece)->bFirstMove == true)
+				{
+					Cast<APiecePawn>(ChosenPiece)->bFirstMove = false;
+				}
 			}
 
 			// Setting the actual tile occupied by a black, setting the old one empty
@@ -118,7 +122,10 @@ void ABlackRandomPlayer::OnTurn()
 
 			// Turn ending
 			GameModeCallback->bIsBlackThinking = false;
-			GameModeCallback->TurnPlayer(this);
+			if (!Cast<APiecePawn>(ChosenPiece) || Cast<APiecePawn>(ChosenPiece)->Relative2DPosition().X != 0)
+			{
+				GameModeCallback->TurnPlayer();
+			}
 
 
 		}, 3, false);

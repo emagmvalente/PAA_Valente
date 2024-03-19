@@ -144,8 +144,11 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 
 			// Turn ending
 			IsMyTurn = false;
-			CPC->SelectedPieceToMove = nullptr;
-			GameMode->TurnPlayer(this);
+			if (!Cast<APiecePawn>(CPC->SelectedPieceToMove) || Cast<APiecePawn>(CPC->SelectedPieceToMove)->Relative2DPosition().X != 7)
+			{
+				CPC->SelectedPieceToMove = nullptr;
+				GameMode->TurnPlayer();
+			}
 		}
 	}
 }

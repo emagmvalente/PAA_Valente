@@ -18,6 +18,7 @@ AChessGameMode::AChessGameMode()
 	bIsWhiteOnCheck = false;
 	bIsBlackOnCheck = false;
 	bIsBlackThinking = false;
+	TurnFlag = 0;
 }
 
 void AChessGameMode::BeginPlay()
@@ -142,13 +143,14 @@ void AChessGameMode::VerifyWin(APiece* Piece)
 	}
 }
 
-void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
+void AChessGameMode::TurnPlayer()
 {
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
 
-	if (Player->PlayerNumber == 0)
+	if (TurnFlag == 0)
 	{
+		TurnFlag++;
 		VerifyCheck(CB->Kings[1]);
 		VerifyWin(CB->Kings[1]);
 		if (!bIsGameOver)
@@ -162,8 +164,9 @@ void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
 			HumanPlayer->OnWin();
 		}
 	}
-	else if (Player->PlayerNumber == 1)
+	else if (TurnFlag == 1)
 	{
+		TurnFlag--;
 		VerifyCheck(CB->Kings[0]);
 		VerifyWin(CB->Kings[0]);
 		if (!bIsGameOver)

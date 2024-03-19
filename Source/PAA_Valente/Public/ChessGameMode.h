@@ -23,6 +23,8 @@ public:
 	bool bIsBlackOnCheck;
 	bool bIsBlackThinking;
 
+	int32 TurnFlag;
+
 	// TSubclassOf is a template class that provides UClass type safety.
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AChessboard> CBClass;
@@ -43,6 +45,6 @@ public:
 	void VerifyWin(APiece* Piece);
 
 	// called at the end of the game turn
-	void TurnPlayer(IPlayerInterface* Player);
+	void TurnPlayer();
 
 };

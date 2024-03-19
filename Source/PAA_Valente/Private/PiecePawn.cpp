@@ -46,9 +46,21 @@ void APiecePawn::PromoteToQueen()
 	}
 	
 	APiece* Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-	Obj->Color = EColor::W;
+	if (Color == EColor::W)
+	{
+		Obj->Color = EColor::W;
+		GameMode->CB->WhitePieces.Add(Obj);
+	}
+	else if (Color == EColor::B)
+	{
+		UMaterialInterface* LoadBlackQueen = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BQueen"));
+		Obj->ChangeMaterial(LoadBlackQueen);
+		Obj->Color = EColor::B;
+		GameMode->CB->BlackPieces.Add(Obj);
+	}
 
 	GameMode->CB->WhitePieces.Add(Obj);
+	GameMode->TurnPlayer();
 }
 
 void APiecePawn::PromoteToRook()
@@ -66,9 +78,21 @@ void APiecePawn::PromoteToRook()
 	}
 
 	APiece* Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-	Obj->Color = EColor::W;
+	if (Color == EColor::W)
+	{
+		Obj->Color = EColor::W;
+		GameMode->CB->WhitePieces.Add(Obj);
+	}
+	else if (Color == EColor::B)
+	{
+		UMaterialInterface* LoadBlackRook = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BRook"));
+		Obj->ChangeMaterial(LoadBlackRook);
+		Obj->Color = EColor::B;
+		GameMode->CB->BlackPieces.Add(Obj);
+	}
 
 	GameMode->CB->WhitePieces.Add(Obj);
+	GameMode->TurnPlayer();
 }
 
 void APiecePawn::PromoteToBishop()
@@ -86,9 +110,21 @@ void APiecePawn::PromoteToBishop()
 	}
 
 	APiece* Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-	Obj->Color = EColor::W;
+	if (Color == EColor::W)
+	{
+		Obj->Color = EColor::W;
+		GameMode->CB->WhitePieces.Add(Obj);
+	}
+	else if (Color == EColor::B)
+	{
+		UMaterialInterface* LoadBlackBishop = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BBishop"));
+		Obj->ChangeMaterial(LoadBlackBishop);
+		Obj->Color = EColor::B;
+		GameMode->CB->BlackPieces.Add(Obj);
+	}
 
 	GameMode->CB->WhitePieces.Add(Obj);
+	GameMode->TurnPlayer();
 }
 
 void APiecePawn::PromoteToKnight()
@@ -106,9 +142,21 @@ void APiecePawn::PromoteToKnight()
 	}
 
 	APiece* Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-	Obj->Color = EColor::W;
 
-	GameMode->CB->WhitePieces.Add(Obj);
+	if (Color == EColor::W)
+	{
+		Obj->Color = EColor::W;
+		GameMode->CB->WhitePieces.Add(Obj);
+	}
+	else if (Color == EColor::B)
+	{
+		UMaterialInterface* LoadBlackKnight = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKnight"));
+		Obj->ChangeMaterial(LoadBlackKnight);
+		Obj->Color = EColor::B;
+		GameMode->CB->BlackPieces.Add(Obj);
+	}
+
+	GameMode->TurnPlayer();
 }
 
 void APiecePawn::Promote()
@@ -120,6 +168,29 @@ void APiecePawn::Promote()
 		if (PawnPromotionWidgetInstance)
 		{
 			PawnPromotionWidgetInstance->AddToViewport();
+		}
+	}
+
+	else if (Color == EColor::B && RelativePosition().X == 0)
+	{
+		int32 RandIdx0 = FMath::Rand() % 4;
+
+		switch (RandIdx0)
+		{
+			case 0:
+				PromoteToQueen();
+				break;
+			case 1:
+				PromoteToRook();
+				break;
+			case 2:
+				PromoteToBishop();
+				break;
+			case 3:
+				PromoteToKnight();
+				break;
+			default: 
+				return;
 		}
 	}
 }
