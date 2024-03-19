@@ -69,29 +69,6 @@ void APiece::ColorPossibleMoves()
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
 
-	UMaterialInterface* LoadE = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_E"));
-	UMaterialInterface* LoadB = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_B"));
-	UMaterialInterface* LoadW = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_W"));
-
-	FString MyDoubleString = FString::Printf(TEXT("Moves: %d, EatablePieces: %d"), Moves.Num(), EatablePieces.Num());
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *MyDoubleString);
-
-	for (ATile* Tile : GameMode->CB->TileArray)
-	{
-		if (Tile->GetOccupantColor() == EOccupantColor::E)
-		{
-			Tile->ChangeMaterial(LoadE);
-		}
-		else if (Tile->GetOccupantColor() == EOccupantColor::W)
-		{
-			Tile->ChangeMaterial(LoadW);
-		}
-		else
-		{
-			Tile->ChangeMaterial(LoadB);
-		}
-	}
-
 	for (int i = 0; i < Moves.Num(); i++)
 	{
 		Moves[i]->ChangeMaterial(LoadYellowMaterial);

@@ -4,6 +4,10 @@
 #include "ChessGameMode.h"
 #include "WhitePlayer.h"
 #include "PieceKing.h"
+#include "PieceQueen.h"
+#include "PieceRook.h"
+#include "PieceBishop.h"
+#include "PieceKnight.h"
 #include "ChessPlayerController.h"
 #include "BlackRandomPlayer.h"
 #include "PlayerInterface.h"
@@ -155,12 +159,10 @@ void AChessGameMode::TurnPlayer()
 		VerifyWin(CB->Kings[1]);
 		if (!bIsGameOver)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's not over!"));
 			AIPlayer->OnTurn();
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's over!"));
 			HumanPlayer->OnWin();
 		}
 	}
@@ -171,13 +173,147 @@ void AChessGameMode::TurnPlayer()
 		VerifyWin(CB->Kings[0]);
 		if (!bIsGameOver)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's not over!"));
 			HumanPlayer->OnTurn();
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's over!"));
 			AIPlayer->OnWin();
 		}
 	}
+}
+
+void AChessGameMode::PromoteToQueen()
+{
+	UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
+	APiece* Obj = nullptr;
+
+	FVector Location = PawnToPromote->GetActorLocation();
+
+	if (PawnToPromote->Color == EColor::W)
+	{
+		PawnPromotionWidgetInstance->RemoveFromParent();
+
+		CB->WhitePieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->Color = EColor::W;
+		CB->WhitePieces.Add(Obj);
+	}
+	else if (PawnToPromote->Color == EColor::B)
+	{
+		UMaterialInterface* LoadBlackQueen = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BQueen"));
+
+		CB->BlackPieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->ChangeMaterial(LoadBlackQueen);
+		Obj->Color = EColor::B;
+		CB->BlackPieces.Add(Obj);
+	}
+
+	TurnPlayer();
+}
+
+void AChessGameMode::PromoteToRook()
+{
+	UBlueprint* RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
+	APiece* Obj = nullptr;
+
+	FVector Location = PawnToPromote->GetActorLocation();
+
+	if (PawnToPromote->Color == EColor::W)
+	{
+		PawnPromotionWidgetInstance->RemoveFromParent();
+
+		CB->WhitePieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->Color = EColor::W;
+		CB->WhitePieces.Add(Obj);
+	}
+	else if (PawnToPromote->Color == EColor::B)
+	{
+		UMaterialInterface* LoadBlackRook = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BRook"));
+
+		CB->BlackPieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->ChangeMaterial(LoadBlackRook);
+		Obj->Color = EColor::B;
+		CB->BlackPieces.Add(Obj);
+	}
+
+	TurnPlayer();
+}
+
+void AChessGameMode::PromoteToBishop()
+{
+	UBlueprint* BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
+	APiece* Obj = nullptr;
+
+	FVector Location = PawnToPromote->GetActorLocation();
+
+	if (PawnToPromote->Color == EColor::W)
+	{
+		PawnPromotionWidgetInstance->RemoveFromParent();
+
+		CB->WhitePieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->Color = EColor::W;
+		CB->WhitePieces.Add(Obj);
+	}
+	else if (PawnToPromote->Color == EColor::B)
+	{
+		UMaterialInterface* LoadBlackBishop = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BBishop"));
+
+		CB->BlackPieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->ChangeMaterial(LoadBlackBishop);
+		Obj->Color = EColor::B;
+		CB->BlackPieces.Add(Obj);
+	}
+
+	TurnPlayer();
+}
+
+void AChessGameMode::PromoteToKnight()
+{
+	UBlueprint* KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
+	APiece* Obj = nullptr;
+
+	FVector Location = PawnToPromote->GetActorLocation();
+
+	if (PawnToPromote->Color == EColor::W)
+	{
+		PawnPromotionWidgetInstance->RemoveFromParent();
+
+		CB->WhitePieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->Color = EColor::W;
+		CB->WhitePieces.Add(Obj);
+	}
+	else if (PawnToPromote->Color == EColor::B)
+	{
+		UMaterialInterface* LoadBlackKnight = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKnight"));
+
+		CB->BlackPieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->ChangeMaterial(LoadBlackKnight);
+		Obj->Color = EColor::B;
+		CB->BlackPieces.Add(Obj);
+	}
+
+	TurnPlayer();
 }

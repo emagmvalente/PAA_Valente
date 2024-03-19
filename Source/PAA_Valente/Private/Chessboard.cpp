@@ -108,6 +108,10 @@ void AChessboard::ResetField()
 		AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 		HumanPlayer->OnTurn();
 	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Shhh! Black is thinking... Reset later."));
+	}
 }
 
 void AChessboard::GenerateField()
@@ -322,18 +326,21 @@ FString AChessboard::GenerateStringFromPositions()
 void AChessboard::GeneratePositionsFromString(FString& String)
 {
 	// Emptying old pieces (if there are any) to recreate the chosen move
-	for (int32 i = 0; i < WhitePieces.Num(); i++)
+	for (APiece* WhitePiece : WhitePieces)
 	{
-		WhitePieces[i]->Destroy();
-		BlackPieces[i]->Destroy();
+		WhitePiece->Destroy();
 	}
-	for (int32 i = 0; i < TileArray.Num(); i++)
+	for (APiece* BlackPiece : BlackPieces)
 	{
-		TileArray[i]->SetOccupantColor(EOccupantColor::E);
+		BlackPiece->Destroy();
+	}
+	for (ATile* Tile : TileArray)
+	{
+		Tile->SetOccupantColor(EOccupantColor::E);
 	}
 	WhitePieces.Empty();
 	BlackPieces.Empty();
-	
+
 	// Skin declarations
 	UMaterialInterface* LoadBlackBishop = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BBishop"));
 	UMaterialInterface* LoadBlackPawn = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BPawn"));

@@ -31,163 +31,38 @@ void APiecePawn::BeginPlay()
 	
 }
 
-void APiecePawn::PromoteToQueen()
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
-	FVector Location = GetActorLocation();
-
-	GameMode->CB->WhitePieces.Remove(this);
-	this->Destroy();
-
-	if (PawnPromotionWidgetInstance)
-	{
-		PawnPromotionWidgetInstance->RemoveFromViewport();
-	}
-	
-	APiece* Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-	if (Color == EColor::W)
-	{
-		Obj->Color = EColor::W;
-		GameMode->CB->WhitePieces.Add(Obj);
-	}
-	else if (Color == EColor::B)
-	{
-		UMaterialInterface* LoadBlackQueen = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BQueen"));
-		Obj->ChangeMaterial(LoadBlackQueen);
-		Obj->Color = EColor::B;
-		GameMode->CB->BlackPieces.Add(Obj);
-	}
-
-	GameMode->CB->WhitePieces.Add(Obj);
-	GameMode->TurnPlayer();
-}
-
-void APiecePawn::PromoteToRook()
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	UBlueprint* RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
-	FVector Location = GetActorLocation();
-
-	GameMode->CB->WhitePieces.Remove(this);
-	this->Destroy();
-
-	if (PawnPromotionWidgetInstance)
-	{
-		PawnPromotionWidgetInstance->RemoveFromViewport();
-	}
-
-	APiece* Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-	if (Color == EColor::W)
-	{
-		Obj->Color = EColor::W;
-		GameMode->CB->WhitePieces.Add(Obj);
-	}
-	else if (Color == EColor::B)
-	{
-		UMaterialInterface* LoadBlackRook = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BRook"));
-		Obj->ChangeMaterial(LoadBlackRook);
-		Obj->Color = EColor::B;
-		GameMode->CB->BlackPieces.Add(Obj);
-	}
-
-	GameMode->CB->WhitePieces.Add(Obj);
-	GameMode->TurnPlayer();
-}
-
-void APiecePawn::PromoteToBishop()
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	UBlueprint* BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
-	FVector Location = GetActorLocation();
-
-	GameMode->CB->WhitePieces.Remove(this);
-	this->Destroy();
-
-	if (PawnPromotionWidgetInstance)
-	{
-		PawnPromotionWidgetInstance->RemoveFromViewport();
-	}
-
-	APiece* Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-	if (Color == EColor::W)
-	{
-		Obj->Color = EColor::W;
-		GameMode->CB->WhitePieces.Add(Obj);
-	}
-	else if (Color == EColor::B)
-	{
-		UMaterialInterface* LoadBlackBishop = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BBishop"));
-		Obj->ChangeMaterial(LoadBlackBishop);
-		Obj->Color = EColor::B;
-		GameMode->CB->BlackPieces.Add(Obj);
-	}
-
-	GameMode->CB->WhitePieces.Add(Obj);
-	GameMode->TurnPlayer();
-}
-
-void APiecePawn::PromoteToKnight()
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	UBlueprint* KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
-	FVector Location = GetActorLocation();
-
-	GameMode->CB->WhitePieces.Remove(this);
-	this->Destroy();
-
-	if (PawnPromotionWidgetInstance)
-	{
-		PawnPromotionWidgetInstance->RemoveFromViewport();
-	}
-
-	APiece* Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-
-	if (Color == EColor::W)
-	{
-		Obj->Color = EColor::W;
-		GameMode->CB->WhitePieces.Add(Obj);
-	}
-	else if (Color == EColor::B)
-	{
-		UMaterialInterface* LoadBlackKnight = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKnight"));
-		Obj->ChangeMaterial(LoadBlackKnight);
-		Obj->Color = EColor::B;
-		GameMode->CB->BlackPieces.Add(Obj);
-	}
-
-	GameMode->TurnPlayer();
-}
-
 void APiecePawn::Promote()
 {
-	PawnPromotionWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), PawnPromotionWidgetClass);
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	GameMode->PawnPromotionWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), GameMode->PawnPromotionWidgetClass);
 
 	if (Color == EColor::W && RelativePosition().X == 7)
 	{
-		if (PawnPromotionWidgetInstance)
+		if (GameMode->PawnPromotionWidgetInstance)
 		{
-			PawnPromotionWidgetInstance->AddToViewport();
+			GameMode->PawnPromotionWidgetInstance->AddToViewport();
+			GameMode->PawnToPromote = this;
 		}
 	}
 
 	else if (Color == EColor::B && RelativePosition().X == 0)
 	{
+		GameMode->PawnToPromote = this;
 		int32 RandIdx0 = FMath::Rand() % 4;
-
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Randomly here"));
 		switch (RandIdx0)
 		{
 			case 0:
-				PromoteToQueen();
+				GameMode->PromoteToQueen();
 				break;
 			case 1:
-				PromoteToRook();
+				GameMode->PromoteToRook();
 				break;
 			case 2:
-				PromoteToBishop();
+				GameMode->PromoteToBishop();
 				break;
 			case 3:
-				PromoteToKnight();
+				GameMode->PromoteToKnight();
 				break;
 			default: 
 				return;

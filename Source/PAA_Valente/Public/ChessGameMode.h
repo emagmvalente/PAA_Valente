@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Chessboard.h"
+#include "Blueprint/UserWidget.h"
 #include "GameFramework/GameModeBase.h"
 #include "ChessGameMode.generated.h"
 
@@ -32,6 +33,15 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	AChessboard* CB;
 
+	APiece* PawnToPromote;
+
+	// Dichiarazione della variabile di tipo TSubclassOf per il widget
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> PawnPromotionWidgetClass;
+
+	// Puntatore al widget effettivamente creato durante l'esecuzione
+	UUserWidget* PawnPromotionWidgetInstance;
+
 	// field size
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 FieldSize;
@@ -43,6 +53,18 @@ public:
 	void SetKings();
 	void VerifyCheck(APiece* Piece);
 	void VerifyWin(APiece* Piece);
+
+	UFUNCTION(BlueprintCallable)
+	void PromoteToQueen();
+
+	UFUNCTION(BlueprintCallable)
+	void PromoteToRook();
+
+	UFUNCTION(BlueprintCallable)
+	void PromoteToBishop();
+
+	UFUNCTION(BlueprintCallable)
+	void PromoteToKnight();
 
 	// called at the end of the game turn
 	void TurnPlayer();
