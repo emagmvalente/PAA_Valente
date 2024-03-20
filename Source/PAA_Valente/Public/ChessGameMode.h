@@ -54,6 +54,8 @@ public:
 	void VerifyCheck(APiece* Piece);
 	void VerifyWin(APiece* Piece);
 
+	void VerifyTie(APiece* Piece);
+
 	UFUNCTION(BlueprintCallable)
 	void PromoteToQueen();
 

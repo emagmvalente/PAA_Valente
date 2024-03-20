@@ -147,6 +147,31 @@ void AChessGameMode::VerifyWin(APiece* Piece)
 	}
 }
 
+void AChessGameMode::VerifyTie(APiece* Piece)
+{
+	// 
+	bool bCondition1 = CB->Kings[0]->Moves.IsEmpty();
+	bool bCondition2 = CB->Kings[0]->EatablePieces.IsEmpty();
+	bool bCondition3 = true;
+
+	bool bTie = false;
+
+	for (APiece* BlackPiece : CB->BlackPieces)
+	{
+		if (BlackPiece->EatablePieces.Contains(CB->Kings[0]))
+		{
+			bCondition3 = false;
+			break;
+		}
+	}
+
+	if (bCondition1 && bCondition2 && bCondition3)
+	{
+		bTie = true;
+		// TODO: Implement Tie Message
+	}
+}
+
 void AChessGameMode::TurnPlayer()
 {
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
