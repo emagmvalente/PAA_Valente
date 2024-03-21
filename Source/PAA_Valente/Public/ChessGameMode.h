@@ -19,56 +19,55 @@ class PAA_VALENTE_API AChessGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+
+	AChessGameMode();
+	virtual void BeginPlay() override;
+
+	// Winning / Draw / Losing - FIELDS
 	bool bIsGameOver;
 	bool bIsWhiteOnCheck;
 	bool bIsBlackOnCheck;
 	bool bIsBlackThinking;
+	int32 MovesWithoutCaptureOrPawnMove;
 
+	// Logic - FIELDS
 	int32 TurnFlag;
 
-	// TSubclassOf is a template class that provides UClass type safety.
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AChessboard> CBClass;
-
-	UPROPERTY(VisibleAnywhere)
-	AChessboard* CB;
-
+	// Pawn Promotion - FIELDS
 	APiece* PawnToPromote;
-
-	// Dichiarazione della variabile di tipo TSubclassOf per il widget
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UUserWidget> PawnPromotionWidgetClass;
-
-	// Puntatore al widget effettivamente creato durante l'esecuzione
 	UUserWidget* PawnPromotionWidgetInstance;
 
-	// field size
+	// Chessboard References - FIELDS
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AChessboard> CBClass;
+	UPROPERTY(VisibleAnywhere)
+	AChessboard* CB;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 FieldSize;
 
-	AChessGameMode();
-
-	virtual void BeginPlay() override;
-
+	// Logic and Utilities - METHODS
 	void SetKings();
+	void TurnPlayer();
+
+	// Winning / Draw / Losing - METHODS
 	void VerifyCheck(APiece* Piece);
 	void VerifyWin(APiece* Piece);
+	void VerifyDraw(APiece* Piece);
+	bool CheckThreeOccurrences();
+	bool Stalemate();
+	bool KingvsKing();
+	bool FiftyMovesRule();
 
-	void VerifyTie(APiece* Piece);
-
+	// Pawn Promotion - METHODS
 	UFUNCTION(BlueprintCallable)
 	void PromoteToQueen();
-
 	UFUNCTION(BlueprintCallable)
 	void PromoteToRook();
-
 	UFUNCTION(BlueprintCallable)
 	void PromoteToBishop();
-
 	UFUNCTION(BlueprintCallable)
 	void PromoteToKnight();
-
-	// called at the end of the game turn
-	void TurnPlayer();
 
 };

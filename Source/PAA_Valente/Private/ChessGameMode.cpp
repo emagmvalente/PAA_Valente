@@ -23,6 +23,7 @@ AChessGameMode::AChessGameMode()
 	bIsBlackOnCheck = false;
 	bIsBlackThinking = false;
 	TurnFlag = 0;
+	MovesWithoutCaptureOrPawnMove = 0;
 }
 
 void AChessGameMode::BeginPlay()
@@ -55,6 +56,7 @@ void AChessGameMode::BeginPlay()
 	HumanPlayer->OnTurn();
 }
 
+// Logic and Utilities
 void AChessGameMode::SetKings()
 {
 	// Finds WhiteKing
@@ -77,6 +79,42 @@ void AChessGameMode::SetKings()
 	}
 }
 
+void AChessGameMode::TurnPlayer()
+{
+	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
+
+	if (TurnFlag == 0)
+	{
+		TurnFlag++;
+		VerifyCheck(CB->Kings[1]);
+		VerifyWin(CB->Kings[1]);
+		if (!bIsGameOver)
+		{
+			AIPlayer->OnTurn();
+		}
+		else
+		{
+			HumanPlayer->OnWin();
+		}
+	}
+	else if (TurnFlag == 1)
+	{
+		TurnFlag--;
+		VerifyCheck(CB->Kings[0]);
+		VerifyWin(CB->Kings[0]);
+		if (!bIsGameOver)
+		{
+			HumanPlayer->OnTurn();
+		}
+		else
+		{
+			AIPlayer->OnWin();
+		}
+	}
+}
+
+// Winning / Draw / Losing
 void AChessGameMode::VerifyCheck(APiece* Piece)
 {
 	ATile** WhiteKingTile = CB->TileMap.Find(FVector2D(CB->Kings[0]->RelativePosition().X, CB->Kings[0]->RelativePosition().Y));
@@ -147,14 +185,44 @@ void AChessGameMode::VerifyWin(APiece* Piece)
 	}
 }
 
-void AChessGameMode::VerifyTie(APiece* Piece)
+void AChessGameMode::VerifyDraw(APiece* Piece)
 {
-	// 
+	// TODO: Dead Positions and 50 moves
+	if (CheckThreeOccurrences() || Stalemate() || KingvsKing() || FiftyMovesRule())
+	{
+		bIsGameOver = true;
+	}
+}
+
+bool AChessGameMode::CheckThreeOccurrences()
+{
+	TMap<FString, int32> CountMap;
+
+	// Conta quante volte ogni elemento appare nell'array
+	for (FString Occurency : CB->HistoryOfMoves) {
+		if (!CountMap.Contains(Occurency)) {
+			CountMap.Add(Occurency, 1);
+		}
+		else {
+			CountMap[Occurency]++;
+		}
+	}
+
+	// Verifica se uno qualsiasi degli elementi appare tre volte
+	for (const auto& Pair : CountMap) {
+		if (Pair.Value >= 3) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool AChessGameMode::Stalemate()
+{
 	bool bCondition1 = CB->Kings[0]->Moves.IsEmpty();
 	bool bCondition2 = CB->Kings[0]->EatablePieces.IsEmpty();
 	bool bCondition3 = true;
-
-	bool bTie = false;
 
 	for (APiece* BlackPiece : CB->BlackPieces)
 	{
@@ -167,46 +235,69 @@ void AChessGameMode::VerifyTie(APiece* Piece)
 
 	if (bCondition1 && bCondition2 && bCondition3)
 	{
-		bTie = true;
-		// TODO: Implement Tie Message
+		return true;
 	}
+
+	return false;
 }
 
-void AChessGameMode::TurnPlayer()
+bool AChessGameMode::KingvsKing()
 {
-	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
-
-	if (TurnFlag == 0)
-	{
-		TurnFlag++;
-		VerifyCheck(CB->Kings[1]);
-		VerifyWin(CB->Kings[1]);
-		if (!bIsGameOver)
-		{
-			AIPlayer->OnTurn();
-		}
-		else
-		{
-			HumanPlayer->OnWin();
-		}
+	if (CB->WhitePieces.Num() == 1 && CB->BlackPieces.Num() == 1) {
+		return true;
 	}
-	else if (TurnFlag == 1)
-	{
-		TurnFlag--;
-		VerifyCheck(CB->Kings[0]);
-		VerifyWin(CB->Kings[0]);
-		if (!bIsGameOver)
-		{
-			HumanPlayer->OnTurn();
-		}
-		else
-		{
-			AIPlayer->OnWin();
-		}
-	}
+	return false;
 }
 
+bool AChessGameMode::FiftyMovesRule()
+{
+	// If the number reaches 50, then it's a draw situation
+	if (MovesWithoutCaptureOrPawnMove >= 50)
+	{
+		return true;
+	}
+
+	// Declarations
+	int32 NumberOfPiecesInPreviousMove = 0;
+	int32 NumberOfPiecesNow = 0;
+	bool bWasMovedAPawn = false;
+	FString ActualMove = CB->HistoryOfMoves.Last();
+	FString PreviousMove = CB->HistoryOfMoves[CB->HistoryOfMoves.Num() - 2];
+
+	// Capture check
+	for (int32 i = 0; i < ActualMove.Len(); i++)
+	{
+		TCHAR PieceInActualMove = ActualMove[i];
+		if (FChar::IsAlpha(PieceInActualMove))
+		{
+			NumberOfPiecesNow++;
+		}
+	}
+	for (int32 i = 0; i < PreviousMove.Len(); i++)
+	{
+		TCHAR PieceInPreviousMove = ActualMove[i];
+		if (FChar::IsAlpha(PieceInPreviousMove))
+		{
+			NumberOfPiecesInPreviousMove++;
+		}
+	}
+
+	// Pawn movement check
+	// Check for each row if the number of pawn is the same between now and before, steal the code from the parser in Chessboard.cpp	
+
+	if ((NumberOfPiecesNow == NumberOfPiecesInPreviousMove) && !bWasMovedAPawn)
+	{
+		MovesWithoutCaptureOrPawnMove++;
+	}
+	else
+	{
+		MovesWithoutCaptureOrPawnMove = 0;
+	}
+
+	return false;
+}
+
+// Pawn Promotion
 void AChessGameMode::PromoteToQueen()
 {
 	UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
