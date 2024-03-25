@@ -122,12 +122,23 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 
 			if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
 			{
+				Cast<APiecePawn>(CPC->SelectedPieceToMove)->TurnsWithoutMoving = 0;
 				// Checks if the pawn could be promoted
 				Cast<APiecePawn>(CPC->SelectedPieceToMove)->Promote();
 				// Disables the first move variable if it's true
 				if (Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove == true)
 				{
 					Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove = false;
+				}
+			}
+			else
+			{
+				for (APiece* WhitePawn : GameMode->CB->WhitePieces)
+				{
+					if (Cast<APiecePawn>(WhitePawn))
+					{
+						Cast<APiecePawn>(WhitePawn)->TurnsWithoutMoving++;
+					}
 				}
 			}
 		}

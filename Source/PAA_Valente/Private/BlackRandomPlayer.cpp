@@ -105,10 +105,21 @@ void ABlackRandomPlayer::OnTurn()
 			ChosenPiece->SetActorLocation(TilePositioning);
 			if (Cast<APiecePawn>(ChosenPiece))
 			{
+				Cast<APiecePawn>(ChosenPiece)->TurnsWithoutMoving = 0;
 				Cast<APiecePawn>(ChosenPiece)->Promote();
 				if (Cast<APiecePawn>(ChosenPiece)->bFirstMove == true)
 				{
 					Cast<APiecePawn>(ChosenPiece)->bFirstMove = false;
+				}
+			}
+			else
+			{
+				for (APiece* BlackPawn : GameModeCallback->CB->BlackPieces)
+				{
+					if (Cast<APiecePawn>(BlackPawn))
+					{
+						Cast<APiecePawn>(BlackPawn)->TurnsWithoutMoving++;
+					}
 				}
 			}
 

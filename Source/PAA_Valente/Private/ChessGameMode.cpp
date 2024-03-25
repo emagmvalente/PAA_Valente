@@ -8,6 +8,7 @@
 #include "PieceRook.h"
 #include "PieceBishop.h"
 #include "PieceKnight.h"
+#include "PiecePawn.h"
 #include "ChessPlayerController.h"
 #include "BlackRandomPlayer.h"
 #include "PlayerInterface.h"
@@ -89,13 +90,10 @@ void AChessGameMode::TurnPlayer()
 		TurnFlag++;
 		VerifyCheck(CB->Kings[1]);
 		VerifyWin(CB->Kings[1]);
+		VerifyDraw();
 		if (!bIsGameOver)
 		{
 			AIPlayer->OnTurn();
-		}
-		else
-		{
-			HumanPlayer->OnWin();
 		}
 	}
 	else if (TurnFlag == 1)
@@ -103,13 +101,10 @@ void AChessGameMode::TurnPlayer()
 		TurnFlag--;
 		VerifyCheck(CB->Kings[0]);
 		VerifyWin(CB->Kings[0]);
+		VerifyDraw();
 		if (!bIsGameOver)
 		{
 			HumanPlayer->OnTurn();
-		}
-		else
-		{
-			AIPlayer->OnWin();
 		}
 	}
 }
@@ -157,16 +152,30 @@ void AChessGameMode::VerifyCheck(APiece* Piece)
 
 void AChessGameMode::VerifyWin(APiece* Piece)
 {
+	IPlayerInterface* Winner = nullptr;
 	int32 NumberOfPiecesWithoutLegalMoves = 0;
 	TArray<APiece*> AllyPieces;
+	TArray<APiece*> EnemyPieces;
+	ATile** AllyKingTile = nullptr;
+	ATile** EnemyKingTile = nullptr;
+
 
 	if (Piece->Color == EColor::W)
 	{
 		AllyPieces = CB->WhitePieces;
+		EnemyPieces = CB->BlackPieces;
+		AllyKingTile = CB->TileMap.Find(CB->Kings[0]->Relative2DPosition());
+		EnemyKingTile = CB->TileMap.Find(CB->Kings[1]->Relative2DPosition());
+		Winner = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
 	}
 	else
 	{
 		AllyPieces = CB->BlackPieces;
+		EnemyPieces = CB->WhitePieces;
+		AllyKingTile = CB->TileMap.Find(CB->Kings[1]->Relative2DPosition());
+		EnemyKingTile = CB->TileMap.Find(CB->Kings[0]->Relative2DPosition());
+		Winner = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Winner will be white"));
 	}
 
 	for (APiece* AllyPiece : AllyPieces)
@@ -181,16 +190,37 @@ void AChessGameMode::VerifyWin(APiece* Piece)
 
 	if (NumberOfPiecesWithoutLegalMoves == AllyPieces.Num())
 	{
+		bool bIsAWinCase = false;
+		for (APiece* EnemyPiece : EnemyPieces)
+		{
+			if (EnemyPiece->EatablePieces.Contains(*AllyKingTile))
+			{
+				bIsAWinCase = true;
+				break;
+			}
+		}
 		bIsGameOver = true;
+
+		if (bIsAWinCase)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("In the right branch"));
+			Winner->OnWin();
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
+		}
 	}
 }
 
-void AChessGameMode::VerifyDraw(APiece* Piece)
+void AChessGameMode::VerifyDraw()
 {
-	// TODO: Dead Positions and 50 moves
-	if (CheckThreeOccurrences() || Stalemate() || KingvsKing() || FiftyMovesRule())
+	// TODO: Dead Positions
+	// Stalemate is evaluated in VerifyWin
+	if (CheckThreeOccurrences() || KingvsKing() || FiftyMovesRule())
 	{
 		bIsGameOver = true;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
 	}
 }
 
@@ -213,29 +243,6 @@ bool AChessGameMode::CheckThreeOccurrences()
 		if (Pair.Value >= 3) {
 			return true;
 		}
-	}
-
-	return false;
-}
-
-bool AChessGameMode::Stalemate()
-{
-	bool bCondition1 = CB->Kings[0]->Moves.IsEmpty();
-	bool bCondition2 = CB->Kings[0]->EatablePieces.IsEmpty();
-	bool bCondition3 = true;
-
-	for (APiece* BlackPiece : CB->BlackPieces)
-	{
-		if (BlackPiece->EatablePieces.Contains(CB->Kings[0]))
-		{
-			bCondition3 = false;
-			break;
-		}
-	}
-
-	if (bCondition1 && bCondition2 && bCondition3)
-	{
-		return true;
 	}
 
 	return false;
@@ -283,7 +290,25 @@ bool AChessGameMode::FiftyMovesRule()
 	}
 
 	// Pawn movement check
-	// Check for each row if the number of pawn is the same between now and before, steal the code from the parser in Chessboard.cpp	
+	for (APiece* WhitePawn : CB->WhitePieces)
+	{
+		if (Cast<APiecePawn>(WhitePawn) && Cast<APiecePawn>(WhitePawn)->TurnsWithoutMoving != 0)
+		{
+			bWasMovedAPawn = true;
+			break;
+		}
+	}
+	if (!bWasMovedAPawn)
+	{
+		for (APiece* BlackPawn : CB->BlackPieces)
+		{
+			if (Cast<APiecePawn>(BlackPawn) && Cast<APiecePawn>(BlackPawn)->TurnsWithoutMoving != 0)
+			{
+				bWasMovedAPawn = true;
+				break;
+			}
+		}
+	}
 
 	if ((NumberOfPiecesNow == NumberOfPiecesInPreviousMove) && !bWasMovedAPawn)
 	{

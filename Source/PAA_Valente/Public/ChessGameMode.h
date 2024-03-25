@@ -54,9 +54,8 @@ public:
 	// Winning / Draw / Losing - METHODS
 	void VerifyCheck(APiece* Piece);
 	void VerifyWin(APiece* Piece);
-	void VerifyDraw(APiece* Piece);
+	void VerifyDraw();
 	bool CheckThreeOccurrences();
-	bool Stalemate();
 	bool KingvsKing();
 	bool FiftyMovesRule();
 

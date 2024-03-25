@@ -24,6 +24,8 @@ public:
 
 	bool bFirstMove = true;
 
+	int32 TurnsWithoutMoving = 0;
+
 	TArray<FVector2D> Directions = { FVector2D(1, 0), FVector2D(1, -1), FVector2D(1, 1) };
 
 protected:
