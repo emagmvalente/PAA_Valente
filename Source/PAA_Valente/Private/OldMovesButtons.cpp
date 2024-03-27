@@ -12,8 +12,12 @@ void UOldMovesButtons::ButtonOnClickFunction()
 {
 	if (AssociatedString != FString("") && !GameMode->bIsBlackThinking)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *AssociatedString);
+		if (CPC->SelectedPieceToMove)
+		{
+			CPC->SelectedPieceToMove->DecolorPossibleMoves();
+		}
 		GameMode->CB->GeneratePositionsFromString(AssociatedString);
+		GameMode->CB->SetTilesOwners();
 	}
 	else if (GameMode->bIsBlackThinking)
 	{

@@ -6,6 +6,7 @@
 #include "PiecePawn.h"
 #include "ChessGameMode.h"
 #include "ChessPlayerController.h"
+#include "MainHUD.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
 // Sets default values
@@ -59,9 +60,6 @@ void AWhitePlayer::PieceSelection()
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("White is on Check!"));
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *LastMoveDone);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, GameMode->CB->GenerateStringFromPositions());
-
 	// Detecting player's click
 	FHitResult Hit = FHitResult(ForceInit);
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
@@ -105,7 +103,12 @@ void AWhitePlayer::PieceSelection()
 
 	else if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() != LastMoveDone))
 	{
+		if (CPC->SelectedPieceToMove)
+		{
+			CPC->SelectedPieceToMove->DecolorPossibleMoves();
+		}
 		GameMode->CB->GeneratePositionsFromString(LastMoveDone);
+		GameMode->CB->SetTilesOwners();
 	}
 }
 
@@ -174,6 +177,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 					{
 						LastButton->AssociatedString = GameMode->CB->HistoryOfMoves.Last();
 						LastButton->GameMode = GameMode;
+						LastButton->CPC = CPC;
 					}
 				}
 			}

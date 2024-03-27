@@ -6,10 +6,11 @@
 #include "GameFramework/PlayerController.h"
 #include "WhitePlayer.h"
 #include "InputActionValue.h"
-#include "MainHUD.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "ChessPlayerController.generated.h"
+
+class UMainHUD;
 
 /**
  * 

@@ -43,26 +43,7 @@ void AChessboard::BeginPlay()
 	// Using FEN notation for the replay mechanic too
 	HistoryOfMoves.Add(GeneratingString);
 
-	for (ATile* Tile : TileArray)
-	{
-		for (APiece* WhitePiece : WhitePieces)
-		{
-			if (WhitePiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
-			{
-				Tile->SetOccupantColor(EOccupantColor::W);
-				break;
-			}
-		}
-
-		for (APiece* BlackPiece : BlackPieces)
-		{
-			if (BlackPiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
-			{
-				Tile->SetOccupantColor(EOccupantColor::B);
-				break;
-			}
-		}
-	}
+	SetTilesOwners();
 }
 
 void AChessboard::ResetField()
@@ -498,6 +479,30 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 
 			// Move to the next column
 			++Col; 
+		}
+	}
+}
+
+void AChessboard::SetTilesOwners()
+{
+	for (ATile* Tile : TileArray)
+	{
+		for (APiece* WhitePiece : WhitePieces)
+		{
+			if (WhitePiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
+			{
+				Tile->SetOccupantColor(EOccupantColor::W);
+				break;
+			}
+		}
+
+		for (APiece* BlackPiece : BlackPieces)
+		{
+			if (BlackPiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
+			{
+				Tile->SetOccupantColor(EOccupantColor::B);
+				break;
+			}
 		}
 	}
 }

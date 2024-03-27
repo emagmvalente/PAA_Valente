@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/Button.h"
 #include "ChessGameMode.h"
+#include "ChessPlayerController.h"
 #include "OldMovesButtons.generated.h"
 
 /**
@@ -19,6 +20,7 @@ public:
 	FString AssociatedString;
 
 	AChessGameMode* GameMode;
+	AChessPlayerController* CPC;
 
 	UOldMovesButtons();
 

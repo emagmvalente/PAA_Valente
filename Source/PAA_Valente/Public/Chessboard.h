@@ -77,6 +77,8 @@ public:
 	FString GenerateStringFromPositions();
 	void GeneratePositionsFromString(FString& String);
 
+	void SetTilesOwners();
+
 	// return a (x,y) position given a hit (click) on a field tile
 	FVector2D GetPosition(const FHitResult& Hit);
 

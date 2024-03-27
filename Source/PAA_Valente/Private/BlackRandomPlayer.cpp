@@ -58,6 +58,7 @@ void ABlackRandomPlayer::OnTurn()
 			// Declarations
 
 			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			APiece* ChosenPiece = nullptr;
 			TArray<ATile*> MovesAndEatablePieces;
 
@@ -145,6 +146,7 @@ void ABlackRandomPlayer::OnTurn()
 					{
 						LastButton->AssociatedString = GameModeCallback->CB->HistoryOfMoves.Last();
 						LastButton->GameMode = GameModeCallback;
+						LastButton->CPC = CPC;
 					}
 				}
 			}
