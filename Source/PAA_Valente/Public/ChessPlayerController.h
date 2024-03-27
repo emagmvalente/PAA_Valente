@@ -32,7 +32,6 @@ public:
 	APiece* SelectedPieceToMove = nullptr;
 
 	void ClickOnBoard();
-	void RecreateMove(UButton* ButtonClicked);
 
 protected:
 	virtual void BeginPlay() override;

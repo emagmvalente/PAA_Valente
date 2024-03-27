@@ -2,27 +2,28 @@
 
 
 #include "MainHUD.h"
-#include "ChessGameMode.h"
-#include "ChessPlayerController.h"
 
 void UMainHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	for (UButton* Button : ButtonArray)
-	{
-		Button->OnClicked.AddUniqueDynamic(this, &AChessPlayerController::RecreateMove);
-	}
 }
 
 void UMainHUD::AddButton()
 {
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	UButton* NewButton = NewObject<UButton>(this);
-	if (NewButton)
-	{
-		ButtonArray.Add(NewButton);
+    UOldMovesButtons* NewButton = NewObject<UOldMovesButtons>(this);
+    if (NewButton)
+    {
+        NewButton->OnClicked.AddDynamic(NewButton, &UOldMovesButtons::ButtonOnClickFunction);
+        ButtonArray.Add(NewButton);
 
-		ScrollBox->AddChild(NewButton);
-	}
+        UTextBlock* NumberOfMove = NewObject<UTextBlock>(this);
+        FString TextValue = FString::FromInt(IntToKeepTrack);
+        NumberOfMove->SetText(FText::FromString(TextValue));
+
+        NewButton->AddChild(NumberOfMove);
+
+        ScrollBox->AddChild(NewButton);
+
+        IntToKeepTrack++;
+    }
 }

@@ -138,6 +138,15 @@ void ABlackRandomPlayer::OnTurn()
 			if (MainHUD)
 			{
 				MainHUD->AddButton();
+				if (MainHUD->ButtonArray.Num() > 0)
+				{
+					UOldMovesButtons* LastButton = MainHUD->ButtonArray.Last();
+					if (LastButton)
+					{
+						LastButton->AssociatedString = GameModeCallback->CB->HistoryOfMoves.Last();
+						LastButton->GameMode = GameModeCallback;
+					}
+				}
 			}
 
 			// Turn ending

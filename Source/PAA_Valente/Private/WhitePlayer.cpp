@@ -59,6 +59,9 @@ void AWhitePlayer::PieceSelection()
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("White is on Check!"));
 	}
 
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *LastMoveDone);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, GameMode->CB->GenerateStringFromPositions());
+
 	// Detecting player's click
 	FHitResult Hit = FHitResult(ForceInit);
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
@@ -98,6 +101,11 @@ void AWhitePlayer::PieceSelection()
 				TileSelection(TileClicked);
 			}
 		}
+	}
+
+	else if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() != LastMoveDone))
+	{
+		GameMode->CB->GeneratePositionsFromString(LastMoveDone);
 	}
 }
 
@@ -159,6 +167,15 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 			if (MainHUD)
 			{
 				MainHUD->AddButton();
+				if (MainHUD->ButtonArray.Num() > 0)
+				{
+					UOldMovesButtons* LastButton = MainHUD->ButtonArray.Last();
+					if (LastButton)
+					{
+						LastButton->AssociatedString = GameMode->CB->HistoryOfMoves.Last();
+						LastButton->GameMode = GameMode;
+					}
+				}
 			}
 
 			// Turn ending

@@ -7,9 +7,8 @@
 #include "Components/Button.h"
 #include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
+#include "OldMovesButtons.h"
 #include "MainHUD.generated.h"
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnClickedButton, class UButton*, ButtonClicked);
 
 /**
  * 
@@ -22,8 +21,6 @@ class PAA_VALENTE_API UMainHUD : public UUserWidget
 public:
 	void AddButton();
 
-	FOnClickedButton OnClickedDelegate;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UButton* ResetButton;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
@@ -31,7 +28,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UScrollBox* ScrollBox;
 
-	TArray<UButton*> ButtonArray;
+	TArray<UOldMovesButtons*> ButtonArray;
+
+	int32 IntToKeepTrack = 0;
 
 	virtual void NativeConstruct() override;
 };

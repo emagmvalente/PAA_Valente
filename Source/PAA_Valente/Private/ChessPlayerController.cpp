@@ -19,11 +19,6 @@ void AChessPlayerController::ClickOnBoard()
 	}
 }
 
-void AChessPlayerController::RecreateMove(UButton* ButtonClicked)
-{
-	
-}
-
 void AChessPlayerController::BeginPlay()
 {
 	Super::BeginPlay();

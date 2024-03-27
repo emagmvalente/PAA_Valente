@@ -175,7 +175,6 @@ void AChessGameMode::VerifyWin(APiece* Piece)
 		AllyKingTile = CB->TileMap.Find(CB->Kings[1]->Relative2DPosition());
 		EnemyKingTile = CB->TileMap.Find(CB->Kings[0]->Relative2DPosition());
 		Winner = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Winner will be white"));
 	}
 
 	for (APiece* AllyPiece : AllyPieces)
