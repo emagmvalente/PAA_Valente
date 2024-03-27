@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "WhitePlayer.h"
 #include "InputActionValue.h"
+#include "MainHUD.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "ChessPlayerController.generated.h"
@@ -31,9 +32,12 @@ public:
 	APiece* SelectedPieceToMove = nullptr;
 
 	void ClickOnBoard();
+	void RecreateMove(UButton* ButtonClicked);
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
+private:
+	UMainHUD* MainHUDWidget;
 };

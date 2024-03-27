@@ -5,6 +5,8 @@
 #include "Piece.h"
 #include "PiecePawn.h"
 #include "EngineUtils.h"
+#include "MainHUD.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 // Sets default values
 ABlackRandomPlayer::ABlackRandomPlayer()
@@ -130,6 +132,13 @@ void ABlackRandomPlayer::OnTurn()
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
 			GameModeCallback->CB->HistoryOfMoves.Add(LastMove);
+			TArray<UUserWidget*> FoundWidgets;
+			UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
+			UMainHUD* MainHUD = Cast<UMainHUD>(FoundWidgets[0]);
+			if (MainHUD)
+			{
+				MainHUD->AddButton();
+			}
 
 			// Turn ending
 			GameModeCallback->bIsBlackThinking = false;

@@ -6,6 +6,7 @@
 #include "PiecePawn.h"
 #include "ChessGameMode.h"
 #include "ChessPlayerController.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 // Sets default values
 AWhitePlayer::AWhitePlayer()
@@ -152,6 +153,13 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameMode->CB->GenerateStringFromPositions();
 			GameMode->CB->HistoryOfMoves.Add(LastMove);
+			TArray<UUserWidget*> FoundWidgets;
+			UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
+			UMainHUD* MainHUD = Cast<UMainHUD>(FoundWidgets[0]);
+			if (MainHUD)
+			{
+				MainHUD->AddButton();
+			}
 
 			// Turn ending
 			IsMyTurn = false;

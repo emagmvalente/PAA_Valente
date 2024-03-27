@@ -90,7 +90,7 @@ void AChessGameMode::TurnPlayer()
 		TurnFlag++;
 		VerifyCheck(CB->Kings[1]);
 		VerifyWin(CB->Kings[1]);
-		VerifyDraw();
+		//VerifyDraw();
 		if (!bIsGameOver)
 		{
 			AIPlayer->OnTurn();
@@ -101,7 +101,7 @@ void AChessGameMode::TurnPlayer()
 		TurnFlag--;
 		VerifyCheck(CB->Kings[0]);
 		VerifyWin(CB->Kings[0]);
-		VerifyDraw();
+		//VerifyDraw();
 		if (!bIsGameOver)
 		{
 			HumanPlayer->OnTurn();

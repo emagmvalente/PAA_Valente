@@ -2,6 +2,7 @@
 
 
 #include "ChessPlayerController.h"
+#include "ChessGameMode.h"
 
 AChessPlayerController::AChessPlayerController()
 {
@@ -16,6 +17,11 @@ void AChessPlayerController::ClickOnBoard()
 	{
 		HumanPlayer->PieceSelection();
 	}
+}
+
+void AChessPlayerController::RecreateMove(UButton* ButtonClicked)
+{
+	
 }
 
 void AChessPlayerController::BeginPlay()
