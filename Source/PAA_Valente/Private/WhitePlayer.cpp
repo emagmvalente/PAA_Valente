@@ -109,6 +109,7 @@ void AWhitePlayer::PieceSelection()
 		}
 		GameMode->CB->GeneratePositionsFromString(LastMoveDone);
 		GameMode->CB->SetTilesOwners();
+		GameMode->SetKings();
 	}
 }
 

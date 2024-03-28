@@ -93,7 +93,7 @@ void AChessGameMode::TurnPlayer()
 		TurnFlag++;
 		VerifyCheck(CB->Kings[1]);
 		VerifyWin(CB->Kings[1]);
-		//VerifyDraw();
+		VerifyDraw();
 		if (!bIsGameOver)
 		{
 			AIPlayer->OnTurn();
@@ -104,7 +104,7 @@ void AChessGameMode::TurnPlayer()
 		TurnFlag--;
 		VerifyCheck(CB->Kings[0]);
 		VerifyWin(CB->Kings[0]);
-		//VerifyDraw();
+		VerifyDraw();
 		if (!bIsGameOver)
 		{
 			HumanPlayer->OnTurn();
@@ -271,7 +271,11 @@ bool AChessGameMode::FiftyMovesRule()
 	int32 NumberOfPiecesNow = 0;
 	bool bWasMovedAPawn = false;
 	FString ActualMove = CB->HistoryOfMoves.Last();
-	FString PreviousMove = CB->HistoryOfMoves[CB->HistoryOfMoves.Num() - 2];
+	FString PreviousMove = FString("");
+	if (CB->HistoryOfMoves.Num() > 1)
+	{
+		PreviousMove = CB->HistoryOfMoves[CB->HistoryOfMoves.Num() - 2];
+	}
 
 	// Capture check
 	for (int32 i = 0; i < ActualMove.Len(); i++)
@@ -282,19 +286,22 @@ bool AChessGameMode::FiftyMovesRule()
 			NumberOfPiecesNow++;
 		}
 	}
-	for (int32 i = 0; i < PreviousMove.Len(); i++)
+	if (PreviousMove != FString(""))
 	{
-		TCHAR PieceInPreviousMove = ActualMove[i];
-		if (FChar::IsAlpha(PieceInPreviousMove))
+		for (int32 i = 0; i < PreviousMove.Len(); i++)
 		{
-			NumberOfPiecesInPreviousMove++;
+			TCHAR PieceInPreviousMove = PreviousMove[i];
+			if (FChar::IsAlpha(PieceInPreviousMove))
+			{
+				NumberOfPiecesInPreviousMove++;
+			}
 		}
 	}
 
 	// Pawn movement check
 	for (APiece* WhitePawn : CB->WhitePieces)
 	{
-		if (Cast<APiecePawn>(WhitePawn) && Cast<APiecePawn>(WhitePawn)->TurnsWithoutMoving != 0)
+		if (Cast<APiecePawn>(WhitePawn) && Cast<APiecePawn>(WhitePawn)->TurnsWithoutMoving > 0)
 		{
 			bWasMovedAPawn = true;
 			break;
@@ -304,7 +311,7 @@ bool AChessGameMode::FiftyMovesRule()
 	{
 		for (APiece* BlackPawn : CB->BlackPieces)
 		{
-			if (Cast<APiecePawn>(BlackPawn) && Cast<APiecePawn>(BlackPawn)->TurnsWithoutMoving != 0)
+			if (Cast<APiecePawn>(BlackPawn) && Cast<APiecePawn>(BlackPawn)->TurnsWithoutMoving > 0)
 			{
 				bWasMovedAPawn = true;
 				break;

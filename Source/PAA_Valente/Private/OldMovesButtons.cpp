@@ -18,6 +18,7 @@ void UOldMovesButtons::ButtonOnClickFunction()
 		}
 		GameMode->CB->GeneratePositionsFromString(AssociatedString);
 		GameMode->CB->SetTilesOwners();
+		GameMode->SetKings();
 	}
 	else if (GameMode->bIsBlackThinking)
 	{

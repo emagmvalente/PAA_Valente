@@ -37,7 +37,7 @@ void AChessboard::BeginPlay()
 	GenerateField();
 
 	// Using FEN notation to generate every piece
-	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+	FString GeneratingString = "4k3/8/3P4/8/8/8/8/4K3";
 
 	GeneratePositionsFromString(GeneratingString);
 	// Using FEN notation for the replay mechanic too
@@ -378,6 +378,11 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
 
+				if (Row != 1)
+				{
+					Cast<APiecePawn>(Obj)->bFirstMove = false;
+				}
+
 				WhitePieces.Add(Obj);
 				break;
 
@@ -423,6 +428,11 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->Color = EColor::B;
 				
 				Obj->ChangeMaterial(LoadBlackPawn);
+
+				if (Row != 6)
+				{
+					Cast<APiecePawn>(Obj)->bFirstMove = false;
+				}
 
 				BlackPieces.Add(Obj);
 				break;
