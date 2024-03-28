@@ -22,8 +22,16 @@ public:
 	AChessGameMode* GameMode;
 	AChessPlayerController* CPC;
 
+	APiece* PieceMoved;
+	APiece* PieceCaptured;
+	FVector NewPosition;
+
 	UOldMovesButtons();
 
 	UFUNCTION()
 	void ButtonOnClickFunction();
+
+	void CreateText();
+	TCHAR PieceParsing(APiece* PieceToParse);
+	FString LocationParsing(FVector& Location);
 };

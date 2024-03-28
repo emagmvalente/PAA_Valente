@@ -179,6 +179,9 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 						LastButton->AssociatedString = GameMode->CB->HistoryOfMoves.Last();
 						LastButton->GameMode = GameMode;
 						LastButton->CPC = CPC;
+						LastButton->PieceMoved = CPC->SelectedPieceToMove;
+						LastButton->PieceCaptured = nullptr;
+						LastButton->NewPosition = CPC->SelectedPieceToMove->RelativePosition();
 					}
 				}
 			}

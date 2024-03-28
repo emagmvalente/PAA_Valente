@@ -147,6 +147,9 @@ void ABlackRandomPlayer::OnTurn()
 						LastButton->AssociatedString = GameModeCallback->CB->HistoryOfMoves.Last();
 						LastButton->GameMode = GameModeCallback;
 						LastButton->CPC = CPC;
+						LastButton->PieceMoved = ChosenPiece;
+						LastButton->PieceCaptured = nullptr;
+						LastButton->NewPosition = ChosenPiece->RelativePosition();
 					}
 				}
 			}

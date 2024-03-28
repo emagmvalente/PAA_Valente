@@ -85,9 +85,6 @@ void AChessGameMode::TurnPlayer()
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
 
-	FString MyDoubleString = FString::Printf(TEXT("(%f, %f)"), CB->Kings[0]->Relative2DPosition().X, CB->Kings[0]->Relative2DPosition().Y);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *MyDoubleString);
-
 	if (TurnFlag == 0)
 	{
 		TurnFlag++;

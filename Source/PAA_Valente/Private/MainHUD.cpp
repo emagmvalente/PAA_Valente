@@ -16,11 +16,7 @@ void UMainHUD::AddButton()
         NewButton->OnClicked.AddDynamic(NewButton, &UOldMovesButtons::ButtonOnClickFunction);
         ButtonArray.Add(NewButton);
 
-        UTextBlock* NumberOfMove = NewObject<UTextBlock>(this);
-        FString TextValue = FString::FromInt(IntToKeepTrack);
-        NumberOfMove->SetText(FText::FromString(TextValue));
-
-        NewButton->AddChild(NumberOfMove);
+        NewButton->CreateText();
 
         ScrollBox->AddChild(NewButton);
 
