@@ -18,6 +18,7 @@ UOldMovesButtons::UOldMovesButtons()
 
 void UOldMovesButtons::ButtonOnClickFunction()
 {
+	// Recreating the chessboard in its old state
 	if (AssociatedString != FString("") && !GameMode->bIsBlackThinking)
 	{
 		if (CPC->SelectedPieceToMove)
@@ -28,6 +29,7 @@ void UOldMovesButtons::ButtonOnClickFunction()
 		GameMode->CB->SetTilesOwners();
 		GameMode->SetKings();
 	}
+	// If the black player is moving, replay is not allowed
 	else if (GameMode->bIsBlackThinking)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Shhh! Black is thinking... Replay later."));
@@ -38,62 +40,47 @@ void UOldMovesButtons::CreateText()
 {
 	UTextBlock* MoveDone = NewObject<UTextBlock>(this);
 
-	TCHAR PieceMovedChar = '\0';
+	FString TextToPutOnButton = "";
 	if (PieceMoved)
 	{
-		PieceMovedChar = PieceParsing(PieceMoved);
+		TextToPutOnButton.AppendChar(PieceParsing(PieceMoved));
 	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("AHAHAHAH"));
-	}
-	TCHAR PieceCapturedChar = '\0';
 	if (PieceCaptured)
 	{
-		PieceCapturedChar = PieceParsing(PieceCaptured);
+		TextToPutOnButton.AppendChar(PieceParsing(PieceCaptured));
 	}
-	FString NewPositionString = LocationParsing(NewPosition);
-
-	FString TextToPutOnButton = "";
-	TextToPutOnButton.AppendChar(PieceMovedChar);
-	TextToPutOnButton.AppendChar(PieceCapturedChar);
-	TextToPutOnButton.Append(NewPositionString);
+	TextToPutOnButton.Append(LocationParsing(NewPosition));
 
 	MoveDone->SetText(FText::FromString(TextToPutOnButton));
+	MoveDone->SetColorAndOpacity(FLinearColor::Black);
 
 	AddChild(MoveDone);
 }
 
 TCHAR UOldMovesButtons::PieceParsing(APiece* PieceToParse)
 {
-	TCHAR ResultantChar = '\0';
-
 	if (Cast<APieceKing>(PieceToParse))
 	{
-		ResultantChar = 'K';
+		return 'K';
 	}
 	else if (Cast<APieceQueen>(PieceToParse))
 	{
-		ResultantChar = 'Q';
+		return 'Q';
 	}
 	else if (Cast<APieceRook>(PieceToParse))
 	{
-		ResultantChar = 'R';
+		return 'R';
 	}
 	else if (Cast<APieceBishop>(PieceToParse))
 	{
-		ResultantChar = 'B';
+		return 'B';
 	}
 	else if (Cast<APieceKnight>(PieceToParse))
 	{
-		ResultantChar = 'N';
+		return 'N';
 	}
 
-	if (PieceToParse->Color == EColor::B)
-	{
-		return FChar::ToLower(ResultantChar);
-	}
-	return ResultantChar;
+	return '\0';
 }
 
 FString UOldMovesButtons::LocationParsing(FVector& Location)
@@ -105,7 +92,9 @@ FString UOldMovesButtons::LocationParsing(FVector& Location)
 		ResultantString.AppendChar('a' + Location.X);
 	}
 
-	FString YPosition = FString::SanitizeFloat(Location.Y);
+	int32 LocationYRoundedToIntPlusOne = FMath::RoundToInt(Location.Y) + 1;
+	FString YPosition = FString::FromInt(LocationYRoundedToIntPlusOne);
+
 	ResultantString.Append(YPosition);
 
 	return ResultantString;

@@ -120,6 +120,9 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(CPC->SelectedPieceToMove->RelativePosition().X, CPC->SelectedPieceToMove->RelativePosition().Y));
 	ATile** ActualTilePtr = GameMode->CB->TileMap.Find(CurrTile->GetGridPosition());
+	TArray<UUserWidget*> FoundWidgets;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
+	UMainHUD* MainHUD = Cast<UMainHUD>(FoundWidgets[0]);
 
 	if (CurrTile->GetOccupantColor() == EOccupantColor::E)
 	{
@@ -165,9 +168,8 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameMode->CB->GenerateStringFromPositions();
 			GameMode->CB->HistoryOfMoves.Add(LastMove);
-			TArray<UUserWidget*> FoundWidgets;
-			UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
-			UMainHUD* MainHUD = Cast<UMainHUD>(FoundWidgets[0]);
+			
+			// Create dinamically the move button
 			if (MainHUD)
 			{
 				MainHUD->AddButton();
@@ -182,6 +184,8 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 						LastButton->PieceMoved = CPC->SelectedPieceToMove;
 						LastButton->PieceCaptured = nullptr;
 						LastButton->NewPosition = CPC->SelectedPieceToMove->RelativePosition();
+
+						LastButton->CreateText();
 					}
 				}
 			}

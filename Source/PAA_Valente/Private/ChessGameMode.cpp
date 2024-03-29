@@ -37,7 +37,7 @@ void AChessGameMode::BeginPlay()
 	auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 
 	// MiniMax Player
-	//auto* AI = GetWorld()->SpawnActor<ATTT_MinimaxPlayer>(FVector(), FRotator());
+	//auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
 
 	if (CBClass != nullptr)
 	{

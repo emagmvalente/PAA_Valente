@@ -16,8 +16,6 @@ void UMainHUD::AddButton()
         NewButton->OnClicked.AddDynamic(NewButton, &UOldMovesButtons::ButtonOnClickFunction);
         ButtonArray.Add(NewButton);
 
-        NewButton->CreateText();
-
         ScrollBox->AddChild(NewButton);
 
         IntToKeepTrack++;

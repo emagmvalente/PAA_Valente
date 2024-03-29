@@ -61,6 +61,9 @@ void ABlackRandomPlayer::OnTurn()
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			APiece* ChosenPiece = nullptr;
 			TArray<ATile*> MovesAndEatablePieces;
+			TArray<UUserWidget*> FoundWidgets;
+			UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
+			UMainHUD* MainHUD = Cast<UMainHUD>(FoundWidgets[0]);
 
 			do
 			{
@@ -133,9 +136,8 @@ void ABlackRandomPlayer::OnTurn()
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
 			GameModeCallback->CB->HistoryOfMoves.Add(LastMove);
-			TArray<UUserWidget*> FoundWidgets;
-			UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
-			UMainHUD* MainHUD = Cast<UMainHUD>(FoundWidgets[0]);
+
+			// Create dinamically the move button
 			if (MainHUD)
 			{
 				MainHUD->AddButton();
@@ -150,6 +152,8 @@ void ABlackRandomPlayer::OnTurn()
 						LastButton->PieceMoved = ChosenPiece;
 						LastButton->PieceCaptured = nullptr;
 						LastButton->NewPosition = ChosenPiece->RelativePosition();
+
+						LastButton->CreateText();
 					}
 				}
 			}
