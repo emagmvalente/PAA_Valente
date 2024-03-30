@@ -84,6 +84,7 @@ void ABlackRandomPlayer::OnTurn()
 
 			// Getting previous tile
 			ATile** PreviousTilePtr = GameModeCallback->CB->TileMap.Find(ChosenPiece->Relative2DPosition());
+			FVector2D OldPosition = ChosenPiece->Relative2DPosition();
 
 			// Getting the new tile and the new position
 			int32 RandIdx1 = FMath::Rand() % MovesAndEatablePieces.Num();
@@ -102,6 +103,7 @@ void ABlackRandomPlayer::OnTurn()
 					{
 						GameModeCallback->CB->WhitePieces.Remove(WhitePiece);
 						WhitePiece->PieceCaptured();
+						bIsACapture = true;
 						break;
 					}
 				}
@@ -150,13 +152,16 @@ void ABlackRandomPlayer::OnTurn()
 						LastButton->GameMode = GameModeCallback;
 						LastButton->CPC = CPC;
 						LastButton->PieceMoved = ChosenPiece;
-						LastButton->PieceCaptured = nullptr;
-						LastButton->NewPosition = ChosenPiece->RelativePosition();
+						LastButton->bItWasACapture = bIsACapture;
+						LastButton->NewPosition = ChosenPiece->Relative2DPosition();
+						LastButton->OldPosition = OldPosition;
 
 						LastButton->CreateText();
 					}
 				}
 			}
+
+			bIsACapture = false;
 
 			// Turn ending
 			GameModeCallback->bIsBlackThinking = false;

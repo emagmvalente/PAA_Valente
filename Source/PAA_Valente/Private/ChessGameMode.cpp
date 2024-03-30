@@ -13,6 +13,8 @@
 #include "BlackRandomPlayer.h"
 #include "PlayerInterface.h"
 #include "EngineUtils.h"
+#include "ChessPlayerController.h"
+#include "MainHUD.h"
 
 AChessGameMode::AChessGameMode()
 {
@@ -158,7 +160,6 @@ void AChessGameMode::VerifyWin(APiece* Piece)
 	TArray<APiece*> EnemyPieces;
 	ATile** AllyKingTile = nullptr;
 	ATile** EnemyKingTile = nullptr;
-
 
 	if (Piece->Color == EColor::W)
 	{

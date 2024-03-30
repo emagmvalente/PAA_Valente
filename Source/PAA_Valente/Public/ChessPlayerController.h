@@ -30,6 +30,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* Click;
 
+	UMainHUD* MainHUDWidget;
+
 	APiece* SelectedPieceToMove = nullptr;
 
 	void ClickOnBoard();
@@ -37,7 +39,4 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
-
-private:
-	UMainHUD* MainHUDWidget;
 };

@@ -17,7 +17,5 @@ void UMainHUD::AddButton()
         ButtonArray.Add(NewButton);
 
         ScrollBox->AddChild(NewButton);
-
-        IntToKeepTrack++;
     }
 }

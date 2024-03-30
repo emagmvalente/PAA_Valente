@@ -30,7 +30,5 @@ public:
 
 	TArray<UOldMovesButtons*> ButtonArray;
 
-	int32 IntToKeepTrack = 0;
-
 	virtual void NativeConstruct() override;
 };

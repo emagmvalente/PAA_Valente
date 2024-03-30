@@ -11,10 +11,13 @@
 #include "PiecePawn.h"
 #include "PieceKnight.h"
 
-UOldMovesButtons::UOldMovesButtons()
+UOldMovesButtons::UOldMovesButtons(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	AssociatedString = FString("");
+	MoveDone = ObjectInitializer.CreateDefaultSubobject<UTextBlock>(this, TEXT("MoveDone"));
 }
+
 
 void UOldMovesButtons::ButtonOnClickFunction()
 {
@@ -38,18 +41,37 @@ void UOldMovesButtons::ButtonOnClickFunction()
 
 void UOldMovesButtons::CreateText()
 {
-	UTextBlock* MoveDone = NewObject<UTextBlock>(this);
-
 	FString TextToPutOnButton = "";
 	if (PieceMoved)
 	{
 		TextToPutOnButton.AppendChar(PieceParsing(PieceMoved));
 	}
-	if (PieceCaptured)
+	if (bItWasACapture)
 	{
-		TextToPutOnButton.AppendChar(PieceParsing(PieceCaptured));
+		if (Cast<APiecePawn>(PieceMoved))
+		{
+			FString OldPositionString = LocationParsing(OldPosition);
+			TCHAR OldPositionChar = OldPositionString[0];
+			TextToPutOnButton.AppendChar(OldPositionChar);
+
+		}
+		TextToPutOnButton.AppendChar('x');
 	}
 	TextToPutOnButton.Append(LocationParsing(NewPosition));
+
+	GameMode->VerifyCheck(GameMode->CB->Kings[0]);
+	GameMode->VerifyCheck(GameMode->CB->Kings[1]);
+	GameMode->VerifyWin(GameMode->CB->Kings[0]);
+	GameMode->VerifyWin(GameMode->CB->Kings[1]);
+
+	if ((GameMode->bIsBlackOnCheck || GameMode->bIsWhiteOnCheck) && !GameMode->bIsGameOver)
+	{
+		TextToPutOnButton.AppendChar('+');
+	}
+	else if (GameMode->bIsGameOver)
+	{
+		TextToPutOnButton.AppendChar('#');
+	}
 
 	MoveDone->SetText(FText::FromString(TextToPutOnButton));
 	MoveDone->SetColorAndOpacity(FLinearColor::Black);
@@ -83,7 +105,7 @@ TCHAR UOldMovesButtons::PieceParsing(APiece* PieceToParse)
 	return '\0';
 }
 
-FString UOldMovesButtons::LocationParsing(FVector& Location)
+FString UOldMovesButtons::LocationParsing(FVector2D& Location)
 {
 	FString ResultantString = FString("");
 

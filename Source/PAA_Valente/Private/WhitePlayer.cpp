@@ -87,6 +87,7 @@ void AWhitePlayer::PieceSelection()
 				{
 					GameMode->CB->BlackPieces.Remove(PieceClicked);
 					PieceClicked->PieceCaptured();
+					bIsACapture = true;
 					(*TilePtr)->SetOccupantColor(EOccupantColor::E);
 					TileSelection(*TilePtr);
 				}
@@ -118,7 +119,8 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
-	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(CPC->SelectedPieceToMove->RelativePosition().X, CPC->SelectedPieceToMove->RelativePosition().Y));
+	FVector2D OldPosition = CPC->SelectedPieceToMove->Relative2DPosition();
+	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(OldPosition);
 	ATile** ActualTilePtr = GameMode->CB->TileMap.Find(CurrTile->GetGridPosition());
 	TArray<UUserWidget*> FoundWidgets;
 	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
@@ -182,13 +184,19 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 						LastButton->GameMode = GameMode;
 						LastButton->CPC = CPC;
 						LastButton->PieceMoved = CPC->SelectedPieceToMove;
-						LastButton->PieceCaptured = nullptr;
-						LastButton->NewPosition = CPC->SelectedPieceToMove->RelativePosition();
+						LastButton->bItWasACapture = bIsACapture;
+						LastButton->NewPosition = CPC->SelectedPieceToMove->Relative2DPosition();
+						if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
+						{
+							LastButton->OldPosition = OldPosition;
+						}
 
 						LastButton->CreateText();
 					}
 				}
 			}
+
+			bIsACapture = false;
 
 			// Turn ending
 			IsMyTurn = false;

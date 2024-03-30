@@ -37,7 +37,7 @@ void AChessboard::BeginPlay()
 	GenerateField();
 
 	// Using FEN notation to generate every piece
-	FString GeneratingString = "4k3/8/3P4/8/8/8/8/4K3";
+	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
 	GeneratePositionsFromString(GeneratingString);
 	// Using FEN notation for the replay mechanic too
