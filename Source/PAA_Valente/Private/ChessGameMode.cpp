@@ -51,7 +51,7 @@ void AChessGameMode::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("Game Field is null"));
 	}
 
-	float CameraPosX = ((CB->TileSize * (FieldSize + ((FieldSize - 1) * CB->NormalizedCellPadding) - (FieldSize - 1))) / 2) - (CB->TileSize / 2);
+	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
 	FVector CameraPos(CameraPosX, CameraPosX, 1000.0f);
 	HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
@@ -87,59 +87,95 @@ void AChessGameMode::TurnPlayer()
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
 
+	VerifyCheck();
+	VerifyDraw();
+
 	if (TurnFlag == 0)
 	{
 		TurnFlag++;
-		VerifyCheck(CB->Kings[1]);
-		VerifyWin(CB->Kings[1]);
-		VerifyDraw();
 		if (!bIsGameOver)
 		{
 			AIPlayer->OnTurn();
+		}
+		else if (bIsGameOver && bIsBlackOnCheck)
+		{
+			HumanPlayer->OnWin();
+		}
+		else if (bIsGameOver && !bIsBlackOnCheck)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
 		}
 	}
 	else if (TurnFlag == 1)
 	{
 		TurnFlag--;
-		VerifyCheck(CB->Kings[0]);
-		VerifyWin(CB->Kings[0]);
-		VerifyDraw();
 		if (!bIsGameOver)
 		{
 			HumanPlayer->OnTurn();
+		}
+		else if (bIsGameOver && bIsWhiteOnCheck)
+		{
+			AIPlayer->OnWin();
+		}
+		else if (bIsGameOver && !bIsWhiteOnCheck)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
 		}
 	}
 }
 
 // Winning / Draw / Losing
-void AChessGameMode::VerifyCheck(APiece* Piece)
+
+// ANCORA MIGLIORABILE ELIMINANDO LE VARIABILI BOOLEANE DI CHECK E SPEZZANDO VERIFYCHECK IN DUE METODI BOOLEANI
+void AChessGameMode::VerifyCheck()
 {
+	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
 	ATile** WhiteKingTile = CB->TileMap.Find(FVector2D(CB->Kings[0]->RelativePosition().X, CB->Kings[0]->RelativePosition().Y));
 	ATile** BlackKingTile = CB->TileMap.Find(FVector2D(CB->Kings[1]->RelativePosition().X, CB->Kings[1]->RelativePosition().Y));
-	
-	if (Piece->Color == EColor::B)
+	int32 NumberOfPiecesWithoutLegalMoves = 0;
+
+	// White puts black on check
+	for (APiece* WhitePiece : CB->WhitePieces)
 	{
-		for (APiece* WhitePiece : CB->WhitePieces)
+		WhitePiece->PossibleMoves();
+
+		// Check detection
+		if (WhitePiece->EatablePiecesPosition.Contains(*BlackKingTile))
 		{
-			WhitePiece->PossibleMoves();
-			if (WhitePiece->EatablePieces.Contains(*BlackKingTile))
+			bIsBlackOnCheck = true;
+			break;
+		}
+		else
+		{
+			bIsBlackOnCheck = false;
+		}
+
+		// Checkmate / Stalemate detection
+		for (APiece* BlackPiece : CB->BlackPieces)
+		{
+			BlackPiece->PossibleMoves();
+			BlackPiece->FilterOnlyLegalMoves();
+			if (BlackPiece->Moves.Num() == 0 && BlackPiece->EatablePiecesPosition.Num() == 0)
 			{
-				bIsBlackOnCheck = true;
-				break;
+				NumberOfPiecesWithoutLegalMoves++;
 			}
-			else
-			{
-				bIsBlackOnCheck = false;
-			}
+		}
+		if (NumberOfPiecesWithoutLegalMoves == CB->BlackPieces.Num())
+		{
+			bIsGameOver = true;
 		}
 	}
 
-	else if (Piece->Color == EColor::W)
+	// Black puts white on check
+	if (!bIsBlackOnCheck)
 	{
 		for (APiece* BlackPiece : CB->BlackPieces)
 		{
 			BlackPiece->PossibleMoves();
-			if (BlackPiece->EatablePieces.Contains(*WhiteKingTile))
+
+			// Check detection
+			if (BlackPiece->EatablePiecesPosition.Contains(*WhiteKingTile))
 			{
 				bIsWhiteOnCheck = true;
 				break;
@@ -148,67 +184,21 @@ void AChessGameMode::VerifyCheck(APiece* Piece)
 			{
 				bIsWhiteOnCheck = false;
 			}
-		}
-	}
-}
 
-void AChessGameMode::VerifyWin(APiece* Piece)
-{
-	IPlayerInterface* Winner = nullptr;
-	int32 NumberOfPiecesWithoutLegalMoves = 0;
-	TArray<APiece*> AllyPieces;
-	TArray<APiece*> EnemyPieces;
-	ATile** AllyKingTile = nullptr;
-	ATile** EnemyKingTile = nullptr;
-
-	if (Piece->Color == EColor::W)
-	{
-		AllyPieces = CB->WhitePieces;
-		EnemyPieces = CB->BlackPieces;
-		AllyKingTile = CB->TileMap.Find(CB->Kings[0]->Relative2DPosition());
-		EnemyKingTile = CB->TileMap.Find(CB->Kings[1]->Relative2DPosition());
-		Winner = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
-	}
-	else
-	{
-		AllyPieces = CB->BlackPieces;
-		EnemyPieces = CB->WhitePieces;
-		AllyKingTile = CB->TileMap.Find(CB->Kings[1]->Relative2DPosition());
-		EnemyKingTile = CB->TileMap.Find(CB->Kings[0]->Relative2DPosition());
-		Winner = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	}
-
-	for (APiece* AllyPiece : AllyPieces)
-	{
-		AllyPiece->PossibleMoves();
-		AllyPiece->FilterOnlyLegalMoves();
-		if (AllyPiece->Moves.Num() == 0 && AllyPiece->EatablePieces.Num() == 0)
-		{
-			NumberOfPiecesWithoutLegalMoves++;
-		}
-	}
-
-	if (NumberOfPiecesWithoutLegalMoves == AllyPieces.Num())
-	{
-		bool bIsAWinCase = false;
-		for (APiece* EnemyPiece : EnemyPieces)
-		{
-			if (EnemyPiece->EatablePieces.Contains(*AllyKingTile))
+			// Checkmate / Stalemate detection
+			for (APiece* WhitePiece : CB->WhitePieces)
 			{
-				bIsAWinCase = true;
-				break;
+				WhitePiece->PossibleMoves();
+				WhitePiece->FilterOnlyLegalMoves();
+				if (WhitePiece->Moves.Num() == 0 && WhitePiece->EatablePiecesPosition.Num() == 0)
+				{
+					NumberOfPiecesWithoutLegalMoves++;
+				}
 			}
-		}
-		bIsGameOver = true;
-
-		if (bIsAWinCase)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("In the right branch"));
-			Winner->OnWin();
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
+			if (NumberOfPiecesWithoutLegalMoves == CB->WhitePieces.Num())
+			{
+				bIsGameOver = true;
+			}
 		}
 	}
 }

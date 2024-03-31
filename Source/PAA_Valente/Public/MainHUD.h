@@ -20,6 +20,7 @@ class PAA_VALENTE_API UMainHUD : public UUserWidget
 
 public:
 	void AddButton();
+	void DestroyButtons();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UButton* ResetButton;

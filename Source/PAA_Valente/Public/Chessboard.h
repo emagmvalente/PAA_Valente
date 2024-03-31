@@ -34,17 +34,6 @@ public:
 	UPROPERTY(Transient)
 	TMap<FVector2D, ATile*> TileMap;
 
-	// Spazio prefissato che c'è tra una cella e l'altra, indipendentemente dalla grandezza delle tile
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	float NormalizedCellPadding;
-
-	static const int32 NOT_ASSIGNED = -1;
-
-	// BlueprintAssignable Usable with Multicast Delegates only. Exposes the property for assigning in Blueprints.
-	// declare a variable of type FOnReset (delegate)
-	UPROPERTY(BlueprintAssignable)
-	FOnReset OnResetEvent;
-
 	// size of field
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 Size;
@@ -52,10 +41,6 @@ public:
 	// TSubclassOf template class that provides UClass type safety
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ATile> TileClass;
-
-	// tile padding dimension
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float CellPadding;
 
 	// tile size
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

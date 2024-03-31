@@ -52,8 +52,7 @@ public:
 	void TurnPlayer();
 
 	// Winning / Draw / Losing - METHODS
-	void VerifyCheck(APiece* Piece);
-	void VerifyWin(APiece* Piece);
+	void VerifyCheck();
 	void VerifyDraw();
 	bool CheckThreeOccurrences();
 	bool KingvsKing();

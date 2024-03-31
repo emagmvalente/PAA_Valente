@@ -31,17 +31,15 @@ protected:
 public:	
 
 	EColor Color;
+	int32 PieceValue;
 	TArray<ATile*> Moves;
-	TArray<ATile*> EatablePieces;
+	TArray<ATile*> EatablePiecesPosition;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// ChangeMaterial changes the skin of the piece (Default: White)
 	void ChangeMaterial(UMaterialInterface* NewMaterial);
-
-	// Destroys the piece
-	void PieceCaptured();
 
 	// Returns piece's relative position with Z = 10.f
 	FVector RelativePosition() const;

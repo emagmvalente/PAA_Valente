@@ -19,3 +19,11 @@ void UMainHUD::AddButton()
         ScrollBox->AddChild(NewButton);
     }
 }
+
+void UMainHUD::DestroyButtons()
+{
+    if (ScrollBox)
+    {
+        ScrollBox->ClearChildren();
+    }
+}

@@ -36,7 +36,7 @@ void APieceKing::Tick(float DeltaTime)
 void APieceKing::PossibleMoves()
 {
 	Moves.Empty();
-	EatablePieces.Empty();
+	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -58,7 +58,7 @@ void APieceKing::PossibleMoves()
 		// Next tile occupied by an enemy piece case
 		else if (NextTile != nullptr && !IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
 		{
-			EatablePieces.Add(*NextTile);
+			EatablePiecesPosition.Add(*NextTile);
 		}
 		// Default case
 		else

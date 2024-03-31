@@ -83,10 +83,10 @@ void AWhitePlayer::PieceSelection()
 			{
 				ATile** TilePtr = GameMode->CB->TileMap.Find(FVector2D(PieceClicked->RelativePosition().X, PieceClicked->RelativePosition().Y));
 
-				if (CPC->SelectedPieceToMove->EatablePieces.Contains(*TilePtr))
+				if (CPC->SelectedPieceToMove->EatablePiecesPosition.Contains(*TilePtr))
 				{
 					GameMode->CB->BlackPieces.Remove(PieceClicked);
-					PieceClicked->PieceCaptured();
+					PieceClicked->Destroy();
 					bIsACapture = true;
 					(*TilePtr)->SetOccupantColor(EOccupantColor::E);
 					TileSelection(*TilePtr);
@@ -122,9 +122,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 	FVector2D OldPosition = CPC->SelectedPieceToMove->Relative2DPosition();
 	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(OldPosition);
 	ATile** ActualTilePtr = GameMode->CB->TileMap.Find(CurrTile->GetGridPosition());
-	TArray<UUserWidget*> FoundWidgets;
-	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
-	UMainHUD* MainHUD = Cast<UMainHUD>(FoundWidgets[0]);
+	UMainHUD* MainHUD = CPC->MainHUDWidget;
 
 	if (CurrTile->GetOccupantColor() == EOccupantColor::E)
 	{
@@ -132,7 +130,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 		CPC->SelectedPieceToMove->DecolorPossibleMoves();
 
 		// If the move is legal, move the piece
-		if (CPC->SelectedPieceToMove->Moves.Contains(CurrTile) || CPC->SelectedPieceToMove->EatablePieces.Contains(CurrTile))
+		if (CPC->SelectedPieceToMove->Moves.Contains(CurrTile) || CPC->SelectedPieceToMove->EatablePiecesPosition.Contains(CurrTile))
 		{
 			FVector ActorPositioning = GameMode->CB->GetRelativeLocationByXYPosition(CurrTile->GetGridPosition().X, CurrTile->GetGridPosition().Y);
 			ActorPositioning.Z = 10.0f;

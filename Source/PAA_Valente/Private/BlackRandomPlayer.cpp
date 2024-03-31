@@ -61,9 +61,7 @@ void ABlackRandomPlayer::OnTurn()
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			APiece* ChosenPiece = nullptr;
 			TArray<ATile*> MovesAndEatablePieces;
-			TArray<UUserWidget*> FoundWidgets;
-			UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
-			UMainHUD* MainHUD = Cast<UMainHUD>(FoundWidgets[0]);
+			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
 			do
 			{
@@ -78,7 +76,7 @@ void ABlackRandomPlayer::OnTurn()
 				ChosenPiece->FilterOnlyLegalMoves();
 
 				MovesAndEatablePieces = ChosenPiece->Moves;
-				MovesAndEatablePieces.Append(ChosenPiece->EatablePieces);
+				MovesAndEatablePieces.Append(ChosenPiece->EatablePiecesPosition);
 
 			} while (MovesAndEatablePieces.Num() == 0);
 
@@ -102,7 +100,7 @@ void ABlackRandomPlayer::OnTurn()
 					if (WhitePiece->GetActorLocation() == TilePositioning)
 					{
 						GameModeCallback->CB->WhitePieces.Remove(WhitePiece);
-						WhitePiece->PieceCaptured();
+						WhitePiece->Destroy();
 						bIsACapture = true;
 						break;
 					}

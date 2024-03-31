@@ -18,7 +18,6 @@ UOldMovesButtons::UOldMovesButtons(const FObjectInitializer& ObjectInitializer)
 	MoveDone = ObjectInitializer.CreateDefaultSubobject<UTextBlock>(this, TEXT("MoveDone"));
 }
 
-
 void UOldMovesButtons::ButtonOnClickFunction()
 {
 	// Recreating the chessboard in its old state
@@ -48,6 +47,7 @@ void UOldMovesButtons::CreateText()
 	}
 	if (bItWasACapture)
 	{
+		// In algebraic notation, pawn doesn't have a letter, so it will be used his location
 		if (Cast<APiecePawn>(PieceMoved))
 		{
 			FString OldPositionString = LocationParsing(OldPosition);
@@ -59,19 +59,22 @@ void UOldMovesButtons::CreateText()
 	}
 	TextToPutOnButton.Append(LocationParsing(NewPosition));
 
-	GameMode->VerifyCheck(GameMode->CB->Kings[0]);
-	GameMode->VerifyCheck(GameMode->CB->Kings[1]);
-	GameMode->VerifyWin(GameMode->CB->Kings[0]);
-	GameMode->VerifyWin(GameMode->CB->Kings[1]);
+	// Add special chars
+	GameMode->VerifyCheck();
 
 	if ((GameMode->bIsBlackOnCheck || GameMode->bIsWhiteOnCheck) && !GameMode->bIsGameOver)
 	{
 		TextToPutOnButton.AppendChar('+');
 	}
-	else if (GameMode->bIsGameOver)
+	else if ((GameMode->bIsBlackOnCheck || GameMode->bIsWhiteOnCheck) && GameMode->bIsGameOver)
 	{
 		TextToPutOnButton.AppendChar('#');
 	}
+
+	// Just check if it was a check situation or a game over, GameMode->TurnPlayer will determine the value of each boolean variable
+	GameMode->bIsGameOver = false;
+	GameMode->bIsWhiteOnCheck = false;
+	GameMode->bIsBlackOnCheck = false;
 
 	MoveDone->SetText(FText::FromString(TextToPutOnButton));
 	MoveDone->SetColorAndOpacity(FLinearColor::Black);

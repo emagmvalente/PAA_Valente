@@ -3,6 +3,8 @@
 
 #include "ChessPlayerController.h"
 #include "ChessGameMode.h"
+#include "MainHUD.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 AChessPlayerController::AChessPlayerController()
 {
@@ -27,6 +29,10 @@ void AChessPlayerController::BeginPlay()
 	{
 		Subsystem->AddMappingContext(ChessContext, 0);
 	}
+
+	TArray<UUserWidget*> FoundWidgets;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
+	MainHUDWidget = Cast<UMainHUD>(FoundWidgets[0]);
 }
 
 void AChessPlayerController::SetupInputComponent()

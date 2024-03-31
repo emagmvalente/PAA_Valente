@@ -12,6 +12,8 @@
 #include "PieceRook.h"
 #include "PlayerInterface.h"
 #include "WhitePlayer.h"
+#include "ChessPlayerController.h"
+#include "MainHUD.h"
 #include "EngineUtils.h"
 
 AChessboard::AChessboard()
@@ -20,15 +22,12 @@ AChessboard::AChessboard()
 	PrimaryActorTick.bCanEverTick = false;
 	Size = 8;
 	TileSize = 120;
-	CellPadding = 0;
 	Kings.SetNum(2);
 }
 
 void AChessboard::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	//normalized tilepadding
-	NormalizedCellPadding = FMath::RoundToDouble(((TileSize + CellPadding) / TileSize) * 100) / 100;
 }
 
 void AChessboard::BeginPlay()
@@ -37,7 +36,7 @@ void AChessboard::BeginPlay()
 	GenerateField();
 
 	// Using FEN notation to generate every piece
-	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+	FString GeneratingString = "k7/3Q4/8/8/8/8/8/4K3";
 
 	GeneratePositionsFromString(GeneratingString);
 	// Using FEN notation for the replay mechanic too
@@ -49,11 +48,15 @@ void AChessboard::BeginPlay()
 void AChessboard::ResetField()
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 	
 	if (!GameMode->bIsBlackThinking)
 	{
-		OnResetEvent.Broadcast();
 		HistoryOfMoves.Empty();
+		if (CPC->MainHUDWidget)
+		{
+			CPC->MainHUDWidget->DestroyButtons();
+		}
 
 		// Using FEN notation to generate every piece
 		FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
@@ -377,47 +380,46 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			case 'P':
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
-
+				Obj->PieceValue = 1;
 				if (Row != 1)
 				{
 					Cast<APiecePawn>(Obj)->bFirstMove = false;
 				}
-
 				WhitePieces.Add(Obj);
 				break;
 
 			case 'N':
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
-
-				WhitePieces.Add(Obj);
+				Obj->PieceValue = 3;
+				WhitePieces.Add(Obj); 
 				break;
 
 			case 'B':
 				Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
-
-				WhitePieces.Add(Obj);
+				Obj->PieceValue = 3;
+				WhitePieces.Add(Obj); 
 				break;
 
 			case 'R':
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
-
+				Obj->PieceValue = 3;
 				WhitePieces.Add(Obj);
 				break;
 
 			case 'Q':
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
-
+				Obj->PieceValue = 9;
 				WhitePieces.Add(Obj);
 				break;
 
 			case 'K':
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::W;
-
+				Obj->PieceValue = 10;
 				WhitePieces.Add(Obj);
 				break;
 
@@ -426,60 +428,53 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			case 'p':
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
-				
-				Obj->ChangeMaterial(LoadBlackPawn);
-
+				Obj->PieceValue = -1;
 				if (Row != 6)
 				{
 					Cast<APiecePawn>(Obj)->bFirstMove = false;
 				}
-
+				Obj->ChangeMaterial(LoadBlackPawn);
 				BlackPieces.Add(Obj);
 				break;
 
 			case 'n':
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
-
+				Obj->PieceValue = -3;
 				Obj->ChangeMaterial(LoadBlackKnight);
-
 				BlackPieces.Add(Obj);
 				break;
 
 			case 'b':
 				Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
-
+				Obj->PieceValue = -3;
 				Obj->ChangeMaterial(LoadBlackBishop);
-
 				BlackPieces.Add(Obj);
 				break;
 
 			case 'r':
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
-
-				Obj->ChangeMaterial(LoadBlackRook);
-
+				Obj->PieceValue = -5;
+				Obj->ChangeMaterial(LoadBlackRook); 
 				BlackPieces.Add(Obj);
 				break;
 
 			case 'q':
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
-
+				Obj->PieceValue = -9;
 				Obj->ChangeMaterial(LoadBlackQueen);
-
-				BlackPieces.Add(Obj);
+				BlackPieces.Add(Obj); 
 				break;
 
 			case 'k':
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->Color = EColor::B;
-
+				Obj->PieceValue = -10;
 				Obj->ChangeMaterial(LoadBlackKing);
-
-				BlackPieces.Add(Obj);
+				BlackPieces.Add(Obj); 
 				break;
 
 			default:
@@ -495,22 +490,23 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 
 void AChessboard::SetTilesOwners()
 {
+	TArray<APiece*> AllPieces = WhitePieces;
+	AllPieces.Append(BlackPieces);
+
 	for (ATile* Tile : TileArray)
 	{
-		for (APiece* WhitePiece : WhitePieces)
+		for (APiece* Piece : AllPieces)
 		{
-			if (WhitePiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
+			if (Piece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
 			{
-				Tile->SetOccupantColor(EOccupantColor::W);
-				break;
-			}
-		}
-
-		for (APiece* BlackPiece : BlackPieces)
-		{
-			if (BlackPiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
-			{
-				Tile->SetOccupantColor(EOccupantColor::B);
+				if (Piece->Color == EColor::W)
+				{
+					Tile->SetOccupantColor(EOccupantColor::W);
+				}
+				else if (Piece->Color == EColor::B)
+				{
+					Tile->SetOccupantColor(EOccupantColor::B);
+				}
 				break;
 			}
 		}
@@ -524,14 +520,13 @@ FVector2D AChessboard::GetPosition(const FHitResult& Hit)
 
 FVector AChessboard::GetRelativeLocationByXYPosition(const int32 InX, const int32 InY) const
 {
-	return TileSize * NormalizedCellPadding * FVector(InX, InY, 0);
+	return TileSize * FVector(InX, InY, 0);
 }
 
 FVector2D AChessboard::GetXYPositionByRelativeLocation(const FVector& Location) const
 {
-	const double x = Location[0] / (TileSize * NormalizedCellPadding);
-	const double y = Location[1] / (TileSize * NormalizedCellPadding);
-	// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("x=%f,y=%f"), x, y));
+	const double x = Location[0] / TileSize;
+	const double y = Location[1] / TileSize;
 	return FVector2D(x, y);
 }
 

@@ -36,7 +36,7 @@ void APieceQueen::Tick(float DeltaTime)
 void APieceQueen::PossibleMoves()
 {
 	Moves.Empty();
-	EatablePieces.Empty();
+	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -61,7 +61,7 @@ void APieceQueen::PossibleMoves()
 				}
 				else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
 				{
-					EatablePieces.Add(*NextTile);
+					EatablePiecesPosition.Add(*NextTile);
 					break;
 				}
 				else

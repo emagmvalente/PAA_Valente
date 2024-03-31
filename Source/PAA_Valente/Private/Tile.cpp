@@ -56,5 +56,4 @@ void ATile::SetOccupantColor(const EOccupantColor Color)
 void ATile::BeginPlay()
 {
 	Super::BeginPlay();
-
 }

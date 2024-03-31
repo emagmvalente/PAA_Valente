@@ -80,7 +80,7 @@ void APiecePawn::Tick(float DeltaTime)
 void APiecePawn::PossibleMoves()
 {
 	Moves.Empty();
-	EatablePieces.Empty();
+	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -117,7 +117,7 @@ void APiecePawn::PossibleMoves()
 			}
 			else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E && Direction != Directions[0])
 			{
-				EatablePieces.Add(*NextTile);
+				EatablePiecesPosition.Add(*NextTile);
 				continue;
 			}
 		}
