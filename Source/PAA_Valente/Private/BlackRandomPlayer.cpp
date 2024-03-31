@@ -178,14 +178,3 @@ void ABlackRandomPlayer::OnWin()
 	GameInstance->SetTurnMessage(TEXT("AI Wins!"));
 	GameInstance->IncrementScoreAiPlayer();
 }
-
-void ABlackRandomPlayer::OnLose()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Loses!"));
-	// GameInstance->SetTurnMessage(TEXT("AI Loses!"));
-}
-
-bool ABlackRandomPlayer::IsCheckStatus()
-{
-	return false;
-}

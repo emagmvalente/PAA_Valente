@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "PlayerInterface.h"
 #include "ChessGameInstance.h"
 #include "ChessGameMode.h"
 #include "Piece.h"
@@ -12,7 +11,7 @@
 #include "BlackMinimaxPlayer.generated.h"
 
 UCLASS()
-class PAA_VALENTE_API ABlackMinimaxPlayer : public APawn, public IPlayerInterface
+class PAA_VALENTE_API ABlackMinimaxPlayer : public APawn
 {
 	GENERATED_BODY()
 
@@ -34,10 +33,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	virtual void OnTurn() override;
-	virtual void OnWin() override;
-	virtual void OnLose() override;
-	virtual bool IsCheckStatus() override;
+	void OnTurn();
+	void OnWin();
 
 	int32 EvaluateGrid(TMap<FVector2D, ATile*>& Board);
 	int32 MiniMax(TMap<FVector2D, ATile*>& Board, int32 Depth, bool IsMax);

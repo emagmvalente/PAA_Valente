@@ -220,14 +220,3 @@ void AWhitePlayer::OnWin()
 	GameInstance->SetTurnMessage(TEXT("Human Wins!"));
 	GameInstance->IncrementScoreHumanPlayer();
 }
-
-void AWhitePlayer::OnLose()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("You Lose!"));
-	GameInstance->SetTurnMessage(TEXT("Human Loses!"));
-}
-
-bool AWhitePlayer::IsCheckStatus()
-{
-	return false;
-}

@@ -56,15 +56,6 @@ void ABlackMinimaxPlayer::OnWin()
 {
 }
 
-void ABlackMinimaxPlayer::OnLose()
-{
-}
-
-bool ABlackMinimaxPlayer::IsCheckStatus()
-{
-	return false;
-}
-
 int32 ABlackMinimaxPlayer::EvaluateGrid(TMap<FVector2D, ATile*>& Board)
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());

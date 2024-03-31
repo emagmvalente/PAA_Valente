@@ -8,8 +8,6 @@
 #include "GameFramework/GameModeBase.h"
 #include "ChessGameMode.generated.h"
 
-class IPlayerInterface;
-
 /**
  * 
  */

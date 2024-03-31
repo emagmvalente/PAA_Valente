@@ -10,7 +10,6 @@
 #include "PiecePawn.h"
 #include "PieceQueen.h"
 #include "PieceRook.h"
-#include "PlayerInterface.h"
 #include "WhitePlayer.h"
 #include "ChessPlayerController.h"
 #include "MainHUD.h"
@@ -36,7 +35,7 @@ void AChessboard::BeginPlay()
 	GenerateField();
 
 	// Using FEN notation to generate every piece
-	FString GeneratingString = "k7/3Q4/8/8/8/8/8/4K3";
+	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
 	GeneratePositionsFromString(GeneratingString);
 	// Using FEN notation for the replay mechanic too

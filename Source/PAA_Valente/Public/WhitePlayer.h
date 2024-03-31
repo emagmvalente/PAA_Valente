@@ -5,14 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "ChessGameInstance.h"
-#include "PlayerInterface.h"
 #include "Piece.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "WhitePlayer.generated.h"
 
 UCLASS()
-class PAA_VALENTE_API AWhitePlayer : public APawn, public IPlayerInterface
+class PAA_VALENTE_API AWhitePlayer : public APawn
 {
 	GENERATED_BODY()
 
@@ -25,6 +24,8 @@ public:
 
 	// game instance reference
 	UChessGameInstance* GameInstance;
+
+	int32 PlayerNumber;
 
 protected:
 	// Called when the game starts or when spawned
@@ -45,9 +46,7 @@ public:
 	void PieceSelection();
 	void TileSelection(ATile* CurrTile);
 
-	virtual void OnTurn() override;
-	virtual void OnWin() override;
-	virtual void OnLose() override;
-	virtual bool IsCheckStatus() override;
+	void OnTurn();
+	void OnWin();
 
 };

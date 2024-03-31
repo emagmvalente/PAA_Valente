@@ -2,7 +2,6 @@
 
 
 #include "ChessGameMode.h"
-#include "WhitePlayer.h"
 #include "PieceKing.h"
 #include "PieceQueen.h"
 #include "PieceRook.h"
@@ -10,8 +9,8 @@
 #include "PieceKnight.h"
 #include "PiecePawn.h"
 #include "ChessPlayerController.h"
+#include "WhitePlayer.h"
 #include "BlackRandomPlayer.h"
-#include "PlayerInterface.h"
 #include "EngineUtils.h"
 #include "ChessPlayerController.h"
 #include "MainHUD.h"
