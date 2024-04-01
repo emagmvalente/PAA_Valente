@@ -23,6 +23,7 @@ public:
 
 	// Winning / Draw / Losing - FIELDS
 	bool bIsGameOver;
+	bool bIsStalemate;
 	bool bIsWhiteOnCheck;
 	bool bIsBlackOnCheck;
 	bool bIsBlackThinking;
@@ -55,6 +56,7 @@ public:
 	bool CheckThreeOccurrences();
 	bool KingvsKing();
 	bool FiftyMovesRule();
+	bool Stalemate();
 
 	// Pawn Promotion - METHODS
 	UFUNCTION(BlueprintCallable)

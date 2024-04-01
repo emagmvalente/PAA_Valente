@@ -87,7 +87,10 @@ void AChessGameMode::TurnPlayer()
 	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
 
 	VerifyCheck();
-	VerifyDraw();
+	if (!bIsGameOver)
+	{
+		VerifyDraw();
+	}
 
 	if (TurnFlag == 0)
 	{
@@ -100,10 +103,6 @@ void AChessGameMode::TurnPlayer()
 		{
 			HumanPlayer->OnWin();
 		}
-		else if (bIsGameOver && !bIsBlackOnCheck)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
-		}
 	}
 	else if (TurnFlag == 1)
 	{
@@ -115,10 +114,6 @@ void AChessGameMode::TurnPlayer()
 		else if (bIsGameOver && bIsWhiteOnCheck)
 		{
 			AIPlayer->OnWin();
-		}
-		else if (bIsGameOver && !bIsWhiteOnCheck)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
 		}
 	}
 }
@@ -135,66 +130,68 @@ void AChessGameMode::VerifyCheck()
 	int32 NumberOfPiecesWithoutLegalMoves = 0;
 
 	// White puts black on check
-	for (APiece* WhitePiece : CB->WhitePieces)
+	if (TurnFlag == 0)
 	{
-		WhitePiece->PossibleMoves();
+		for (APiece* WhitePiece : CB->WhitePieces)
+		{
+			WhitePiece->PossibleMoves();
 
-		// Check detection
-		if (WhitePiece->EatablePiecesPosition.Contains(*BlackKingTile))
-		{
-			bIsBlackOnCheck = true;
-			break;
-		}
-		else
-		{
-			bIsBlackOnCheck = false;
-		}
-
-		// Checkmate / Stalemate detection
-		for (APiece* BlackPiece : CB->BlackPieces)
-		{
-			BlackPiece->PossibleMoves();
-			BlackPiece->FilterOnlyLegalMoves();
-			if (BlackPiece->Moves.Num() == 0 && BlackPiece->EatablePiecesPosition.Num() == 0)
+			// Check detection
+			if (WhitePiece->EatablePiecesPosition.Contains(*BlackKingTile))
 			{
-				NumberOfPiecesWithoutLegalMoves++;
+				bIsBlackOnCheck = true;
+				break;
 			}
 		}
-		if (NumberOfPiecesWithoutLegalMoves == CB->BlackPieces.Num())
+		if (bIsBlackOnCheck)
 		{
-			bIsGameOver = true;
+			bool bCanMove = false;
+			for (APiece* BlackPiece : CB->BlackPieces)
+			{
+				BlackPiece->PossibleMoves();
+				BlackPiece->FilterOnlyLegalMoves();
+				if (BlackPiece->Moves.Num() > 0 || BlackPiece->EatablePiecesPosition.Num() > 0)
+				{
+					bCanMove = true;
+					break;
+				}
+			}
+			if (!bCanMove)
+			{
+				bIsGameOver = true;
+			}
 		}
 	}
 
-	// Black puts white on check
-	if (!bIsBlackOnCheck)
+	else if (TurnFlag == 1)
 	{
+		// Black puts white on check
 		for (APiece* BlackPiece : CB->BlackPieces)
 		{
 			BlackPiece->PossibleMoves();
-
 			// Check detection
 			if (BlackPiece->EatablePiecesPosition.Contains(*WhiteKingTile))
 			{
 				bIsWhiteOnCheck = true;
 				break;
 			}
-			else
-			{
-				bIsWhiteOnCheck = false;
-			}
+		}
 
-			// Checkmate / Stalemate detection
+		// Verify a checkmate / stalemate
+		if (bIsWhiteOnCheck)
+		{
+			bool bCanMove = false;
 			for (APiece* WhitePiece : CB->WhitePieces)
 			{
 				WhitePiece->PossibleMoves();
 				WhitePiece->FilterOnlyLegalMoves();
-				if (WhitePiece->Moves.Num() == 0 && WhitePiece->EatablePiecesPosition.Num() == 0)
+				if (WhitePiece->Moves.Num() > 0 || WhitePiece->EatablePiecesPosition.Num() > 0)
 				{
-					NumberOfPiecesWithoutLegalMoves++;
+					bCanMove = true;
+					break;
 				}
 			}
-			if (NumberOfPiecesWithoutLegalMoves == CB->WhitePieces.Num())
+			if (!bCanMove)
 			{
 				bIsGameOver = true;
 			}
@@ -205,8 +202,7 @@ void AChessGameMode::VerifyCheck()
 void AChessGameMode::VerifyDraw()
 {
 	// TODO: Dead Positions
-	// Stalemate is evaluated in VerifyWin
-	if (CheckThreeOccurrences() || KingvsKing() || FiftyMovesRule())
+	if (CheckThreeOccurrences() || KingvsKing() || FiftyMovesRule() || Stalemate())
 	{
 		bIsGameOver = true;
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
@@ -315,6 +311,45 @@ bool AChessGameMode::FiftyMovesRule()
 		MovesWithoutCaptureOrPawnMove = 0;
 	}
 
+	return false;
+}
+
+bool AChessGameMode::Stalemate()
+{
+	if (!bIsWhiteOnCheck || !bIsBlackOnCheck)
+	{
+		bool bCanMove = false;
+		if (TurnFlag == 0)
+		{
+			for (APiece* BlackPiece : CB->BlackPieces)
+			{
+				BlackPiece->PossibleMoves();
+				BlackPiece->FilterOnlyLegalMoves();
+				if (BlackPiece->Moves.Num() > 0 || BlackPiece->EatablePiecesPosition.Num() > 0)
+				{
+					bCanMove = true;
+					break;
+				}
+			}
+		}
+		else if (TurnFlag == 1)
+		{
+			for (APiece* WhitePiece : CB->WhitePieces)
+			{
+				WhitePiece->PossibleMoves();
+				WhitePiece->FilterOnlyLegalMoves();
+				if (WhitePiece->Moves.Num() > 0 || WhitePiece->EatablePiecesPosition.Num() > 0)
+				{
+					bCanMove = true;
+					break;
+				}
+			}
+		}
+		if (!bCanMove)
+		{
+			return true;
+		}
+	}
 	return false;
 }
 
