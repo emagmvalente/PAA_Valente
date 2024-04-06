@@ -35,7 +35,7 @@ void AChessboard::BeginPlay()
 	GenerateField();
 
 	// Using FEN notation to generate every piece
-	FString GeneratingString = "k7/3Q4/2Q5/8/8/8/8/4K3";
+	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
 	GeneratePositionsFromString(GeneratingString);
 	// Using FEN notation for the replay mechanic too
@@ -88,6 +88,7 @@ void AChessboard::ResetField()
 		GameMode->bIsGameOver = false;
 		GameMode->bIsWhiteOnCheck = false;
 		GameMode->bIsBlackOnCheck = false;
+		GameMode->TurnFlag = 0;
 		AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 		HumanPlayer->OnTurn();
 	}

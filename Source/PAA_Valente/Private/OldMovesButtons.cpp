@@ -62,11 +62,11 @@ void UOldMovesButtons::CreateText()
 	// Add special chars
 	GameMode->VerifyCheck();
 
-	if ((GameMode->bIsBlackOnCheck || GameMode->bIsWhiteOnCheck) && !GameMode->bIsGameOver)
+	if (((GameMode->bIsBlackOnCheck && GameMode->TurnFlag == 0) || (GameMode->bIsWhiteOnCheck && GameMode->TurnFlag == 1)) && !GameMode->bIsGameOver)
 	{
 		TextToPutOnButton.AppendChar('+');
 	}
-	else if ((GameMode->bIsBlackOnCheck || GameMode->bIsWhiteOnCheck) && GameMode->bIsGameOver)
+	else if (((GameMode->bIsBlackOnCheck && GameMode->TurnFlag == 0) || (GameMode->bIsWhiteOnCheck && GameMode->TurnFlag == 1)) && GameMode->bIsGameOver)
 	{
 		TextToPutOnButton.AppendChar('#');
 	}

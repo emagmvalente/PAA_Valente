@@ -23,7 +23,6 @@ public:
 
 	// Winning / Draw / Losing - FIELDS
 	bool bIsGameOver;
-	bool bIsStalemate;
 	bool bIsWhiteOnCheck;
 	bool bIsBlackOnCheck;
 	bool bIsBlackThinking;

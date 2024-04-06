@@ -123,78 +123,77 @@ void AChessGameMode::TurnPlayer()
 // ANCORA MIGLIORABILE ELIMINANDO LE VARIABILI BOOLEANE DI CHECK E SPEZZANDO VERIFYCHECK IN DUE METODI BOOLEANI
 void AChessGameMode::VerifyCheck()
 {
-	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
 	ATile** WhiteKingTile = CB->TileMap.Find(FVector2D(CB->Kings[0]->RelativePosition().X, CB->Kings[0]->RelativePosition().Y));
 	ATile** BlackKingTile = CB->TileMap.Find(FVector2D(CB->Kings[1]->RelativePosition().X, CB->Kings[1]->RelativePosition().Y));
-	int32 NumberOfPiecesWithoutLegalMoves = 0;
 
 	// White puts black on check
+
+	bool bEnemyTeamOnCheck = false;
+	ATile* EnemyKingTile = nullptr;
+	TArray<APiece*> AllyPieces;
+	TArray<APiece*> EnemyPieces;
+
 	if (TurnFlag == 0)
 	{
-		for (APiece* WhitePiece : CB->WhitePieces)
-		{
-			WhitePiece->PossibleMoves();
+		EnemyKingTile = *BlackKingTile;
+		AllyPieces = CB->WhitePieces;
+		EnemyPieces = CB->BlackPieces;
+	}
+	else if (TurnFlag == 1)
+	{
+		EnemyKingTile = *WhiteKingTile;
+		AllyPieces = CB->BlackPieces;
+		EnemyPieces = CB->WhitePieces;
+	}
 
-			// Check detection
-			if (WhitePiece->EatablePiecesPosition.Contains(*BlackKingTile))
+	for (APiece* AllyPiece : AllyPieces)
+	{
+		AllyPiece->PossibleMoves();
+
+		// Check detection
+		if (AllyPiece->EatablePiecesPosition.Contains(EnemyKingTile))
+		{
+			if (TurnFlag == 0)
 			{
 				bIsBlackOnCheck = true;
 				break;
 			}
-		}
-		if (bIsBlackOnCheck)
-		{
-			bool bCanMove = false;
-			for (APiece* BlackPiece : CB->BlackPieces)
-			{
-				BlackPiece->PossibleMoves();
-				BlackPiece->FilterOnlyLegalMoves();
-				if (BlackPiece->Moves.Num() > 0 || BlackPiece->EatablePiecesPosition.Num() > 0)
-				{
-					bCanMove = true;
-					break;
-				}
-			}
-			if (!bCanMove)
-			{
-				bIsGameOver = true;
-			}
-		}
-	}
-
-	else if (TurnFlag == 1)
-	{
-		// Black puts white on check
-		for (APiece* BlackPiece : CB->BlackPieces)
-		{
-			BlackPiece->PossibleMoves();
-			// Check detection
-			if (BlackPiece->EatablePiecesPosition.Contains(*WhiteKingTile))
+			else if (TurnFlag == 1)
 			{
 				bIsWhiteOnCheck = true;
 				break;
 			}
+			break;
 		}
-
-		// Verify a checkmate / stalemate
-		if (bIsWhiteOnCheck)
+		else
 		{
-			bool bCanMove = false;
-			for (APiece* WhitePiece : CB->WhitePieces)
+			if (TurnFlag == 0)
 			{
-				WhitePiece->PossibleMoves();
-				WhitePiece->FilterOnlyLegalMoves();
-				if (WhitePiece->Moves.Num() > 0 || WhitePiece->EatablePiecesPosition.Num() > 0)
-				{
-					bCanMove = true;
-					break;
-				}
+				bIsBlackOnCheck = false;
 			}
-			if (!bCanMove)
+			else if (TurnFlag == 1)
 			{
-				bIsGameOver = true;
+				bIsWhiteOnCheck = false;
 			}
+		}
+	}
+
+	if (bIsBlackOnCheck || bIsWhiteOnCheck)
+	{
+		bool bCanMove = false;
+		for (APiece* EnemyPiece : EnemyPieces)
+		{
+			EnemyPiece->PossibleMoves();
+			EnemyPiece->FilterOnlyLegalMoves();
+			if (EnemyPiece->Moves.Num() > 0 || EnemyPiece->EatablePiecesPosition.Num() > 0)
+			{
+				bCanMove = true;
+				break;
+			}
+		}
+		if (!bCanMove)
+		{
+			bIsGameOver = true;
 		}
 	}
 }
