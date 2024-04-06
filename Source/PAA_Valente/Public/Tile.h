@@ -23,7 +23,7 @@ public:
 	// Sets default values for this actor's properties
 	ATile();
 
-	EOccupantColor GetOccupantColor();
+	EOccupantColor GetOccupantColor() const;
 
 	// set the player owner and the status of a tile
 	void SetOccupantColor(const EOccupantColor Color);
@@ -32,7 +32,7 @@ public:
 	void SetGridPosition(const double InX, const double InY);
 
 	// get the (x, y) position
-	FVector2D GetGridPosition();
+	FVector2D GetGridPosition() const;
 
 	// To change the color of the tile
 	UFUNCTION(BlueprintCallable)

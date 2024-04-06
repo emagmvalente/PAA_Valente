@@ -83,12 +83,7 @@ void AChessboard::ResetField()
 				}
 			}
 		}
-		GameMode->SetKings();
-
-		GameMode->bIsGameOver = false;
-		GameMode->bIsWhiteOnCheck = false;
-		GameMode->bIsBlackOnCheck = false;
-		GameMode->TurnFlag = 0;
+		GameMode->ResetVariablesForRematch();
 		AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 		HumanPlayer->OnTurn();
 	}
@@ -379,8 +374,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			// WHITE PIECES
 			case 'P':
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::W;
-				Obj->PieceValue = 1;
+				Obj->SetColor(EColor::W);
 				if (Row != 1)
 				{
 					Cast<APiecePawn>(Obj)->bFirstMove = false;
@@ -390,36 +384,31 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 
 			case 'N':
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::W;
-				Obj->PieceValue = 3;
+				Obj->SetColor(EColor::W);
 				WhitePieces.Add(Obj); 
 				break;
 
 			case 'B':
 				Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::W;
-				Obj->PieceValue = 3;
+				Obj->SetColor(EColor::W);
 				WhitePieces.Add(Obj); 
 				break;
 
 			case 'R':
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::W;
-				Obj->PieceValue = 3;
+				Obj->SetColor(EColor::W);
 				WhitePieces.Add(Obj);
 				break;
 
 			case 'Q':
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::W;
-				Obj->PieceValue = 9;
+				Obj->SetColor(EColor::W);
 				WhitePieces.Add(Obj);
 				break;
 
 			case 'K':
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::W;
-				Obj->PieceValue = 10;
+				Obj->SetColor(EColor::W);
 				WhitePieces.Add(Obj);
 				break;
 
@@ -427,8 +416,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			// BLACK PIECES
 			case 'p':
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::B;
-				Obj->PieceValue = -1;
+				Obj->SetColor(EColor::B);
 				if (Row != 6)
 				{
 					Cast<APiecePawn>(Obj)->bFirstMove = false;
@@ -439,40 +427,35 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 
 			case 'n':
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::B;
-				Obj->PieceValue = -3;
+				Obj->SetColor(EColor::B);
 				Obj->ChangeMaterial(LoadBlackKnight);
 				BlackPieces.Add(Obj);
 				break;
 
 			case 'b':
 				Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::B;
-				Obj->PieceValue = -3;
+				Obj->SetColor(EColor::B);
 				Obj->ChangeMaterial(LoadBlackBishop);
 				BlackPieces.Add(Obj);
 				break;
 
 			case 'r':
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::B;
-				Obj->PieceValue = -5;
+				Obj->SetColor(EColor::B);
 				Obj->ChangeMaterial(LoadBlackRook); 
 				BlackPieces.Add(Obj);
 				break;
 
 			case 'q':
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::B;
-				Obj->PieceValue = -9;
+				Obj->SetColor(EColor::B);
 				Obj->ChangeMaterial(LoadBlackQueen);
 				BlackPieces.Add(Obj); 
 				break;
 
 			case 'k':
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-				Obj->Color = EColor::B;
-				Obj->PieceValue = -10;
+				Obj->SetColor(EColor::B);
 				Obj->ChangeMaterial(LoadBlackKing);
 				BlackPieces.Add(Obj); 
 				break;
@@ -499,11 +482,11 @@ void AChessboard::SetTilesOwners()
 		{
 			if (Piece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
 			{
-				if (Piece->Color == EColor::W)
+				if (Piece->GetColor() == EColor::W)
 				{
 					Tile->SetOccupantColor(EOccupantColor::W);
 				}
-				else if (Piece->Color == EColor::B)
+				else if (Piece->GetColor() == EColor::B)
 				{
 					Tile->SetOccupantColor(EOccupantColor::B);
 				}

@@ -25,13 +25,13 @@ public:
 	APiece();
 
 protected:
+	int32 PieceValue;
+	EColor Color;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-
-	EColor Color;
-	int32 PieceValue;
 	TArray<ATile*> Moves;
 	TArray<ATile*> EatablePiecesPosition;
 
@@ -52,5 +52,10 @@ public:
 
 	virtual void PossibleMoves() {};
 	void FilterOnlyLegalMoves();
+
+	int32 GetPieceValue() const;
+	EColor GetColor() const;
+
+	void SetColor(EColor NewColor);
 
 };

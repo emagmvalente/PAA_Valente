@@ -12,7 +12,6 @@ APiece::APiece()
 	PrimaryActorTick.bCanEverTick = false;
 
 	Color = EColor::E;
-	PieceValue = 0;
 }
 
 // Called when the game starts or when spawned
@@ -40,13 +39,13 @@ void APiece::ChangeMaterial(UMaterialInterface* NewMaterial)
 
 FVector APiece::RelativePosition() const
 {
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	return FVector(GameMode->CB->GetXYPositionByRelativeLocation(GetActorLocation()).X, GameMode->CB->GetXYPositionByRelativeLocation(GetActorLocation()).Y, 10.f);
+	return FVector(Relative2DPosition().X, Relative2DPosition().Y, 10.f);
 }
 
 FVector2D APiece::Relative2DPosition() const
 {
-	return FVector2D(RelativePosition().X, RelativePosition().Y);
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	return GameMode->CB->GetXYPositionByRelativeLocation(GetActorLocation());
 }
 
 void APiece::ColorPossibleMoves()
@@ -195,4 +194,19 @@ void APiece::FilterOnlyLegalMoves()
 
 	// Restoring the original occupant color of the start tile
 	(*StartTile)->SetOccupantColor(AllyColor);
+}
+
+int32 APiece::GetPieceValue() const
+{
+	return PieceValue;
+}
+
+EColor APiece::GetColor() const
+{
+	return Color;
+}
+
+void APiece::SetColor(EColor NewColor)
+{
+	Color = NewColor;
 }

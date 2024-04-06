@@ -69,7 +69,7 @@ void AWhitePlayer::PieceSelection()
 		if (APiece* PieceClicked = Cast<APiece>(Hit.GetActor()))
 		{
 			// Ally Piece
-			if (PieceClicked->Color == EColor::W)
+			if (PieceClicked->GetColor() == EColor::W)
 			{
 				// Save the piece
 				CPC->SelectedPieceToMove = PieceClicked;
@@ -79,7 +79,7 @@ void AWhitePlayer::PieceSelection()
 				PieceClicked->ColorPossibleMoves();
 			}
 			// Enemy Piece
-			else if (PieceClicked->Color == EColor::B && CPC->SelectedPieceToMove != nullptr)
+			else if (PieceClicked->GetColor() == EColor::B && CPC->SelectedPieceToMove != nullptr)
 			{
 				ATile** TilePtr = GameMode->CB->TileMap.Find(FVector2D(PieceClicked->RelativePosition().X, PieceClicked->RelativePosition().Y));
 

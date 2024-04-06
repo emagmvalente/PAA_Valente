@@ -16,6 +16,10 @@ class PAA_VALENTE_API AChessGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+	int32 MovesWithoutCaptureOrPawnMove;
+	bool bIsWhiteOnCheck;
+	bool bIsBlackOnCheck;
+
 public:
 
 	AChessGameMode();
@@ -23,10 +27,7 @@ public:
 
 	// Winning / Draw / Losing - FIELDS
 	bool bIsGameOver;
-	bool bIsWhiteOnCheck;
-	bool bIsBlackOnCheck;
 	bool bIsBlackThinking;
-	int32 MovesWithoutCaptureOrPawnMove;
 
 	// Logic - FIELDS
 	int32 TurnFlag;
@@ -48,6 +49,11 @@ public:
 	// Logic and Utilities - METHODS
 	void SetKings();
 	void TurnPlayer();
+	void SetWhiteCheckStatus(bool NewStatus);
+	void SetBlackCheckStatus(bool NewStatus);
+	bool GetWhiteCheckStatus() const;
+	bool GetBlackCheckStatus() const;
+	void ResetVariablesForRematch();
 
 	// Winning / Draw / Losing - METHODS
 	void VerifyCheck();

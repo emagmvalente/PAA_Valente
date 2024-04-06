@@ -17,6 +17,8 @@ APieceRook::APieceRook()
 	// every actor has a RootComponent that defines the transform in the World
 	SetRootComponent(Scene);
 	StaticMeshComponent->SetupAttachment(Scene);
+
+	PieceValue = 5;
 }
 
 // Called when the game starts or when spawned
@@ -24,6 +26,10 @@ void APieceRook::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (Color == EColor::B)
+	{
+		PieceValue = -PieceValue;
+	}
 }
 
 // Called every frame
