@@ -22,9 +22,10 @@ AWhitePlayer::AWhitePlayer()
 	//set the camera as RootComponent
 	SetRootComponent(Camera);
 
-	PlayerNumber = 0;
-
 	GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	
+	bIsACapture = false;
+	IsMyTurn = false;
 }
 
 // Called when the game starts or when spawned
@@ -54,11 +55,6 @@ void AWhitePlayer::PieceSelection()
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 	FString LastMoveDone = GameMode->CB->HistoryOfMoves.Last();
-
-	if (GameMode->bIsWhiteOnCheck)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("White is on Check!"));
-	}
 
 	// Detecting player's click
 	FHitResult Hit = FHitResult(ForceInit);
@@ -138,13 +134,13 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 
 			if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
 			{
-				Cast<APiecePawn>(CPC->SelectedPieceToMove)->TurnsWithoutMoving = 0;
+				Cast<APiecePawn>(CPC->SelectedPieceToMove)->ResetTurnsWithoutMoving();
 				// Checks if the pawn could be promoted
 				Cast<APiecePawn>(CPC->SelectedPieceToMove)->Promote();
 				// Disables the first move variable if it's true
-				if (Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove == true)
+				if (Cast<APiecePawn>(CPC->SelectedPieceToMove)->GetIsFirstMove())
 				{
-					Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove = false;
+					Cast<APiecePawn>(CPC->SelectedPieceToMove)->PawnMovedForTheFirstTime();
 				}
 			}
 			else
@@ -153,7 +149,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 				{
 					if (Cast<APiecePawn>(WhitePawn))
 					{
-						Cast<APiecePawn>(WhitePawn)->TurnsWithoutMoving++;
+						Cast<APiecePawn>(WhitePawn)->IncrementTurnsWithoutMoving();
 					}
 				}
 			}

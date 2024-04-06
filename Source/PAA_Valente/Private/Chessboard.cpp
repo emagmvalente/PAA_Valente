@@ -377,7 +377,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetColor(EColor::W);
 				if (Row != 1)
 				{
-					Cast<APiecePawn>(Obj)->bFirstMove = false;
+					Cast<APiecePawn>(Obj)->PawnMovedForTheFirstTime();
 				}
 				WhitePieces.Add(Obj);
 				break;
@@ -419,7 +419,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetColor(EColor::B);
 				if (Row != 6)
 				{
-					Cast<APiecePawn>(Obj)->bFirstMove = false;
+					Cast<APiecePawn>(Obj)->PawnMovedForTheFirstTime();
 				}
 				Obj->ChangeMaterial(LoadBlackPawn);
 				BlackPieces.Add(Obj);

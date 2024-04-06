@@ -62,17 +62,19 @@ void UOldMovesButtons::CreateText()
 	// Add special chars
 	GameMode->VerifyCheck();
 
-	if (((GameMode->GetBlackCheckStatus() && GameMode->TurnFlag == 0) || (GameMode->GetWhiteCheckStatus() && GameMode->TurnFlag == 1)) && !GameMode->bIsGameOver)
+	if (((GameMode->GetBlackCheckStatus() && GameMode->GetCurrentTurnFlag() == 0) || (GameMode->GetWhiteCheckStatus() && GameMode->GetCurrentTurnFlag() == 1))
+		&& !GameMode->GetGameOver())
 	{
 		TextToPutOnButton.AppendChar('+');
 	}
-	else if (((GameMode->GetBlackCheckStatus() && GameMode->TurnFlag == 0) || (GameMode->GetWhiteCheckStatus() && GameMode->TurnFlag == 1)) && GameMode->bIsGameOver)
+	else if (((GameMode->GetBlackCheckStatus() && GameMode->GetCurrentTurnFlag() == 0) || (GameMode->GetWhiteCheckStatus() && GameMode->GetCurrentTurnFlag() == 1))
+		&& GameMode->GetGameOver())
 	{
 		TextToPutOnButton.AppendChar('#');
 	}
 
 	// Just check if it was a check situation or a game over, GameMode->TurnPlayer will determine the value of each boolean variable
-	GameMode->bIsGameOver = false;
+	GameMode->SetGameOver(false);
 	GameMode->SetWhiteCheckStatus(false);
 	GameMode->SetBlackCheckStatus(false);
 

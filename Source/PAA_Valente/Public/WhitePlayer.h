@@ -25,16 +25,13 @@ public:
 	// game instance reference
 	UChessGameInstance* GameInstance;
 
-	int32 PlayerNumber;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	// keeps track of turn
-	bool IsMyTurn = false;
-
-	bool bIsACapture = false;
+	bool IsMyTurn;
+	bool bIsACapture;
 
 public:
 	// Called every frame

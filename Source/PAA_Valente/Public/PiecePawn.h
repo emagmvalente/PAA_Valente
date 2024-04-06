@@ -22,15 +22,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* StaticMeshComponent;
 
-	bool bFirstMove = true;
-
-	int32 TurnsWithoutMoving = 0;
-
-	TArray<FVector2D> Directions = { FVector2D(1, 0), FVector2D(1, -1), FVector2D(1, 1) };
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	TArray<FVector2D> Directions = { FVector2D(1, 0), FVector2D(1, -1), FVector2D(1, 1) };
+	int32 TurnsWithoutMoving;
+	bool bIsFirstMove;
 
 public:
 	void Promote();
@@ -39,4 +37,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void PossibleMoves() override;
+
+	void IncrementTurnsWithoutMoving();
+	void ResetTurnsWithoutMoving();
+	void PawnMovedForTheFirstTime();
+
+	int32 GetTurnsWithoutMoving() const;
+	bool GetIsFirstMove() const;
 };

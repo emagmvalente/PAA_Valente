@@ -14,8 +14,8 @@ ABlackRandomPlayer::ABlackRandomPlayer()
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	bIsACapture = false;
 
-	PlayerNumber = 1;
 }
 
 // Called when the game starts or when spawned
@@ -44,10 +44,6 @@ void ABlackRandomPlayer::OnTurn()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	if (GameMode->bIsBlackOnCheck)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Black is on Check!"));
-	}
 
 	FTimerHandle TimerHandle;
 
@@ -111,11 +107,11 @@ void ABlackRandomPlayer::OnTurn()
 			ChosenPiece->SetActorLocation(TilePositioning);
 			if (Cast<APiecePawn>(ChosenPiece))
 			{
-				Cast<APiecePawn>(ChosenPiece)->TurnsWithoutMoving = 0;
+				Cast<APiecePawn>(ChosenPiece)->ResetTurnsWithoutMoving();
 				Cast<APiecePawn>(ChosenPiece)->Promote();
-				if (Cast<APiecePawn>(ChosenPiece)->bFirstMove == true)
+				if (Cast<APiecePawn>(ChosenPiece)->GetIsFirstMove())
 				{
-					Cast<APiecePawn>(ChosenPiece)->bFirstMove = false;
+					Cast<APiecePawn>(ChosenPiece)->PawnMovedForTheFirstTime();
 				}
 			}
 			else
@@ -124,7 +120,7 @@ void ABlackRandomPlayer::OnTurn()
 				{
 					if (Cast<APiecePawn>(BlackPawn))
 					{
-						Cast<APiecePawn>(BlackPawn)->TurnsWithoutMoving++;
+						Cast<APiecePawn>(BlackPawn)->IncrementTurnsWithoutMoving();
 					}
 				}
 			}

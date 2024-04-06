@@ -87,9 +87,19 @@ void AChessGameMode::TurnPlayer()
 	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
 
 	VerifyCheck();
+
 	if (!bIsGameOver)
 	{
 		VerifyDraw();
+	}
+
+	if (bIsWhiteOnCheck)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("White is on Check!"));
+	}
+	else if (bIsBlackOnCheck)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Black is on Check!"));
 	}
 
 	if (TurnFlag == 0)
@@ -128,6 +138,11 @@ void AChessGameMode::SetBlackCheckStatus(bool NewStatus)
 	bIsBlackOnCheck = NewStatus;
 }
 
+void AChessGameMode::SetGameOver(bool NewStatus)
+{
+	bIsGameOver = NewStatus;
+}
+
 bool AChessGameMode::GetWhiteCheckStatus() const
 {
 	return bIsWhiteOnCheck;
@@ -136,6 +151,16 @@ bool AChessGameMode::GetWhiteCheckStatus() const
 bool AChessGameMode::GetBlackCheckStatus() const
 {
 	return bIsBlackOnCheck;
+}
+
+bool AChessGameMode::GetGameOver() const
+{
+	return bIsGameOver;
+}
+
+int32 AChessGameMode::GetCurrentTurnFlag() const
+{
+	return TurnFlag;
 }
 
 void AChessGameMode::ResetVariablesForRematch()
@@ -313,7 +338,7 @@ bool AChessGameMode::FiftyMovesRule()
 	// Pawn movement check
 	for (APiece* WhitePawn : CB->WhitePieces)
 	{
-		if (Cast<APiecePawn>(WhitePawn) && Cast<APiecePawn>(WhitePawn)->TurnsWithoutMoving > 0)
+		if (Cast<APiecePawn>(WhitePawn) && Cast<APiecePawn>(WhitePawn)->GetTurnsWithoutMoving() > 0)
 		{
 			bWasMovedAPawn = true;
 			break;
@@ -323,7 +348,7 @@ bool AChessGameMode::FiftyMovesRule()
 	{
 		for (APiece* BlackPawn : CB->BlackPieces)
 		{
-			if (Cast<APiecePawn>(BlackPawn) && Cast<APiecePawn>(BlackPawn)->TurnsWithoutMoving > 0)
+			if (Cast<APiecePawn>(BlackPawn) && Cast<APiecePawn>(BlackPawn)->GetTurnsWithoutMoving() > 0)
 			{
 				bWasMovedAPawn = true;
 				break;

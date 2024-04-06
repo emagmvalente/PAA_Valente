@@ -20,13 +20,11 @@ public:
 	ABlackRandomPlayer();
 	UChessGameInstance* GameInstance;
 
-	int32 PlayerNumber;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
-	bool bIsACapture = false;
+	bool bIsACapture;
 
 public:
 	// Called every frame
