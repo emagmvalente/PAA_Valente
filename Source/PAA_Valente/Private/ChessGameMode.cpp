@@ -14,6 +14,7 @@
 #include "EngineUtils.h"
 #include "ChessPlayerController.h"
 #include "MainHUD.h"
+#include "Engine/DirectionalLight.h"
 
 AChessGameMode::AChessGameMode()
 {

@@ -16,6 +16,7 @@ UOldMovesButtons::UOldMovesButtons(const FObjectInitializer& ObjectInitializer)
 {
 	AssociatedString = FString("");
 	MoveDone = ObjectInitializer.CreateDefaultSubobject<UTextBlock>(this, TEXT("MoveDone"));
+	bItWasACapture = false;
 }
 
 void UOldMovesButtons::ButtonOnClickFunction()
@@ -36,6 +37,31 @@ void UOldMovesButtons::ButtonOnClickFunction()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Shhh! Black is thinking... Replay later."));
 	}
+}
+
+void UOldMovesButtons::SetAssociatedString(FString& AssociatedStringToPrint)
+{
+	AssociatedString = AssociatedStringToPrint;
+}
+
+void UOldMovesButtons::SetNewLocationToPrint(FVector2D NewLocationToPrint)
+{
+	NewPosition = NewLocationToPrint;
+}
+
+void UOldMovesButtons::SetPieceToPrint(APiece* PieceToPrint)
+{
+	PieceMoved = PieceToPrint;
+}
+
+void UOldMovesButtons::SetOldLocationToPrint(FVector2D OldLocationToPrint)
+{
+	OldPosition = OldLocationToPrint;
+}
+
+void UOldMovesButtons::SetItWasACapture(bool ItWasACapture)
+{
+	bItWasACapture = ItWasACapture;
 }
 
 void UOldMovesButtons::CreateText()

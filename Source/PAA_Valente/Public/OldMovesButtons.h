@@ -17,26 +17,31 @@ class PAA_VALENTE_API UOldMovesButtons : public UButton
 {
 	GENERATED_BODY()
 
-public:
-	FString AssociatedString;
 	UTextBlock* MoveDone;
-
-	AChessGameMode* GameMode;
-	AChessPlayerController* CPC;
-
 	APiece* PieceMoved;
-	bool bItWasACapture = false;
+	bool bItWasACapture;
 	FVector2D NewPosition;
-
-	bool bIsCheckmate = false;
 
 	// Only for Pawn's captures
 	FVector2D OldPosition;
+
+	FString AssociatedString;
+
+public:
+
+	AChessGameMode* GameMode;
+	AChessPlayerController* CPC;
 
 	UOldMovesButtons(const FObjectInitializer& ObjectInitializer);
 
 	UFUNCTION()
 	void ButtonOnClickFunction();
+
+	void SetAssociatedString(FString& AssociatedStringToPrint);
+	void SetNewLocationToPrint(FVector2D NewLocationToPrint);
+	void SetPieceToPrint(APiece* PieceToPrint);
+	void SetOldLocationToPrint(FVector2D OldLocationToPrint);
+	void SetItWasACapture(bool ItWasACapture);
 
 	void CreateText();
 	TCHAR PieceParsing(APiece* PieceToParse);

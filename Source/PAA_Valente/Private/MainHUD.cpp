@@ -14,6 +14,8 @@ void UMainHUD::AddButton()
     if (NewButton)
     {
         NewButton->OnClicked.AddDynamic(NewButton, &UOldMovesButtons::ButtonOnClickFunction);
+        NewButton->GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+        NewButton->CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
         ButtonArray.Add(NewButton);
 
         ScrollBox->AddChild(NewButton);

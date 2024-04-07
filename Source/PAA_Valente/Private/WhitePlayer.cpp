@@ -174,15 +174,13 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 					UOldMovesButtons* LastButton = MainHUD->ButtonArray.Last();
 					if (LastButton)
 					{
-						LastButton->AssociatedString = GameMode->CB->HistoryOfMoves.Last();
-						LastButton->GameMode = GameMode;
-						LastButton->CPC = CPC;
-						LastButton->PieceMoved = CPC->SelectedPieceToMove;
-						LastButton->bItWasACapture = bIsACapture;
-						LastButton->NewPosition = CPC->SelectedPieceToMove->Relative2DPosition();
+						LastButton->SetAssociatedString(GameMode->CB->HistoryOfMoves.Last());
+						LastButton->SetPieceToPrint(CPC->SelectedPieceToMove);
+						LastButton->SetItWasACapture(bIsACapture);
+						LastButton->SetNewLocationToPrint(CPC->SelectedPieceToMove->Relative2DPosition());
 						if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
 						{
-							LastButton->OldPosition = OldPosition;
+							LastButton->SetOldLocationToPrint(OldPosition);
 						}
 
 						LastButton->CreateText();
