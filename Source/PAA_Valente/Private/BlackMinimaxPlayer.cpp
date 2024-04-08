@@ -2,13 +2,18 @@
 
 
 #include "BlackMinimaxPlayer.h"
+#include "Piece.h"
+#include "PiecePawn.h"
+#include "EngineUtils.h"
+#include "MainHUD.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 // Sets default values
 ABlackMinimaxPlayer::ABlackMinimaxPlayer()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	bIsACapture = false;
 
 }
@@ -39,17 +44,82 @@ void ABlackMinimaxPlayer::OnTurn()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Minimax) Turn"));
 
+	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
+	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
+	UMainHUD* MainHUD = CPC->MainHUDWidget;
+
 	FTimerHandle TimerHandle;
+
+	GameMode->bIsBlackThinking = true;
 
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
-			AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
+			AChessGameMode* GameModeCallback = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
+			FVector2D OldPosition(0, 0);
+			if (SelectedPieceToMove)
+			{
+				OldPosition = SelectedPieceToMove->Relative2DPosition();
+			}
 
-			FVector2D BestMove = FindBestMove(GameMode->CB->TileMap);
-			FVector Location = GameMode->CB->GetRelativeLocationByXYPosition(BestMove.X, BestMove.Y);
+			FVector2D BestMove = FindBestMove(GameModeCallback->CB->TileMap);
+			FVector Location = GameModeCallback->CB->GetRelativeLocationByXYPosition(BestMove.X, BestMove.Y);
+			Location.Z = 10.f;
 
-			// Get the piece to move in that location and destroy a possible white occupant
-			GameMode->CB->TileMap[BestMove]->SetOccupantColor(EOccupantColor::B);
+			SelectedPieceToMove->SetActorLocation(Location);
+			if (Cast<APiecePawn>(SelectedPieceToMove))
+			{
+				Cast<APiecePawn>(SelectedPieceToMove)->ResetTurnsWithoutMoving();
+				Cast<APiecePawn>(SelectedPieceToMove)->Promote();
+				if (Cast<APiecePawn>(SelectedPieceToMove)->GetIsFirstMove())
+				{
+					Cast<APiecePawn>(SelectedPieceToMove)->PawnMovedForTheFirstTime();
+				}
+			}
+			else
+			{
+				for (APiece* BlackPawn : GameModeCallback->CB->BlackPieces)
+				{
+					if (Cast<APiecePawn>(BlackPawn))
+					{
+						Cast<APiecePawn>(BlackPawn)->IncrementTurnsWithoutMoving();
+					}
+				}
+			}
+
+			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
+			GameModeCallback->CB->HistoryOfMoves.Add(LastMove);
+
+			// Create dinamically the move button
+			if (MainHUD)
+			{
+				MainHUD->AddButton();
+				if (MainHUD->ButtonArray.Num() > 0)
+				{
+					UOldMovesButtons* LastButton = MainHUD->ButtonArray.Last();
+					if (LastButton)
+					{
+						LastButton->SetAssociatedString(GameModeCallback->CB->HistoryOfMoves.Last());
+						LastButton->SetPieceToPrint(SelectedPieceToMove);
+						LastButton->SetItWasACapture(bIsACapture);
+						LastButton->SetNewLocationToPrint(SelectedPieceToMove->Relative2DPosition());
+						if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
+						{
+							LastButton->SetOldLocationToPrint(OldPosition);
+						}
+
+						LastButton->CreateText();
+					}
+				}
+			}
+
+			bIsACapture = false;
+
+			// Turn ending
+			GameModeCallback->bIsBlackThinking = false;
+			if (!Cast<APiecePawn>(SelectedPieceToMove) || Cast<APiecePawn>(SelectedPieceToMove)->Relative2DPosition().X != 0)
+			{
+				GameModeCallback->TurnPlayer();
+			}
 
 		}, 3, false);
 }
@@ -85,37 +155,55 @@ int32 ABlackMinimaxPlayer::MiniMax(TMap<FVector2D, ATile*>& Board, int32 Depth, 
 
 FVector2D ABlackMinimaxPlayer::FindBestMove(TMap<FVector2D, ATile*>& Board)
 {
-	int32 BestVal = -100000000;
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+
+	int32 BestVal = 100000000;
 	FVector2D BestMove;
 	BestMove.X = -1;
 	BestMove.Y = -1;
 
-	for (int32 Row = 0; Row < 8; Row++)
+	for (APiece* BlackPiece : GameMode->CB->BlackPieces)
 	{
-		for (int32 Col = 0; Col < 8; Col++)
+		TArray<ATile*> MovesAndEatablePiecePositions = BlackPiece->Moves;
+		MovesAndEatablePiecePositions.Append(BlackPiece->EatablePiecesPosition);
+
+		int32 CurrVal = 0;
+
+		for (ATile* Move : MovesAndEatablePiecePositions)
 		{
-			if ((Board[FVector2D(Row, Col)])->GetOccupantColor() != EOccupantColor::B)
+			if (Move->GetOccupantColor() == EOccupantColor::W)
 			{
-				// Make the move (set the AI player owner)
-				(Board[FVector2D(Row, Col)])->SetOccupantColor(EOccupantColor::B);
-
-				// compute evaluation function for this
-				// move.
-				int32 MoveVal = MiniMax(Board, 0, false);
-
-				// Undo the move
-				(Board[FVector2D(Row, Col)])->SetOccupantColor(EOccupantColor::B);
-
-				// If the value of the current move is
-				// more than the best value, then update
-				// best/
-				if (MoveVal > BestVal)
+				for (APiece* WhitePiece : GameMode->CB->WhitePieces)
 				{
-					BestMove.X = Row;
-					BestMove.Y = Col;
-					BestVal = MoveVal;
+					if (WhitePiece->Relative2DPosition() == Move->GetGridPosition())
+					{
+						CurrVal = WhitePiece->GetPieceValue();
+						bIsACapture = true;
+						break;
+					}
 				}
 			}
+			else
+			{
+				CurrVal = 0;
+			}
+
+			if (CurrVal < BestVal)
+			{
+				BestVal = CurrVal;
+				BestMove.X = Move->GetGridPosition().X;
+				BestMove.Y = Move->GetGridPosition().Y;
+				SelectedPieceToMove = BlackPiece;
+			}
+		}
+	}
+
+	for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+	{
+		if (WhitePiece->Relative2DPosition() == BestMove)
+		{
+			GameMode->CB->WhitePieces.Remove(WhitePiece);
+			WhitePiece->Destroy();
 		}
 	}
 

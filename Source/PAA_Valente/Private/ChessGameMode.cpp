@@ -11,6 +11,7 @@
 #include "ChessPlayerController.h"
 #include "WhitePlayer.h"
 #include "BlackRandomPlayer.h"
+#include "BlackMinimaxPlayer.h"
 #include "EngineUtils.h"
 #include "ChessPlayerController.h"
 #include "MainHUD.h"
@@ -36,10 +37,10 @@ void AChessGameMode::BeginPlay()
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 
 	// Random Player
-	auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+	//auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 
 	// MiniMax Player
-	//auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
+	auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
 
 	if (CBClass != nullptr)
 	{
@@ -85,7 +86,8 @@ void AChessGameMode::SetKings()
 void AChessGameMode::TurnPlayer()
 {
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
+	//ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
+	auto* AIPlayer = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
 
 	VerifyCheck();
 
