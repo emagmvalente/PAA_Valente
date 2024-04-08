@@ -90,7 +90,7 @@ void ABlackMinimaxPlayer::OnTurn()
 			GameModeCallback->CB->HistoryOfMoves.Add(LastMove);
 
 			// Create dinamically the move button
-			if (MainHUD)
+			if (MainHUD && SelectedPieceToMove)
 			{
 				MainHUD->AddButton();
 				if (MainHUD->ButtonArray.Num() > 0)
@@ -102,7 +102,7 @@ void ABlackMinimaxPlayer::OnTurn()
 						LastButton->SetPieceToPrint(SelectedPieceToMove);
 						LastButton->SetItWasACapture(bIsACapture);
 						LastButton->SetNewLocationToPrint(SelectedPieceToMove->Relative2DPosition());
-						if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
+						if (Cast<APiecePawn>(SelectedPieceToMove))
 						{
 							LastButton->SetOldLocationToPrint(OldPosition);
 						}
@@ -110,6 +110,10 @@ void ABlackMinimaxPlayer::OnTurn()
 						LastButton->CreateText();
 					}
 				}
+			}
+			else if (!SelectedPieceToMove)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AAAA"));
 			}
 
 			bIsACapture = false;

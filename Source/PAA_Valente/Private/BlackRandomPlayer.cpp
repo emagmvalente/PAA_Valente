@@ -146,7 +146,7 @@ void ABlackRandomPlayer::OnTurn()
 						LastButton->SetPieceToPrint(ChosenPiece);
 						LastButton->SetItWasACapture(bIsACapture);
 						LastButton->SetNewLocationToPrint(ChosenPiece->Relative2DPosition());
-						if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
+						if (Cast<APiecePawn>(ChosenPiece))
 						{
 							LastButton->SetOldLocationToPrint(OldPosition);
 						}
