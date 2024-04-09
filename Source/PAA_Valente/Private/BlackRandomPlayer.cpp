@@ -143,15 +143,7 @@ void ABlackRandomPlayer::OnTurn()
 					if (LastButton)
 					{
 						LastButton->SetAssociatedString(GameModeCallback->CB->HistoryOfMoves.Last());
-						LastButton->SetPieceToPrint(ChosenPiece);
-						LastButton->SetItWasACapture(bIsACapture);
-						LastButton->SetNewLocationToPrint(ChosenPiece->Relative2DPosition());
-						if (Cast<APiecePawn>(ChosenPiece))
-						{
-							LastButton->SetOldLocationToPrint(OldPosition);
-						}
-
-						LastButton->CreateText();
+						LastButton->CreateText(ChosenPiece, bIsACapture, ChosenPiece->Relative2DPosition(), OldPosition);
 					}
 				}
 			}

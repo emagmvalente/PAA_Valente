@@ -18,12 +18,6 @@ class PAA_VALENTE_API UOldMovesButtons : public UButton
 	GENERATED_BODY()
 
 	UTextBlock* MoveDone;
-	APiece* PieceMoved;
-	bool bItWasACapture;
-	FVector2D NewPosition;
-
-	// Only for Pawn's captures
-	FVector2D OldPosition;
 
 	FString AssociatedString;
 
@@ -38,12 +32,8 @@ public:
 	void ButtonOnClickFunction();
 
 	void SetAssociatedString(FString& AssociatedStringToPrint);
-	void SetNewLocationToPrint(FVector2D NewLocationToPrint);
-	void SetPieceToPrint(APiece* PieceToPrint);
-	void SetOldLocationToPrint(FVector2D OldLocationToPrint);
-	void SetItWasACapture(bool ItWasACapture);
 
-	void CreateText();
+	void CreateText(APiece* PieceMoved, bool bItWasACapture, FVector2D NewPosition, FVector2D OldPosition);
 	TCHAR PieceParsing(APiece* PieceToParse);
 	FString LocationParsing(FVector2D& Location);
 };

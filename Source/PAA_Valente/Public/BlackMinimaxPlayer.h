@@ -38,5 +38,5 @@ public:
 
 	int32 EvaluateGrid(TMap<FVector2D, ATile*>& Board);
 	int32 MiniMax(TMap<FVector2D, ATile*>& Board, int32 Depth, bool IsMax);
-	FVector2D FindBestMove(TMap<FVector2D, ATile*>& Board);
+	FVector2D FindBestMove(bool IsMax);
 };
