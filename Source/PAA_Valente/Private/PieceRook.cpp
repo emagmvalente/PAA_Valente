@@ -17,6 +17,8 @@ APieceRook::APieceRook()
 	// every actor has a RootComponent that defines the transform in the World
 	SetRootComponent(Scene);
 	StaticMeshComponent->SetupAttachment(Scene);
+
+	PieceValue = 5;
 }
 
 // Called when the game starts or when spawned
@@ -24,6 +26,10 @@ void APieceRook::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (Color == EColor::B)
+	{
+		PieceValue = -PieceValue;
+	}
 }
 
 // Called every frame
@@ -36,7 +42,7 @@ void APieceRook::Tick(float DeltaTime)
 void APieceRook::PossibleMoves()
 {
 	Moves.Empty();
-	EatablePieces.Empty();
+	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -61,7 +67,7 @@ void APieceRook::PossibleMoves()
 				}
 				else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
 				{
-					EatablePieces.Add(*NextTile);
+					EatablePiecesPosition.Add(*NextTile);
 					break;
 				}
 				else

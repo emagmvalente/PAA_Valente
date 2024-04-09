@@ -37,5 +37,4 @@ public:
 	
 	virtual void PossibleMoves() override;
 
-	void Escape();
 };

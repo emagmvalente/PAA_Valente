@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings. a
 
 #pragma once
 
@@ -8,25 +8,24 @@
 #include "ChessGameMode.h"
 #include "Piece.h"
 #include "Kismet/GameplayStatics.h"
-#include "BlackRandomPlayer.generated.h"
+#include "BlackMinimaxPlayer.generated.h"
 
 UCLASS()
-class PAA_VALENTE_API ABlackRandomPlayer : public APawn
+class PAA_VALENTE_API ABlackMinimaxPlayer : public APawn
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this pawn's properties
-	ABlackRandomPlayer();
+	ABlackMinimaxPlayer();
 	UChessGameInstance* GameInstance;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
 	bool bIsACapture;
 
-public:
+public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -36,4 +35,7 @@ public:
 	void OnTurn();
 	void OnWin();
 
+	int32 EvaluateGrid(TMap<FVector2D, ATile*>& Board);
+	int32 MiniMax(TMap<FVector2D, ATile*>& Board, int32 Depth, bool IsMax);
+	FVector2D FindBestMove(TMap<FVector2D, ATile*>& Board);
 };

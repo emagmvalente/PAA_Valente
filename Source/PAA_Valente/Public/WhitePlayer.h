@@ -5,14 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "ChessGameInstance.h"
-#include "PlayerInterface.h"
 #include "Piece.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "WhitePlayer.generated.h"
 
 UCLASS()
-class PAA_VALENTE_API AWhitePlayer : public APawn, public IPlayerInterface
+class PAA_VALENTE_API AWhitePlayer : public APawn
 {
 	GENERATED_BODY()
 
@@ -31,7 +30,8 @@ protected:
 	virtual void BeginPlay() override;
 
 	// keeps track of turn
-	bool IsMyTurn = false;
+	bool IsMyTurn;
+	bool bIsACapture;
 
 public:
 	// Called every frame
@@ -43,9 +43,7 @@ public:
 	void PieceSelection();
 	void TileSelection(ATile* CurrTile);
 
-	virtual void OnTurn() override;
-	virtual void OnWin() override;
-	virtual void OnLose() override;
-	virtual bool IsCheckStatus() override;
+	void OnTurn();
+	void OnWin();
 
 };

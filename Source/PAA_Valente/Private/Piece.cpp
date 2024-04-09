@@ -37,23 +37,15 @@ void APiece::ChangeMaterial(UMaterialInterface* NewMaterial)
 	}
 }
 
-void APiece::PieceCaptured()
-{
-	Destroy();
-}
-
 FVector APiece::RelativePosition() const
 {
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	// Getting the absolute location and getting the relative one passing through the position of the tile.
-	FVector2D CurrentRelativeLocation2D = GameMode->CB->GetXYPositionByRelativeLocation(GetActorLocation());
-	FVector CurrentRelativeLocation3D(CurrentRelativeLocation2D.X, CurrentRelativeLocation2D.Y, 10.f);
-	return CurrentRelativeLocation3D;
+	return FVector(Relative2DPosition().X, Relative2DPosition().Y, 10.f);
 }
 
 FVector2D APiece::Relative2DPosition() const
 {
-	return FVector2D(RelativePosition().X, RelativePosition().Y);
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	return GameMode->CB->GetXYPositionByRelativeLocation(GetActorLocation());
 }
 
 void APiece::ColorPossibleMoves()
@@ -69,36 +61,13 @@ void APiece::ColorPossibleMoves()
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
 
-	UMaterialInterface* LoadE = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_E"));
-	UMaterialInterface* LoadB = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_B"));
-	UMaterialInterface* LoadW = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_W"));
-
-	FString MyDoubleString = FString::Printf(TEXT("Moves: %d, EatablePieces: %d"), Moves.Num(), EatablePieces.Num());
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *MyDoubleString);
-
-	for (ATile* Tile : GameMode->CB->TileArray)
+	for (ATile* Move : Moves)
 	{
-		if (Tile->GetOccupantColor() == EOccupantColor::E)
-		{
-			Tile->ChangeMaterial(LoadE);
-		}
-		else if (Tile->GetOccupantColor() == EOccupantColor::W)
-		{
-			Tile->ChangeMaterial(LoadW);
-		}
-		else
-		{
-			Tile->ChangeMaterial(LoadB);
-		}
+		Move->ChangeMaterial(LoadYellowMaterial);
 	}
-
-	for (int i = 0; i < Moves.Num(); i++)
+	for (ATile* EatablePiecePosition : EatablePiecesPosition)
 	{
-		Moves[i]->ChangeMaterial(LoadYellowMaterial);
-	}
-	for (int i = 0; i < EatablePieces.Num(); i++)
-	{
-		EatablePieces[i]->ChangeMaterial(LoadRedMaterial);
+		EatablePiecePosition->ChangeMaterial(LoadRedMaterial);
 	}
 }
 
@@ -106,21 +75,20 @@ void APiece::DecolorPossibleMoves()
 {
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	TArray<ATile*> TileArray = GameMode->CB->GetTileArray();
 	UMaterialInterface* LoadWhiteMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_White"));
 	UMaterialInterface* LoadBlackMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Black"));
 
 	// Decolor every tile, it's a little bit rudimental but it's the best way to decolor
-	for (int i = 0; i < TileArray.Num(); i++)
+	for (ATile* Tile : GameMode->CB->GetTileArray())
 	{
-		FVector2D TilePosition = TileArray[i]->GetGridPosition();
+		FVector2D TilePosition = Tile->GetGridPosition();
 		if ((static_cast<int>(TilePosition.X) + static_cast<int>(TilePosition.Y)) % 2 == 0)
 		{
-			TileArray[i]->ChangeMaterial(LoadBlackMaterial);
+			Tile->ChangeMaterial(LoadBlackMaterial);
 		}
 		else
 		{
-			TileArray[i]->ChangeMaterial(LoadWhiteMaterial);
+			Tile->ChangeMaterial(LoadWhiteMaterial);
 		}
 	}
 }
@@ -143,7 +111,7 @@ void APiece::FilterOnlyLegalMoves()
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	TArray<ATile*> MovesAndEatablePieces = Moves;
-	MovesAndEatablePieces.Append(EatablePieces);
+	MovesAndEatablePieces.Append(EatablePiecesPosition);
 	ATile** StartTile = GameMode->CB->TileMap.Find(Relative2DPosition());
 	
 	ATile** KingTile = nullptr;
@@ -175,22 +143,21 @@ void APiece::FilterOnlyLegalMoves()
 	{
 		// Storing the real occupant color to restore it later
 		EOccupantColor ActualOccupantColor = Move->GetOccupantColor();
-		Move->SetOccupantColor(AllyColor); // Setting the occupant color of the tile to ally color temporarily
+		Move->SetOccupantColor(AllyColor);
 		bool bIsMoveSafe = true;
 
 		// Checking if any enemy piece can threaten the move
 		for (APiece* EnemyPiece : EnemyPieces)
 		{
-			// Checking if the piece calculated isn't the threatening piece, if yes then overwrite it to simulate a capture
-			if (!(ActualOccupantColor == EnemyColor &&
-				Move->GetGridPosition() == EnemyPiece->Relative2DPosition()))
+			// Checking if the piece calculated isn't the threatening piece, if yes then skip its moves to simulate a capture
+			if (Move->GetGridPosition() != EnemyPiece->Relative2DPosition())
 			{
 				EnemyPiece->PossibleMoves();
 				// Checking if the piece is a king, if yes then any move is equal to moving the king tile, 
 				// so don't consider "the king tile" but consinder "the move"
 				if (Cast<APieceKing>(this))
 				{
-					if (EnemyPiece->EatablePieces.Contains(Move))
+					if (EnemyPiece->EatablePiecesPosition.Contains(Move))
 					{
 						bIsMoveSafe = false;
 						break;
@@ -199,7 +166,7 @@ void APiece::FilterOnlyLegalMoves()
 				// Else consider "king tile"
 				else
 				{
-					if (EnemyPiece->EatablePieces.Contains(*KingTile))
+					if (EnemyPiece->EatablePiecesPosition.Contains(*KingTile))
 					{
 						bIsMoveSafe = false;
 						break;
@@ -215,9 +182,9 @@ void APiece::FilterOnlyLegalMoves()
 			{
 				Moves.Remove(Move);
 			}
-			else if (EatablePieces.Contains(Move))
+			else if (EatablePiecesPosition.Contains(Move))
 			{
-				EatablePieces.Remove(Move);
+				EatablePiecesPosition.Remove(Move);
 			}
 		}
 
@@ -227,4 +194,19 @@ void APiece::FilterOnlyLegalMoves()
 
 	// Restoring the original occupant color of the start tile
 	(*StartTile)->SetOccupantColor(AllyColor);
+}
+
+int32 APiece::GetPieceValue() const
+{
+	return PieceValue;
+}
+
+EColor APiece::GetColor() const
+{
+	return Color;
+}
+
+void APiece::SetColor(EColor NewColor)
+{
+	Color = NewColor;
 }

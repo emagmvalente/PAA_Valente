@@ -17,6 +17,8 @@ APieceKing::APieceKing()
 	// every actor has a RootComponent that defines the transform in the World
 	SetRootComponent(Scene);
 	StaticMeshComponent->SetupAttachment(Scene);
+
+	PieceValue = 10;
 }
 
 // Called when the game starts or when spawned
@@ -24,6 +26,10 @@ void APieceKing::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (Color == EColor::B)
+	{
+		PieceValue = -PieceValue;
+	}
 }
 
 // Called every frame
@@ -36,7 +42,7 @@ void APieceKing::Tick(float DeltaTime)
 void APieceKing::PossibleMoves()
 {
 	Moves.Empty();
-	EatablePieces.Empty();
+	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -58,7 +64,7 @@ void APieceKing::PossibleMoves()
 		// Next tile occupied by an enemy piece case
 		else if (NextTile != nullptr && !IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
 		{
-			EatablePieces.Add(*NextTile);
+			EatablePiecesPosition.Add(*NextTile);
 		}
 		// Default case
 		else

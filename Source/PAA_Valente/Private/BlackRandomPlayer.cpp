@@ -5,6 +5,8 @@
 #include "Piece.h"
 #include "PiecePawn.h"
 #include "EngineUtils.h"
+#include "MainHUD.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 // Sets default values
 ABlackRandomPlayer::ABlackRandomPlayer()
@@ -12,8 +14,8 @@ ABlackRandomPlayer::ABlackRandomPlayer()
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	bIsACapture = false;
 
-	PlayerNumber = 1;
 }
 
 // Called when the game starts or when spawned
@@ -42,10 +44,6 @@ void ABlackRandomPlayer::OnTurn()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	if (GameMode->bIsBlackOnCheck)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Black is on Check!"));
-	}
 
 	FTimerHandle TimerHandle;
 
@@ -56,8 +54,10 @@ void ABlackRandomPlayer::OnTurn()
 			// Declarations
 
 			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			APiece* ChosenPiece = nullptr;
 			TArray<ATile*> MovesAndEatablePieces;
+			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
 			do
 			{
@@ -72,12 +72,13 @@ void ABlackRandomPlayer::OnTurn()
 				ChosenPiece->FilterOnlyLegalMoves();
 
 				MovesAndEatablePieces = ChosenPiece->Moves;
-				MovesAndEatablePieces.Append(ChosenPiece->EatablePieces);
+				MovesAndEatablePieces.Append(ChosenPiece->EatablePiecesPosition);
 
 			} while (MovesAndEatablePieces.Num() == 0);
 
 			// Getting previous tile
 			ATile** PreviousTilePtr = GameModeCallback->CB->TileMap.Find(ChosenPiece->Relative2DPosition());
+			FVector2D OldPosition = ChosenPiece->Relative2DPosition();
 
 			// Getting the new tile and the new position
 			int32 RandIdx1 = FMath::Rand() % MovesAndEatablePieces.Num();
@@ -95,7 +96,8 @@ void ABlackRandomPlayer::OnTurn()
 					if (WhitePiece->GetActorLocation() == TilePositioning)
 					{
 						GameModeCallback->CB->WhitePieces.Remove(WhitePiece);
-						WhitePiece->PieceCaptured();
+						WhitePiece->Destroy();
+						bIsACapture = true;
 						break;
 					}
 				}
@@ -103,9 +105,24 @@ void ABlackRandomPlayer::OnTurn()
 
 			// Moving the piece
 			ChosenPiece->SetActorLocation(TilePositioning);
-			if (Cast<APiecePawn>(ChosenPiece) && Cast<APiecePawn>(ChosenPiece)->bFirstMove == true)
+			if (Cast<APiecePawn>(ChosenPiece))
 			{
-				Cast<APiecePawn>(ChosenPiece)->bFirstMove = false;
+				Cast<APiecePawn>(ChosenPiece)->ResetTurnsWithoutMoving();
+				Cast<APiecePawn>(ChosenPiece)->Promote();
+				if (Cast<APiecePawn>(ChosenPiece)->GetIsFirstMove())
+				{
+					Cast<APiecePawn>(ChosenPiece)->PawnMovedForTheFirstTime();
+				}
+			}
+			else
+			{
+				for (APiece* BlackPawn : GameModeCallback->CB->BlackPieces)
+				{
+					if (Cast<APiecePawn>(BlackPawn))
+					{
+						Cast<APiecePawn>(BlackPawn)->IncrementTurnsWithoutMoving();
+					}
+				}
 			}
 
 			// Setting the actual tile occupied by a black, setting the old one empty
@@ -116,9 +133,37 @@ void ABlackRandomPlayer::OnTurn()
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
 			GameModeCallback->CB->HistoryOfMoves.Add(LastMove);
 
+			// Create dinamically the move button
+			if (MainHUD)
+			{
+				MainHUD->AddButton();
+				if (MainHUD->ButtonArray.Num() > 0)
+				{
+					UOldMovesButtons* LastButton = MainHUD->ButtonArray.Last();
+					if (LastButton)
+					{
+						LastButton->SetAssociatedString(GameModeCallback->CB->HistoryOfMoves.Last());
+						LastButton->SetPieceToPrint(ChosenPiece);
+						LastButton->SetItWasACapture(bIsACapture);
+						LastButton->SetNewLocationToPrint(ChosenPiece->Relative2DPosition());
+						if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
+						{
+							LastButton->SetOldLocationToPrint(OldPosition);
+						}
+
+						LastButton->CreateText();
+					}
+				}
+			}
+
+			bIsACapture = false;
+
 			// Turn ending
 			GameModeCallback->bIsBlackThinking = false;
-			GameModeCallback->TurnPlayer(this);
+			if (!Cast<APiecePawn>(ChosenPiece) || Cast<APiecePawn>(ChosenPiece)->Relative2DPosition().X != 0)
+			{
+				GameModeCallback->TurnPlayer();
+			}
 
 
 		}, 3, false);
@@ -129,15 +174,4 @@ void ABlackRandomPlayer::OnWin()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Wins!"));
 	GameInstance->SetTurnMessage(TEXT("AI Wins!"));
 	GameInstance->IncrementScoreAiPlayer();
-}
-
-void ABlackRandomPlayer::OnLose()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Loses!"));
-	// GameInstance->SetTurnMessage(TEXT("AI Loses!"));
-}
-
-bool ABlackRandomPlayer::IsCheckStatus()
-{
-	return false;
 }

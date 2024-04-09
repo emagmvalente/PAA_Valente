@@ -23,7 +23,7 @@ ATile::ATile()
 
 }
 
-EOccupantColor ATile::GetOccupantColor()
+EOccupantColor ATile::GetOccupantColor() const
 {
 	return OccupantColor;
 }
@@ -33,7 +33,7 @@ void ATile::SetGridPosition(const double InX, const double InY)
 	TileGridPosition.Set(InX, InY);
 }
 
-FVector2D ATile::GetGridPosition()
+FVector2D ATile::GetGridPosition() const
 {
 	return TileGridPosition;
 }
@@ -56,5 +56,4 @@ void ATile::SetOccupantColor(const EOccupantColor Color)
 void ATile::BeginPlay()
 {
 	Super::BeginPlay();
-
 }

@@ -6,6 +6,8 @@
 #include "PiecePawn.h"
 #include "ChessGameMode.h"
 #include "ChessPlayerController.h"
+#include "MainHUD.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 // Sets default values
 AWhitePlayer::AWhitePlayer()
@@ -20,9 +22,10 @@ AWhitePlayer::AWhitePlayer()
 	//set the camera as RootComponent
 	SetRootComponent(Camera);
 
-	PlayerNumber = 0;
-
 	GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	
+	bIsACapture = false;
+	IsMyTurn = false;
 }
 
 // Called when the game starts or when spawned
@@ -53,11 +56,6 @@ void AWhitePlayer::PieceSelection()
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 	FString LastMoveDone = GameMode->CB->HistoryOfMoves.Last();
 
-	if (GameMode->bIsWhiteOnCheck)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("White is on Check!"));
-	}
-
 	// Detecting player's click
 	FHitResult Hit = FHitResult(ForceInit);
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
@@ -67,7 +65,7 @@ void AWhitePlayer::PieceSelection()
 		if (APiece* PieceClicked = Cast<APiece>(Hit.GetActor()))
 		{
 			// Ally Piece
-			if (PieceClicked->Color == EColor::W)
+			if (PieceClicked->GetColor() == EColor::W)
 			{
 				// Save the piece
 				CPC->SelectedPieceToMove = PieceClicked;
@@ -77,14 +75,15 @@ void AWhitePlayer::PieceSelection()
 				PieceClicked->ColorPossibleMoves();
 			}
 			// Enemy Piece
-			else if (PieceClicked->Color == EColor::B && CPC->SelectedPieceToMove != nullptr)
+			else if (PieceClicked->GetColor() == EColor::B && CPC->SelectedPieceToMove != nullptr)
 			{
 				ATile** TilePtr = GameMode->CB->TileMap.Find(FVector2D(PieceClicked->RelativePosition().X, PieceClicked->RelativePosition().Y));
 
-				if (CPC->SelectedPieceToMove->EatablePieces.Contains(*TilePtr))
+				if (CPC->SelectedPieceToMove->EatablePiecesPosition.Contains(*TilePtr))
 				{
 					GameMode->CB->BlackPieces.Remove(PieceClicked);
-					PieceClicked->PieceCaptured();
+					PieceClicked->Destroy();
+					bIsACapture = true;
 					(*TilePtr)->SetOccupantColor(EOccupantColor::E);
 					TileSelection(*TilePtr);
 				}
@@ -98,6 +97,17 @@ void AWhitePlayer::PieceSelection()
 			}
 		}
 	}
+
+	else if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() != LastMoveDone))
+	{
+		if (CPC->SelectedPieceToMove)
+		{
+			CPC->SelectedPieceToMove->DecolorPossibleMoves();
+		}
+		GameMode->CB->GeneratePositionsFromString(LastMoveDone);
+		GameMode->CB->SetTilesOwners();
+		GameMode->SetKings();
+	}
 }
 
 void AWhitePlayer::TileSelection(ATile* CurrTile)
@@ -105,8 +115,10 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
-	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(FVector2D(CPC->SelectedPieceToMove->RelativePosition().X, CPC->SelectedPieceToMove->RelativePosition().Y));
+	FVector2D OldPosition = CPC->SelectedPieceToMove->Relative2DPosition();
+	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(OldPosition);
 	ATile** ActualTilePtr = GameMode->CB->TileMap.Find(CurrTile->GetGridPosition());
+	UMainHUD* MainHUD = CPC->MainHUDWidget;
 
 	if (CurrTile->GetOccupantColor() == EOccupantColor::E)
 	{
@@ -114,7 +126,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 		CPC->SelectedPieceToMove->DecolorPossibleMoves();
 
 		// If the move is legal, move the piece
-		if (CPC->SelectedPieceToMove->Moves.Contains(CurrTile) || CPC->SelectedPieceToMove->EatablePieces.Contains(CurrTile))
+		if (CPC->SelectedPieceToMove->Moves.Contains(CurrTile) || CPC->SelectedPieceToMove->EatablePiecesPosition.Contains(CurrTile))
 		{
 			FVector ActorPositioning = GameMode->CB->GetRelativeLocationByXYPosition(CurrTile->GetGridPosition().X, CurrTile->GetGridPosition().Y);
 			ActorPositioning.Z = 10.0f;
@@ -122,12 +134,23 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 
 			if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
 			{
+				Cast<APiecePawn>(CPC->SelectedPieceToMove)->ResetTurnsWithoutMoving();
 				// Checks if the pawn could be promoted
 				Cast<APiecePawn>(CPC->SelectedPieceToMove)->Promote();
 				// Disables the first move variable if it's true
-				if (Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove == true)
+				if (Cast<APiecePawn>(CPC->SelectedPieceToMove)->GetIsFirstMove())
 				{
-					Cast<APiecePawn>(CPC->SelectedPieceToMove)->bFirstMove = false;
+					Cast<APiecePawn>(CPC->SelectedPieceToMove)->PawnMovedForTheFirstTime();
+				}
+			}
+			else
+			{
+				for (APiece* WhitePawn : GameMode->CB->WhitePieces)
+				{
+					if (Cast<APiecePawn>(WhitePawn))
+					{
+						Cast<APiecePawn>(WhitePawn)->IncrementTurnsWithoutMoving();
+					}
 				}
 			}
 		}
@@ -141,11 +164,39 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameMode->CB->GenerateStringFromPositions();
 			GameMode->CB->HistoryOfMoves.Add(LastMove);
+			
+			// Create dinamically the move button
+			if (MainHUD)
+			{
+				MainHUD->AddButton();
+				if (MainHUD->ButtonArray.Num() > 0)
+				{
+					UOldMovesButtons* LastButton = MainHUD->ButtonArray.Last();
+					if (LastButton)
+					{
+						LastButton->SetAssociatedString(GameMode->CB->HistoryOfMoves.Last());
+						LastButton->SetPieceToPrint(CPC->SelectedPieceToMove);
+						LastButton->SetItWasACapture(bIsACapture);
+						LastButton->SetNewLocationToPrint(CPC->SelectedPieceToMove->Relative2DPosition());
+						if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
+						{
+							LastButton->SetOldLocationToPrint(OldPosition);
+						}
+
+						LastButton->CreateText();
+					}
+				}
+			}
+
+			bIsACapture = false;
 
 			// Turn ending
 			IsMyTurn = false;
-			CPC->SelectedPieceToMove = nullptr;
-			GameMode->TurnPlayer(this);
+			if (!Cast<APiecePawn>(CPC->SelectedPieceToMove) || Cast<APiecePawn>(CPC->SelectedPieceToMove)->Relative2DPosition().X != 7)
+			{
+				CPC->SelectedPieceToMove = nullptr;
+				GameMode->TurnPlayer();
+			}
 		}
 	}
 }
@@ -162,15 +213,4 @@ void AWhitePlayer::OnWin()
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("You Win!"));
 	GameInstance->SetTurnMessage(TEXT("Human Wins!"));
 	GameInstance->IncrementScoreHumanPlayer();
-}
-
-void AWhitePlayer::OnLose()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("You Lose!"));
-	GameInstance->SetTurnMessage(TEXT("Human Loses!"));
-}
-
-bool AWhitePlayer::IsCheckStatus()
-{
-	return false;
 }

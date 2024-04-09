@@ -22,6 +22,10 @@ APiecePawn::APiecePawn()
 	// every actor has a RootComponent that defines the transform in the World
 	SetRootComponent(Scene);
 	StaticMeshComponent->SetupAttachment(Scene);
+
+	PieceValue = 1;
+	TurnsWithoutMoving = 0;
+	bIsFirstMove = true;
 }
 
 // Called when the game starts or when spawned
@@ -29,97 +33,47 @@ void APiecePawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
-}
-
-void APiecePawn::PromoteToQueen()
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
-	FVector Location = GetActorLocation();
-
-	GameMode->CB->WhitePieces.Remove(this);
-	this->Destroy();
-
-	if (PawnPromotionWidgetInstance)
+	if (Color == EColor::B)
 	{
-		PawnPromotionWidgetInstance->RemoveFromViewport();
+		PieceValue = -PieceValue;
 	}
-	
-	APiece* Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-	Obj->Color = EColor::W;
-
-	GameMode->CB->WhitePieces.Add(Obj);
-}
-
-void APiecePawn::PromoteToRook()
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	UBlueprint* RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
-	FVector Location = GetActorLocation();
-
-	GameMode->CB->WhitePieces.Remove(this);
-	this->Destroy();
-
-	if (PawnPromotionWidgetInstance)
-	{
-		PawnPromotionWidgetInstance->RemoveFromViewport();
-	}
-
-	APiece* Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-	Obj->Color = EColor::W;
-
-	GameMode->CB->WhitePieces.Add(Obj);
-}
-
-void APiecePawn::PromoteToBishop()
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	UBlueprint* BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
-	FVector Location = GetActorLocation();
-
-	GameMode->CB->WhitePieces.Remove(this);
-	this->Destroy();
-
-	if (PawnPromotionWidgetInstance)
-	{
-		PawnPromotionWidgetInstance->RemoveFromViewport();
-	}
-
-	APiece* Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-	Obj->Color = EColor::W;
-
-	GameMode->CB->WhitePieces.Add(Obj);
-}
-
-void APiecePawn::PromoteToKnight()
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	UBlueprint* KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
-	FVector Location = GetActorLocation();
-
-	GameMode->CB->WhitePieces.Remove(this);
-	this->Destroy();
-
-	if (PawnPromotionWidgetInstance)
-	{
-		PawnPromotionWidgetInstance->RemoveFromViewport();
-	}
-
-	APiece* Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
-	Obj->Color = EColor::W;
-
-	GameMode->CB->WhitePieces.Add(Obj);
 }
 
 void APiecePawn::Promote()
 {
-	PawnPromotionWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), PawnPromotionWidgetClass);
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+	GameMode->PawnPromotionWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), GameMode->PawnPromotionWidgetClass);
 
 	if (Color == EColor::W && RelativePosition().X == 7)
 	{
-		if (PawnPromotionWidgetInstance)
+		if (GameMode->PawnPromotionWidgetInstance)
 		{
-			PawnPromotionWidgetInstance->AddToViewport();
+			GameMode->PawnPromotionWidgetInstance->AddToViewport();
+			GameMode->PawnToPromote = this;
+		}
+	}
+
+	else if (Color == EColor::B && RelativePosition().X == 0)
+	{
+		GameMode->PawnToPromote = this;
+		int32 RandIdx0 = FMath::Rand() % 4;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Randomly here"));
+		switch (RandIdx0)
+		{
+			case 0:
+				GameMode->PromoteToQueen();
+				break;
+			case 1:
+				GameMode->PromoteToRook();
+				break;
+			case 2:
+				GameMode->PromoteToBishop();
+				break;
+			case 3:
+				GameMode->PromoteToKnight();
+				break;
+			default: 
+				return;
 		}
 	}
 }
@@ -134,7 +88,7 @@ void APiecePawn::Tick(float DeltaTime)
 void APiecePawn::PossibleMoves()
 {
 	Moves.Empty();
-	EatablePieces.Empty();
+	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -162,7 +116,7 @@ void APiecePawn::PossibleMoves()
 				NextPosition += Direction;
 				NextTile = GameMode->CB->TileMap.Find(NextPosition);
 
-				if (NextTile != nullptr && Direction == Directions[0] && bFirstMove && (*NextTile)->GetOccupantColor() == EOccupantColor::E)
+				if (NextTile != nullptr && Direction == Directions[0] && bIsFirstMove && (*NextTile)->GetOccupantColor() == EOccupantColor::E)
 				{
 					Moves.Add(*NextTile);
 				}
@@ -171,7 +125,7 @@ void APiecePawn::PossibleMoves()
 			}
 			else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E && Direction != Directions[0])
 			{
-				EatablePieces.Add(*NextTile);
+				EatablePiecesPosition.Add(*NextTile);
 				continue;
 			}
 		}
@@ -180,4 +134,29 @@ void APiecePawn::PossibleMoves()
 			continue;
 		}
 	}
+}
+
+void APiecePawn::IncrementTurnsWithoutMoving()
+{
+	TurnsWithoutMoving++;
+}
+
+void APiecePawn::ResetTurnsWithoutMoving()
+{
+	TurnsWithoutMoving = 0;
+}
+
+void APiecePawn::PawnMovedForTheFirstTime()
+{
+	bIsFirstMove = false;
+}
+
+int32 APiecePawn::GetTurnsWithoutMoving() const
+{
+	return TurnsWithoutMoving;
+}
+
+bool APiecePawn::GetIsFirstMove() const
+{
+	return bIsFirstMove;
 }

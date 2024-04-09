@@ -17,12 +17,19 @@ APieceBishop::APieceBishop()
 	// every actor has a RootComponent that defines the transform in the World
 	SetRootComponent(Scene);
 	StaticMeshComponent->SetupAttachment(Scene);
+
+	PieceValue = 3;
 }
 
 // Called when the game starts or when spawned
 void APieceBishop::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (Color == EColor::B)
+	{
+		PieceValue = -PieceValue;
+	}
 	
 }
 
@@ -36,7 +43,7 @@ void APieceBishop::Tick(float DeltaTime)
 void APieceBishop::PossibleMoves()
 {
 	Moves.Empty();
-	EatablePieces.Empty();
+	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -61,7 +68,7 @@ void APieceBishop::PossibleMoves()
 				}
 				else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
 				{
-					EatablePieces.Add(*NextTile);
+					EatablePiecesPosition.Add(*NextTile);
 					break;
 				}
 				else

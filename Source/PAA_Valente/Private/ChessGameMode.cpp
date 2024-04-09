@@ -2,12 +2,19 @@
 
 
 #include "ChessGameMode.h"
-#include "WhitePlayer.h"
 #include "PieceKing.h"
+#include "PieceQueen.h"
+#include "PieceRook.h"
+#include "PieceBishop.h"
+#include "PieceKnight.h"
+#include "PiecePawn.h"
 #include "ChessPlayerController.h"
+#include "WhitePlayer.h"
 #include "BlackRandomPlayer.h"
-#include "PlayerInterface.h"
 #include "EngineUtils.h"
+#include "ChessPlayerController.h"
+#include "MainHUD.h"
+#include "Engine/DirectionalLight.h"
 
 AChessGameMode::AChessGameMode()
 {
@@ -18,6 +25,8 @@ AChessGameMode::AChessGameMode()
 	bIsWhiteOnCheck = false;
 	bIsBlackOnCheck = false;
 	bIsBlackThinking = false;
+	TurnFlag = 0;
+	MovesWithoutCaptureOrPawnMove = 0;
 }
 
 void AChessGameMode::BeginPlay()
@@ -30,7 +39,7 @@ void AChessGameMode::BeginPlay()
 	auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 
 	// MiniMax Player
-	//auto* AI = GetWorld()->SpawnActor<ATTT_MinimaxPlayer>(FVector(), FRotator());
+	//auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
 
 	if (CBClass != nullptr)
 	{
@@ -42,7 +51,7 @@ void AChessGameMode::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("Game Field is null"));
 	}
 
-	float CameraPosX = ((CB->TileSize * (FieldSize + ((FieldSize - 1) * CB->NormalizedCellPadding) - (FieldSize - 1))) / 2) - (CB->TileSize / 2);
+	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
 	FVector CameraPos(CameraPosX, CameraPosX, 1000.0f);
 	HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
@@ -50,6 +59,7 @@ void AChessGameMode::BeginPlay()
 	HumanPlayer->OnTurn();
 }
 
+// Logic and Utilities
 void AChessGameMode::SetKings()
 {
 	// Finds WhiteKing
@@ -72,109 +82,465 @@ void AChessGameMode::SetKings()
 	}
 }
 
-void AChessGameMode::VerifyCheck(APiece* Piece)
+void AChessGameMode::TurnPlayer()
 {
-	ATile** WhiteKingTile = CB->TileMap.Find(FVector2D(CB->Kings[0]->RelativePosition().X, CB->Kings[0]->RelativePosition().Y));
-	ATile** BlackKingTile = CB->TileMap.Find(FVector2D(CB->Kings[1]->RelativePosition().X, CB->Kings[1]->RelativePosition().Y));
-	
-	if (Piece->Color == EColor::B)
+	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
+
+	VerifyCheck();
+
+	if (!bIsGameOver)
 	{
-		for (APiece* WhitePiece : CB->WhitePieces)
-		{
-			WhitePiece->PossibleMoves();
-			if (WhitePiece->EatablePieces.Contains(*BlackKingTile))
-			{
-				bIsBlackOnCheck = true;
-				break;
-			}
-			else
-			{
-				bIsBlackOnCheck = false;
-			}
-		}
+		VerifyDraw();
 	}
 
-	else if (Piece->Color == EColor::W)
+	if (bIsWhiteOnCheck)
 	{
-		for (APiece* BlackPiece : CB->BlackPieces)
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("White is on Check!"));
+	}
+	else if (bIsBlackOnCheck)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Black is on Check!"));
+	}
+
+	if (TurnFlag == 0)
+	{
+		TurnFlag++;
+		if (!bIsGameOver)
 		{
-			BlackPiece->PossibleMoves();
-			if (BlackPiece->EatablePieces.Contains(*WhiteKingTile))
-			{
-				bIsWhiteOnCheck = true;
-				break;
-			}
-			else
-			{
-				bIsWhiteOnCheck = false;
-			}
+			AIPlayer->OnTurn();
+		}
+		else if (bIsGameOver && bIsBlackOnCheck)
+		{
+			HumanPlayer->OnWin();
+		}
+	}
+	else if (TurnFlag == 1)
+	{
+		TurnFlag--;
+		if (!bIsGameOver)
+		{
+			HumanPlayer->OnTurn();
+		}
+		else if (bIsGameOver && bIsWhiteOnCheck)
+		{
+			AIPlayer->OnWin();
 		}
 	}
 }
 
-void AChessGameMode::VerifyWin(APiece* Piece)
+void AChessGameMode::SetWhiteCheckStatus(bool NewStatus)
 {
-	int32 NumberOfPiecesWithoutLegalMoves = 0;
-	TArray<APiece*> AllyPieces;
+	bIsWhiteOnCheck = NewStatus;
+}
 
-	if (Piece->Color == EColor::W)
+void AChessGameMode::SetBlackCheckStatus(bool NewStatus)
+{
+	bIsBlackOnCheck = NewStatus;
+}
+
+void AChessGameMode::SetGameOver(bool NewStatus)
+{
+	bIsGameOver = NewStatus;
+}
+
+bool AChessGameMode::GetWhiteCheckStatus() const
+{
+	return bIsWhiteOnCheck;
+}
+
+bool AChessGameMode::GetBlackCheckStatus() const
+{
+	return bIsBlackOnCheck;
+}
+
+bool AChessGameMode::GetGameOver() const
+{
+	return bIsGameOver;
+}
+
+int32 AChessGameMode::GetCurrentTurnFlag() const
+{
+	return TurnFlag;
+}
+
+void AChessGameMode::ResetVariablesForRematch()
+{
+	bIsGameOver = false;
+	bIsWhiteOnCheck = false;
+	bIsBlackOnCheck = false;
+	SetKings();
+	TurnFlag = 0;
+	MovesWithoutCaptureOrPawnMove = 0;
+}
+
+// Winning / Draw / Losing
+
+// ANCORA MIGLIORABILE ELIMINANDO LE VARIABILI BOOLEANE DI CHECK E SPEZZANDO VERIFYCHECK IN DUE METODI BOOLEANI
+void AChessGameMode::VerifyCheck()
+{
+	ATile** WhiteKingTile = CB->TileMap.Find(FVector2D(CB->Kings[0]->RelativePosition().X, CB->Kings[0]->RelativePosition().Y));
+	ATile** BlackKingTile = CB->TileMap.Find(FVector2D(CB->Kings[1]->RelativePosition().X, CB->Kings[1]->RelativePosition().Y));
+
+	// White puts black on check
+
+	bool bEnemyTeamOnCheck = false;
+	ATile* EnemyKingTile = nullptr;
+	TArray<APiece*> AllyPieces;
+	TArray<APiece*> EnemyPieces;
+
+	if (TurnFlag == 0)
 	{
+		EnemyKingTile = *BlackKingTile;
 		AllyPieces = CB->WhitePieces;
+		EnemyPieces = CB->BlackPieces;
 	}
-	else
+	else if (TurnFlag == 1)
 	{
+		EnemyKingTile = *WhiteKingTile;
 		AllyPieces = CB->BlackPieces;
+		EnemyPieces = CB->WhitePieces;
 	}
 
 	for (APiece* AllyPiece : AllyPieces)
 	{
 		AllyPiece->PossibleMoves();
-		AllyPiece->FilterOnlyLegalMoves();
-		if (AllyPiece->Moves.Num() == 0 && AllyPiece->EatablePieces.Num() == 0)
+
+		// Check detection
+		if (AllyPiece->EatablePiecesPosition.Contains(EnemyKingTile))
 		{
-			NumberOfPiecesWithoutLegalMoves++;
+			if (TurnFlag == 0)
+			{
+				bIsBlackOnCheck = true;
+				break;
+			}
+			else if (TurnFlag == 1)
+			{
+				bIsWhiteOnCheck = true;
+				break;
+			}
+			break;
+		}
+		else
+		{
+			if (TurnFlag == 0)
+			{
+				bIsBlackOnCheck = false;
+			}
+			else if (TurnFlag == 1)
+			{
+				bIsWhiteOnCheck = false;
+			}
 		}
 	}
 
-	if (NumberOfPiecesWithoutLegalMoves == AllyPieces.Num())
+	if (bIsBlackOnCheck || bIsWhiteOnCheck)
 	{
-		bIsGameOver = true;
+		bool bCanMove = false;
+		for (APiece* EnemyPiece : EnemyPieces)
+		{
+			EnemyPiece->PossibleMoves();
+			EnemyPiece->FilterOnlyLegalMoves();
+			if (EnemyPiece->Moves.Num() > 0 || EnemyPiece->EatablePiecesPosition.Num() > 0)
+			{
+				bCanMove = true;
+				break;
+			}
+		}
+		if (!bCanMove)
+		{
+			bIsGameOver = true;
+		}
 	}
 }
 
-void AChessGameMode::TurnPlayer(IPlayerInterface* Player)
+void AChessGameMode::VerifyDraw()
 {
-	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
+	// TODO: Dead Positions
+	if (CheckThreeOccurrences() || KingvsKing() || FiftyMovesRule() || Stalemate())
+	{
+		bIsGameOver = true;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
+	}
+}
 
-	if (Player->PlayerNumber == 0)
-	{
-		VerifyCheck(CB->Kings[1]);
-		VerifyWin(CB->Kings[1]);
-		if (!bIsGameOver)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's not over!"));
-			AIPlayer->OnTurn();
+bool AChessGameMode::CheckThreeOccurrences()
+{
+	TMap<FString, int32> CountMap;
+
+	// Conta quante volte ogni elemento appare nell'array
+	for (FString Occurency : CB->HistoryOfMoves) {
+		if (!CountMap.Contains(Occurency)) {
+			CountMap.Add(Occurency, 1);
 		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's over!"));
-			HumanPlayer->OnWin();
+		else {
+			CountMap[Occurency]++;
 		}
 	}
-	else if (Player->PlayerNumber == 1)
-	{
-		VerifyCheck(CB->Kings[0]);
-		VerifyWin(CB->Kings[0]);
-		if (!bIsGameOver)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's not over!"));
-			HumanPlayer->OnTurn();
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Game's over!"));
-			AIPlayer->OnWin();
+
+	// Verifica se uno qualsiasi degli elementi appare tre volte
+	for (const auto& Pair : CountMap) {
+		if (Pair.Value >= 3) {
+			return true;
 		}
 	}
+
+	return false;
+}
+
+bool AChessGameMode::KingvsKing()
+{
+	if (CB->WhitePieces.Num() == 1 && CB->BlackPieces.Num() == 1) {
+		return true;
+	}
+	return false;
+}
+
+bool AChessGameMode::FiftyMovesRule()
+{
+	// If the number reaches 50, then it's a draw situation
+	if (MovesWithoutCaptureOrPawnMove >= 50)
+	{
+		return true;
+	}
+
+	// Declarations
+	int32 NumberOfPiecesInPreviousMove = 0;
+	int32 NumberOfPiecesNow = 0;
+	bool bWasMovedAPawn = false;
+	FString ActualMove = CB->HistoryOfMoves.Last();
+	FString PreviousMove = FString("");
+	if (CB->HistoryOfMoves.Num() > 1)
+	{
+		PreviousMove = CB->HistoryOfMoves[CB->HistoryOfMoves.Num() - 2];
+	}
+
+	// Capture check
+	for (int32 i = 0; i < ActualMove.Len(); i++)
+	{
+		TCHAR PieceInActualMove = ActualMove[i];
+		if (FChar::IsAlpha(PieceInActualMove))
+		{
+			NumberOfPiecesNow++;
+		}
+	}
+	if (PreviousMove != FString(""))
+	{
+		for (int32 i = 0; i < PreviousMove.Len(); i++)
+		{
+			TCHAR PieceInPreviousMove = PreviousMove[i];
+			if (FChar::IsAlpha(PieceInPreviousMove))
+			{
+				NumberOfPiecesInPreviousMove++;
+			}
+		}
+	}
+
+	// Pawn movement check
+	for (APiece* WhitePawn : CB->WhitePieces)
+	{
+		if (Cast<APiecePawn>(WhitePawn) && Cast<APiecePawn>(WhitePawn)->GetTurnsWithoutMoving() > 0)
+		{
+			bWasMovedAPawn = true;
+			break;
+		}
+	}
+	if (!bWasMovedAPawn)
+	{
+		for (APiece* BlackPawn : CB->BlackPieces)
+		{
+			if (Cast<APiecePawn>(BlackPawn) && Cast<APiecePawn>(BlackPawn)->GetTurnsWithoutMoving() > 0)
+			{
+				bWasMovedAPawn = true;
+				break;
+			}
+		}
+	}
+
+	if ((NumberOfPiecesNow == NumberOfPiecesInPreviousMove) && !bWasMovedAPawn)
+	{
+		MovesWithoutCaptureOrPawnMove++;
+	}
+	else
+	{
+		MovesWithoutCaptureOrPawnMove = 0;
+	}
+
+	return false;
+}
+
+bool AChessGameMode::Stalemate()
+{
+	if (!bIsWhiteOnCheck || !bIsBlackOnCheck)
+	{
+		bool bCanMove = false;
+		if (TurnFlag == 0)
+		{
+			for (APiece* BlackPiece : CB->BlackPieces)
+			{
+				BlackPiece->PossibleMoves();
+				BlackPiece->FilterOnlyLegalMoves();
+				if (BlackPiece->Moves.Num() > 0 || BlackPiece->EatablePiecesPosition.Num() > 0)
+				{
+					bCanMove = true;
+					break;
+				}
+			}
+		}
+		else if (TurnFlag == 1)
+		{
+			for (APiece* WhitePiece : CB->WhitePieces)
+			{
+				WhitePiece->PossibleMoves();
+				WhitePiece->FilterOnlyLegalMoves();
+				if (WhitePiece->Moves.Num() > 0 || WhitePiece->EatablePiecesPosition.Num() > 0)
+				{
+					bCanMove = true;
+					break;
+				}
+			}
+		}
+		if (!bCanMove)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+// Pawn Promotion
+void AChessGameMode::PromoteToQueen()
+{
+	UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
+	APiece* Obj = nullptr;
+
+	FVector Location = PawnToPromote->GetActorLocation();
+
+	if (PawnToPromote->GetColor() == EColor::W)
+	{
+		PawnPromotionWidgetInstance->RemoveFromParent();
+
+		CB->WhitePieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->SetColor(EColor::W);
+		CB->WhitePieces.Add(Obj);
+	}
+	else if (PawnToPromote->GetColor() == EColor::B)
+	{
+		UMaterialInterface* LoadBlackQueen = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BQueen"));
+
+		CB->BlackPieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->ChangeMaterial(LoadBlackQueen);
+		Obj->SetColor(EColor::B);
+		CB->BlackPieces.Add(Obj);
+	}
+
+	TurnPlayer();
+}
+
+void AChessGameMode::PromoteToRook()
+{
+	UBlueprint* RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
+	APiece* Obj = nullptr;
+
+	FVector Location = PawnToPromote->GetActorLocation();
+
+	if (PawnToPromote->GetColor() == EColor::W)
+	{
+		PawnPromotionWidgetInstance->RemoveFromParent();
+
+		CB->WhitePieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->SetColor(EColor::W);
+		CB->WhitePieces.Add(Obj);
+	}
+	else if (PawnToPromote->GetColor() == EColor::B)
+	{
+		UMaterialInterface* LoadBlackRook = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BRook"));
+
+		CB->BlackPieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->ChangeMaterial(LoadBlackRook);
+		Obj->SetColor(EColor::B);
+		CB->BlackPieces.Add(Obj);
+	}
+
+	TurnPlayer();
+}
+
+void AChessGameMode::PromoteToBishop()
+{
+	UBlueprint* BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
+	APiece* Obj = nullptr;
+
+	FVector Location = PawnToPromote->GetActorLocation();
+
+	if (PawnToPromote->GetColor() == EColor::W)
+	{
+		PawnPromotionWidgetInstance->RemoveFromParent();
+
+		CB->WhitePieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->SetColor(EColor::W);
+		CB->WhitePieces.Add(Obj);
+	}
+	else if (PawnToPromote->GetColor() == EColor::B)
+	{
+		UMaterialInterface* LoadBlackBishop = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BBishop"));
+
+		CB->BlackPieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->ChangeMaterial(LoadBlackBishop);
+		Obj->SetColor(EColor::B);
+		CB->BlackPieces.Add(Obj);
+	}
+
+	TurnPlayer();
+}
+
+void AChessGameMode::PromoteToKnight()
+{
+	UBlueprint* KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
+	APiece* Obj = nullptr;
+
+	FVector Location = PawnToPromote->GetActorLocation();
+
+	if (PawnToPromote->GetColor() == EColor::W)
+	{
+		PawnPromotionWidgetInstance->RemoveFromParent();
+
+		CB->WhitePieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->SetColor(EColor::W);
+		CB->WhitePieces.Add(Obj);
+	}
+	else if (PawnToPromote->GetColor() == EColor::B)
+	{
+		UMaterialInterface* LoadBlackKnight = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKnight"));
+
+		CB->BlackPieces.Remove(PawnToPromote);
+		PawnToPromote->Destroy();
+
+		Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
+		Obj->ChangeMaterial(LoadBlackKnight);
+		Obj->SetColor(EColor::B);
+		CB->BlackPieces.Add(Obj);
+	}
+
+	TurnPlayer();
 }
