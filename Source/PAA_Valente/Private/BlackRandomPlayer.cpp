@@ -52,7 +52,6 @@ void ABlackRandomPlayer::OnTurn()
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
 			// Declarations
-
 			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			APiece* ChosenPiece = nullptr;
@@ -85,7 +84,6 @@ void ABlackRandomPlayer::OnTurn()
 			ATile* DestinationTile = MovesAndEatablePieces[RandIdx1];
 			FVector TilePositioning = GameModeCallback->CB->GetRelativeLocationByXYPosition(DestinationTile->GetGridPosition().X, DestinationTile->GetGridPosition().Y);
 			TilePositioning.Z = 10.0f;
-			APiece* PieceToCapture = nullptr;
 
 			// If it's an eating move, then delete the white piece
 			if (DestinationTile->GetOccupantColor() == EOccupantColor::W)

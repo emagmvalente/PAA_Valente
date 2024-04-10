@@ -47,18 +47,12 @@ public:
 	// Logic and Utilities - METHODS
 	void SetKings();
 	void TurnPlayer();
-	void SetWhiteCheckStatus(bool NewStatus);
-	void SetBlackCheckStatus(bool NewStatus);
-	void SetGameOver(bool NewStatus);
-	bool GetWhiteCheckStatus() const;
-	bool GetBlackCheckStatus() const;
-	bool GetGameOver() const;
-	int32 GetCurrentTurnFlag() const;
 	void ResetVariablesForRematch();
 
 	// Winning / Draw / Losing - METHODS
-	void VerifyCheck();
-	void VerifyDraw();
+	bool VerifyCheck();
+	bool VerifyCheckmate();
+	bool VerifyDraw();
 	bool CheckThreeOccurrences();
 	bool KingvsKing();
 	bool FiftyMovesRule();

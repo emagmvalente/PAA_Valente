@@ -189,6 +189,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 				CPC->SelectedPieceToMove = nullptr;
 				GameMode->TurnPlayer();
 			}
+			// Else -> A pawn has been promoted, then the turn's passed in GameMode promotion's segment
 		}
 	}
 }
