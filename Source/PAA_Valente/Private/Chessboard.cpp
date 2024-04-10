@@ -46,9 +46,11 @@ void AChessboard::BeginPlay()
 
 void AChessboard::ResetField()
 {
+	// Declaration
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 	
+	// Reset everything
 	if (!GameMode->bIsBlackThinking)
 	{
 		HistoryOfMoves.Empty();
@@ -57,10 +59,8 @@ void AChessboard::ResetField()
 			CPC->MainHUDWidget->DestroyButtons();
 		}
 
-		// Using FEN notation to generate every piece
 		FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 		GeneratePositionsFromString(GeneratingString);
-		// Using FEN notation for the replay mechanic too
 		HistoryOfMoves.Add(GeneratingString);
 
 		for (ATile* Tile : TileArray)

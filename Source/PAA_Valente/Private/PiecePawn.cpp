@@ -44,6 +44,7 @@ void APiecePawn::Promote()
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	GameMode->PawnPromotionWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), GameMode->PawnPromotionWidgetClass);
 
+	// If it's white, show thw widget
 	if (Color == EColor::W && RelativePosition().X == 7)
 	{
 		if (GameMode->PawnPromotionWidgetInstance)
@@ -53,6 +54,7 @@ void APiecePawn::Promote()
 		}
 	}
 
+	// If it's black, chose randomly
 	else if (Color == EColor::B && RelativePosition().X == 0)
 	{
 		GameMode->PawnToPromote = this;
