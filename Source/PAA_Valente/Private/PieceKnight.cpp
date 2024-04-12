@@ -41,32 +41,34 @@ void APieceKnight::Tick(float DeltaTime)
 
 void APieceKnight::PossibleMoves()
 {
+	// Emptying from old moves (if there are any)
 	Moves.Empty();
 	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FVector ActorLocation = RelativePosition();
-	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
-	ATile** NextTile = GameMode->CB->TileMap.Find(TileLocation);
+	FVector2D ActorLocation = Relative2DPosition();
+	ATile* StartTile = GameMode->CB->TileMap[ActorLocation];
+	ATile* NextTile = nullptr;
 
 	// For every direction check if the tile is occupied, if not add a possible move
 	for (const FVector2D& Direction : Directions)
 	{
-		FVector2D NextPosition = TileLocation + Direction;
-		NextTile = GameMode->CB->TileMap.Find(NextPosition);
-		if (NextTile == nullptr || IsSameColorAsTileOccupant(*NextTile))
+		FVector2D NextPosition = ActorLocation + Direction;
+		if (GameMode->CB->TileMap.Contains(NextPosition))
 		{
-			continue;
-		}
-		else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
-		{
-			EatablePiecesPosition.Add(*NextTile);
-			continue;
-		}
-		else
-		{
-			Moves.Add(*NextTile);
+			NextTile = GameMode->CB->TileMap[NextPosition];
+			
+			if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
+			{
+				if (NextTile->GetOccupantColor() == EOccupantColor::E)
+				{
+					Moves.Add(NextTile);
+					continue;
+				}
+				EatablePiecesPosition.Add(NextTile);
+				continue;
+			}
 		}
 	}
 }

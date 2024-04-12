@@ -89,14 +89,15 @@ void APiecePawn::Tick(float DeltaTime)
 
 void APiecePawn::PossibleMoves()
 {
+	// Emptying from old moves (if there are any)
 	Moves.Empty();
 	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FVector ActorLocation = RelativePosition();
-	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
-	ATile** NextTile = GameMode->CB->TileMap.Find(TileLocation);
+	FVector2D ActorLocation = Relative2DPosition();
+	ATile* StartTile = GameMode->CB->TileMap[ActorLocation];
+	ATile* NextTile = nullptr;
 
 	// If the pawn is black, then invert his movements
 	if (Color == EColor::B)
@@ -106,34 +107,41 @@ void APiecePawn::PossibleMoves()
 
 	for (const FVector2D& Direction : Directions)
 	{
-		FVector2D NextPosition = TileLocation + Direction;
-		NextTile = GameMode->CB->TileMap.Find(NextPosition);
-
-		if (NextTile != nullptr)
+		FVector2D NextPosition = ActorLocation + Direction;
+		if (GameMode->CB->TileMap.Contains(NextPosition))
 		{
-			if (Direction == Directions[0] && (*NextTile)->GetOccupantColor() == EOccupantColor::E)
+			NextTile = GameMode->CB->TileMap[NextPosition];
+			// If it's the upper / lower direction and the tile's empty, then add to moves
+			if (Direction == Directions[0] && NextTile->GetOccupantColor() == EOccupantColor::E)
 			{
-				Moves.Add((*NextTile));
+				Moves.Add(NextTile);
 
 				NextPosition += Direction;
-				NextTile = GameMode->CB->TileMap.Find(NextPosition);
-
-				if (NextTile != nullptr && Direction == Directions[0] && bIsFirstMove && (*NextTile)->GetOccupantColor() == EOccupantColor::E)
+				if (GameMode->CB->TileMap.Contains(NextPosition))
 				{
-					Moves.Add(*NextTile);
+					NextTile = GameMode->CB->TileMap[NextPosition];
+					// If is pawn's first move, then add the next tile too to moves
+					if (NextTile != nullptr && Direction == Directions[0] && bIsFirstMove && NextTile->GetOccupantColor() == EOccupantColor::E)
+					{
+						Moves.Add(NextTile);
+					}
 				}
 
 				continue;
 			}
-			else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E && Direction != Directions[0])
+			else if (Direction != Directions[0])
 			{
-				EatablePiecesPosition.Add(*NextTile);
-				continue;
+				// If it's any other direction and the tile's occupied by an enemy, add to eatable moves
+				if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
+				{
+					if (NextTile->GetOccupantColor() != EOccupantColor::E)
+					{
+						EatablePiecesPosition.Add(NextTile);
+						continue;
+					}
+					continue;
+				}
 			}
-		}
-		else
-		{
-			continue;
 		}
 	}
 }

@@ -42,45 +42,54 @@ void APieceBishop::Tick(float DeltaTime)
 
 void APieceBishop::PossibleMoves()
 {
+	// Emptying from old moves (if there are any)
 	Moves.Empty();
 	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FVector ActorLocation = RelativePosition();
-	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
-	ATile** NextTile = GameMode->CB->TileMap.Find(TileLocation);
+	FVector2D ActorLocation = Relative2DPosition();
+	ATile* StartTile = GameMode->CB->TileMap[ActorLocation];
+	ATile* NextTile = nullptr;
 
 	// For every direction check if the tile is occupied, if not add a possible move.
-	// By the way, if a piece interrupts a path, then stop adding moves in that direction.
+	// If a piece interrupts a path, then check the color.
+	// If white -> break
+	// If black -> add as eatable
 	for (const FVector2D& Direction : Directions)
 	{
-		FVector2D NextPosition = TileLocation + Direction;
-		NextTile = GameMode->CB->TileMap.Find(NextPosition);
+		FVector2D NextPosition = ActorLocation + Direction;
 
-		while (true)
+		if (GameMode->CB->TileMap.Contains(NextPosition))
 		{
-			if (NextTile != nullptr)
+			NextTile = GameMode->CB->TileMap[NextPosition];
+
+			while (true)
 			{
-				if ((*NextTile)->GetOccupantColor() == EOccupantColor::E)
+				if (!GameMode->CB->TileMap.Contains(NextPosition))
 				{
-					Moves.Add((*NextTile));
-				}
-				else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
-				{
-					EatablePiecesPosition.Add(*NextTile);
 					break;
+				}
+				
+				NextTile = GameMode->CB->TileMap[NextPosition];
+
+				if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
+				{
+					if (NextTile->GetOccupantColor() == EOccupantColor::E)
+					{
+						Moves.Add(NextTile);
+					}
+					else
+					{
+						EatablePiecesPosition.Add(NextTile);
+						break;
+					}
 				}
 				else
 				{
 					break;
 				}
 				NextPosition += Direction;
-				NextTile = GameMode->CB->TileMap.Find(NextPosition);
-			}
-			else
-			{
-				break;
 			}
 		}
 	}
