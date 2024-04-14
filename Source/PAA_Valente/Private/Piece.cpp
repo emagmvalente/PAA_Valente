@@ -93,19 +93,6 @@ void APiece::DecolorPossibleMoves()
 	}
 }
 
-bool APiece::IsSameColorAsTileOccupant(ATile* Tile)
-{
-	if (Tile->GetOccupantColor() == EOccupantColor::B && Color == EColor::B)
-	{
-		return true;
-	}
-	if (Tile->GetOccupantColor() == EOccupantColor::W && Color == EColor::W)
-	{
-		return true;
-	}
-	return false;
-}
-
 void APiece::FilterOnlyLegalMoves()
 {
 	// Declarations

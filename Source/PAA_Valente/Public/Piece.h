@@ -48,8 +48,6 @@ public:
 	void ColorPossibleMoves();
 	void DecolorPossibleMoves();
 
-	bool IsSameColorAsTileOccupant(ATile* Tile);
-
 	virtual void PossibleMoves() {};
 	void FilterOnlyLegalMoves();
 
