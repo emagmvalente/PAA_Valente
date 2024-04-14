@@ -67,7 +67,7 @@ void ABlackRandomPlayer::OnTurn()
 				ChosenPiece = GameModeCallback->CB->BlackPieces[RandIdx0];
 
 				// Calculate piece's possible moves.
-				ChosenPiece->PossibleMoves(ChosenPiece->Relative2DPosition());
+				ChosenPiece->PossibleMoves(ChosenPiece->GetVirtualPosition());
 				ChosenPiece->FilterOnlyLegalMoves();
 
 				MovesAndEatablePieces = ChosenPiece->Moves;
@@ -76,8 +76,8 @@ void ABlackRandomPlayer::OnTurn()
 			} while (MovesAndEatablePieces.Num() == 0);
 
 			// Getting previous tile
-			ATile** PreviousTilePtr = GameModeCallback->CB->TileMap.Find(ChosenPiece->Relative2DPosition());
-			FVector2D OldPosition = ChosenPiece->Relative2DPosition();
+			ATile** PreviousTilePtr = GameModeCallback->CB->TileMap.Find(ChosenPiece->GetVirtualPosition());
+			FVector2D OldPosition = ChosenPiece->GetVirtualPosition();
 
 			// Getting the new tile and the new position
 			int32 RandIdx1 = FMath::Rand() % MovesAndEatablePieces.Num();
@@ -126,6 +126,7 @@ void ABlackRandomPlayer::OnTurn()
 			// Setting the actual tile occupied by a black, setting the old one empty
 			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
 			DestinationTile->SetOccupantColor(EOccupantColor::B);
+			ChosenPiece->SetVirtualPosition(DestinationTile->GetGridPosition());
 
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
@@ -141,7 +142,7 @@ void ABlackRandomPlayer::OnTurn()
 					if (LastButton)
 					{
 						LastButton->SetAssociatedString(GameModeCallback->CB->HistoryOfMoves.Last());
-						LastButton->CreateText(ChosenPiece, bIsACapture, ChosenPiece->Relative2DPosition(), OldPosition);
+						LastButton->CreateText(ChosenPiece, bIsACapture, ChosenPiece->GetVirtualPosition(), OldPosition);
 					}
 				}
 			}
@@ -150,7 +151,7 @@ void ABlackRandomPlayer::OnTurn()
 
 			// Turn ending
 			GameModeCallback->bIsBlackThinking = false;
-			if (!Cast<APiecePawn>(ChosenPiece) || Cast<APiecePawn>(ChosenPiece)->Relative2DPosition().X != 0)
+			if (!Cast<APiecePawn>(ChosenPiece) || Cast<APiecePawn>(ChosenPiece)->GetVirtualPosition().X != 0)
 			{
 				GameModeCallback->TurnPlayer();
 			}

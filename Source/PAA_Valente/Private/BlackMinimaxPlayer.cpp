@@ -59,7 +59,7 @@ void ABlackMinimaxPlayer::OnTurn()
 
 			CallMiniMaxAndFoundAttributes(2);
 
-			FVector2D OldPosition = BestPieceToMove->Relative2DPosition();
+			FVector2D OldPosition = BestPieceToMove->GetVirtualPosition();
 			ATile* PreviousTile = GameModeCallback->CB->TileMap[OldPosition];
 
 			FVector Location = GameModeCallback->CB->GetRelativeLocationByXYPosition(BestTileToMove->GetGridPosition().X, BestTileToMove->GetGridPosition().Y);
@@ -103,6 +103,7 @@ void ABlackMinimaxPlayer::OnTurn()
 
 			PreviousTile->SetOccupantColor(EOccupantColor::E);
 			BestTileToMove->SetOccupantColor(EOccupantColor::B);
+			BestPieceToMove->SetVirtualPosition(BestTileToMove->GetGridPosition());
 
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
 			GameModeCallback->CB->HistoryOfMoves.Add(LastMove);
@@ -117,7 +118,7 @@ void ABlackMinimaxPlayer::OnTurn()
 					if (LastButton)
 					{
 						LastButton->SetAssociatedString(GameModeCallback->CB->HistoryOfMoves.Last());
-						LastButton->CreateText(BestPieceToMove, bIsACapture, BestPieceToMove->Relative2DPosition(), OldPosition);
+						LastButton->CreateText(BestPieceToMove, bIsACapture, BestPieceToMove->GetVirtualPosition(), OldPosition);
 					}
 				}
 			}
@@ -126,7 +127,7 @@ void ABlackMinimaxPlayer::OnTurn()
 
 			// Turn ending
 			GameModeCallback->bIsBlackThinking = false;
-			if (!Cast<APiecePawn>(BestPieceToMove) || Cast<APiecePawn>(BestPieceToMove)->Relative2DPosition().X != 0)
+			if (!Cast<APiecePawn>(BestPieceToMove) || Cast<APiecePawn>(BestPieceToMove)->GetVirtualPosition().X != 0)
 			{
 				BestPieceToMove = nullptr;
 				BestTileToMove = nullptr;

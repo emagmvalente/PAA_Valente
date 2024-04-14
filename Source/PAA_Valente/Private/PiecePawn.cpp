@@ -45,7 +45,7 @@ void APiecePawn::Promote()
 	GameMode->PawnPromotionWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), GameMode->PawnPromotionWidgetClass);
 
 	// If it's white, show thw widget
-	if (Color == EColor::W && RelativePosition().X == 7)
+	if (Color == EColor::W && VirtualPosition.X == 7)
 	{
 		if (GameMode->PawnPromotionWidgetInstance)
 		{
@@ -55,7 +55,7 @@ void APiecePawn::Promote()
 	}
 
 	// If it's black, chose randomly
-	else if (Color == EColor::B && RelativePosition().X == 0)
+	else if (Color == EColor::B && VirtualPosition.X == 0)
 	{
 		GameMode->PawnToPromote = this;
 		int32 RandIdx0 = FMath::Rand() % 4;
