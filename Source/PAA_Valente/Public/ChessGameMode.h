@@ -57,6 +57,8 @@ public:
 	bool KingvsKing();
 	bool FiftyMovesRule();
 	bool Stalemate();
+	bool GetIsWhiteOnCheck() const;
+	bool GetIsBlackOnCheck() const;
 
 	// Pawn Promotion - METHODS
 	UFUNCTION(BlueprintCallable)

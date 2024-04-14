@@ -15,7 +15,8 @@ ABlackMinimaxPlayer::ABlackMinimaxPlayer()
 	PrimaryActorTick.bCanEverTick = true;
 	GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	bIsACapture = false;
-	SelectedPieceToMove = nullptr;
+	BestPieceToMove = nullptr;
+	BestTileToMove = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -55,22 +56,16 @@ void ABlackMinimaxPlayer::OnTurn()
 			AChessGameMode* GameModeCallback = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			UMainHUD* MainHUD = CPC->MainHUDWidget;
-			FVector2D OldPosition(0, 0);
-			ATile** PreviousTilePtr = nullptr;
 
-			FVector2D BestMove = FindBestMove(false);
-			FVector Location = GameModeCallback->CB->GetRelativeLocationByXYPosition(BestMove.X, BestMove.Y);
+			CallMiniMaxAndFoundAttributes(2);
+
+			FVector2D OldPosition = BestPieceToMove->Relative2DPosition();
+			ATile* PreviousTile = GameModeCallback->CB->TileMap[OldPosition];
+
+			FVector Location = GameModeCallback->CB->GetRelativeLocationByXYPosition(BestTileToMove->GetGridPosition().X, BestTileToMove->GetGridPosition().Y);
 			Location.Z = 10.f;
 
-			if (SelectedPieceToMove)
-			{
-				OldPosition = SelectedPieceToMove->Relative2DPosition();
-				PreviousTilePtr = GameModeCallback->CB->TileMap.Find(SelectedPieceToMove->Relative2DPosition());
-			}
-
-			ATile* DestinationTile = GameModeCallback->CB->TileMap[BestMove];
-
-			if (DestinationTile->GetOccupantColor() == EOccupantColor::W)
+			if (BestTileToMove->GetOccupantColor() == EOccupantColor::W)
 			{
 				// Search the white piece who occupies the tile and capture it
 				for (APiece* WhitePiece : GameModeCallback->CB->WhitePieces)
@@ -85,14 +80,14 @@ void ABlackMinimaxPlayer::OnTurn()
 				}
 			}
 
-			SelectedPieceToMove->SetActorLocation(Location);
-			if (Cast<APiecePawn>(SelectedPieceToMove))
+			BestPieceToMove->SetActorLocation(Location);
+			if (Cast<APiecePawn>(BestPieceToMove))
 			{
-				Cast<APiecePawn>(SelectedPieceToMove)->ResetTurnsWithoutMoving();
-				Cast<APiecePawn>(SelectedPieceToMove)->Promote();
-				if (Cast<APiecePawn>(SelectedPieceToMove)->GetIsFirstMove())
+				Cast<APiecePawn>(BestPieceToMove)->ResetTurnsWithoutMoving();
+				Cast<APiecePawn>(BestPieceToMove)->Promote();
+				if (Cast<APiecePawn>(BestPieceToMove)->GetIsFirstMove())
 				{
-					Cast<APiecePawn>(SelectedPieceToMove)->PawnMovedForTheFirstTime();
+					Cast<APiecePawn>(BestPieceToMove)->PawnMovedForTheFirstTime();
 				}
 			}
 			else
@@ -106,8 +101,8 @@ void ABlackMinimaxPlayer::OnTurn()
 				}
 			}
 
-			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
-			DestinationTile->SetOccupantColor(EOccupantColor::B);
+			PreviousTile->SetOccupantColor(EOccupantColor::E);
+			BestTileToMove->SetOccupantColor(EOccupantColor::B);
 
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
 			GameModeCallback->CB->HistoryOfMoves.Add(LastMove);
@@ -122,7 +117,7 @@ void ABlackMinimaxPlayer::OnTurn()
 					if (LastButton)
 					{
 						LastButton->SetAssociatedString(GameModeCallback->CB->HistoryOfMoves.Last());
-						LastButton->CreateText(SelectedPieceToMove, bIsACapture, SelectedPieceToMove->Relative2DPosition(), OldPosition);
+						LastButton->CreateText(BestPieceToMove, bIsACapture, BestPieceToMove->Relative2DPosition(), OldPosition);
 					}
 				}
 			}
@@ -131,12 +126,12 @@ void ABlackMinimaxPlayer::OnTurn()
 
 			// Turn ending
 			GameModeCallback->bIsBlackThinking = false;
-			if (!Cast<APiecePawn>(SelectedPieceToMove) || Cast<APiecePawn>(SelectedPieceToMove)->Relative2DPosition().X != 0)
+			if (!Cast<APiecePawn>(BestPieceToMove) || Cast<APiecePawn>(BestPieceToMove)->Relative2DPosition().X != 0)
 			{
-				SelectedPieceToMove = nullptr;
+				BestPieceToMove = nullptr;
+				BestTileToMove = nullptr;
 				GameModeCallback->TurnPlayer();
 			}
-
 		}, 3, false);
 }
 
@@ -144,96 +139,174 @@ void ABlackMinimaxPlayer::OnWin()
 {
 }
 
-int32 ABlackMinimaxPlayer::EvaluateGrid(TMap<FVector2D, ATile*>& Board)
-{
-	return int32();
-}
-
-int32 ABlackMinimaxPlayer::MiniMax(TMap<FVector2D, ATile*>& Board, int32 Depth, bool IsMax)
-{
-	return int32();
-}
-
-FVector2D ABlackMinimaxPlayer::FindBestMove(bool IsMax)
+int32 ABlackMinimaxPlayer::EvaluateGrid()
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
-	int32 BestVal = 0;
-	FVector2D BestMove(-1, -1);
+	// Check & Checkmate cases
+	if (GameMode->VerifyCheck())
+	{
+		if (GameMode->GetIsWhiteOnCheck())
+		{
+			if (GameMode->VerifyCheckmate())
+			{
+				return -100;
+			}
+			
+			ATile* WhiteKingTile = GameMode->CB->TileMap[GameMode->CB->Kings[0]->GetVirtualPosition()];
 
-	TArray<APiece*> AllyPieces;
-	EColor AllyColor = EColor::E;
-	TArray<APiece*> EnemyPieces;
-	EColor EnemyColor = EColor::E;
+			// If white's on check and piece that threatens could be eaten, return it's value in positive
+			for (APiece* BlackPiece : GameMode->CB->BlackPieces)
+			{
+				if (BlackPiece->EatablePiecesPosition.Contains(WhiteKingTile))
+				{
+					for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+					{
+						WhitePiece->PossibleMoves(WhitePiece->GetVirtualPosition());
+						WhitePiece->FilterOnlyLegalMoves();
+						ATile* ThreatenPiecePosition = GameMode->CB->TileMap[BlackPiece->GetVirtualPosition()];
+						if (WhitePiece->EatablePiecesPosition.Contains(ThreatenPiecePosition))
+						{
+							return -BlackPiece->GetPieceValue();
+						}
+					}
+
+					// If none can save the white king, return an high value for black
+					return -10;
+				}
+			}
+		}
+
+		else if (GameMode->GetIsBlackOnCheck())
+		{
+			if (GameMode->VerifyCheckmate())
+			{
+				return 100;
+			}
+
+			ATile* BlackKingTile = GameMode->CB->TileMap[GameMode->CB->Kings[1]->GetVirtualPosition()];
+
+			// If black's on check and piece that threatens could be eaten, return it's value in negative
+			for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+			{
+				if (WhitePiece->EatablePiecesPosition.Contains(BlackKingTile))
+				{
+					for (APiece* BlackPiece : GameMode->CB->BlackPieces)
+					{
+						BlackPiece->PossibleMoves(BlackPiece->GetVirtualPosition());
+						BlackPiece->FilterOnlyLegalMoves();
+						ATile* ThreatenPiecePosition = GameMode->CB->TileMap[WhitePiece->GetVirtualPosition()];
+						if (WhitePiece->EatablePiecesPosition.Contains(ThreatenPiecePosition))
+						{
+							return -WhitePiece->GetPieceValue();
+						}
+					}
+
+					// If none can save the black king, return an high value for white
+					return 10;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+int32 ABlackMinimaxPlayer::MiniMax(int32 Depth, bool IsMax)
+{
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+
+	int32 Score = EvaluateGrid();
+
+	if (Score == 100 || Score == -100)
+	{
+		return Score;
+	}
+
 
 	if (IsMax)
 	{
-		AllyPieces = GameMode->CB->WhitePieces;
-		AllyColor = EColor::W;
-		EnemyPieces = GameMode->CB->BlackPieces;
-		EnemyColor = EColor::B;
-		BestVal = 10000000;
+		int32 BestForMax = -10000000;
+
+		for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+		{
+			WhitePiece->PossibleMoves(WhitePiece->GetVirtualPosition());
+			WhitePiece->FilterOnlyLegalMoves();
+			
+			TArray<ATile*> MovesAndEatablePositions = WhitePiece->Moves;
+			MovesAndEatablePositions.Append(WhitePiece->EatablePiecesPosition);
+
+			for (ATile* Move : MovesAndEatablePositions)
+			{
+				FVector2D PreviousPosition = WhitePiece->GetVirtualPosition();
+				ATile* PreviousTile = GameMode->CB->TileMap[PreviousPosition];
+
+				PreviousTile->SetOccupantColor(EOccupantColor::E);
+				Move->SetOccupantColor(EOccupantColor::W);
+				WhitePiece->SetVirtualPosition(Move->GetGridPosition());
+
+				int32 CurrentValue = MiniMax(Depth - 1, !IsMax);
+
+				if (CurrentValue >= BestForMax)
+				{
+					BestForMax = CurrentValue;
+					BestPieceToMove = WhitePiece;
+					BestTileToMove = Move;
+				}
+
+				PreviousTile->SetOccupantColor(EOccupantColor::W);
+				Move->SetOccupantColor(EOccupantColor::E);
+				WhitePiece->SetVirtualPosition(PreviousPosition);
+			}
+		}
+
+		return BestForMax;
 	}
+
 	else
 	{
-		AllyPieces = GameMode->CB->BlackPieces;
-		AllyColor = EColor::B;
-		EnemyPieces = GameMode->CB->WhitePieces;
-		EnemyColor = EColor::W;
-		BestVal = -10000000;
-	}
+		int32 BestForMin = 10000000;
 
-	for (APiece* AllyPiece : AllyPieces)
-	{
-		AllyPiece->PossibleMoves();
-		AllyPiece->FilterOnlyLegalMoves();
-
-		int32 CurrVal = 0;
-
-		if (AllyPiece->EatablePiecesPosition.Num() == 0)
+		for (APiece* BlackPiece : GameMode->CB->BlackPieces)
 		{
-			continue;
-		}
+			BlackPiece->PossibleMoves(BlackPiece->GetVirtualPosition());
+			BlackPiece->FilterOnlyLegalMoves();
 
-		for (ATile* Move : AllyPiece->EatablePiecesPosition)
-		{
-			for (APiece* EnemyPiece : EnemyPieces)
+			TArray<ATile*> MovesAndEatablePositions = BlackPiece->Moves;
+			MovesAndEatablePositions.Append(BlackPiece->EatablePiecesPosition);
+
+			for (ATile* Move : MovesAndEatablePositions)
 			{
-				if (EnemyPiece->Relative2DPosition() == Move->GetGridPosition())
+				FVector2D PreviousPosition = BlackPiece->GetVirtualPosition();
+				ATile* PreviousTile = GameMode->CB->TileMap[PreviousPosition];
+
+				PreviousTile->SetOccupantColor(EOccupantColor::E);
+				Move->SetOccupantColor(EOccupantColor::B);
+				BlackPiece->SetVirtualPosition(Move->GetGridPosition());
+
+				int32 CurrentValue = MiniMax(Depth - 1, IsMax);
+
+				if (CurrentValue <= BestForMin)
 				{
-					CurrVal = EnemyPiece->GetPieceValue();
-					break;
+					BestForMin = CurrentValue;
+					BestPieceToMove = BlackPiece;
+					BestTileToMove = Move;
 				}
-			}
 
-			if (((CurrVal < BestVal) && IsMax) || 
-				((CurrVal > BestVal) && !IsMax))
-			{
-				SelectedPieceToMove = AllyPiece;
-				BestVal = CurrVal;
-				BestMove = Move->GetGridPosition();
-			}
-		}
-	}
-
-	if (BestMove.X == -1 && BestMove.Y == -1)
-	{
-		TArray<APiece*> PiecesWithLegalMoves;
-
-		for (APiece* AllyPiece : AllyPieces)
-		{
-			if (AllyPiece->Moves.Num() > 0)
-			{
-				PiecesWithLegalMoves.Add(AllyPiece);
+				PreviousTile->SetOccupantColor(EOccupantColor::B);
+				Move->SetOccupantColor(EOccupantColor::E);
+				BlackPiece->SetVirtualPosition(PreviousPosition);
 			}
 		}
 
-		int32 RandIdx0 = FMath::Rand() % PiecesWithLegalMoves.Num();
-		SelectedPieceToMove = PiecesWithLegalMoves[RandIdx0];
-		int32 RandIdx1 = FMath::Rand() % SelectedPieceToMove->Moves.Num();
-		BestMove = SelectedPieceToMove->Moves[RandIdx1]->GetGridPosition();
+		return BestForMin;
 	}
 
-	return BestMove;
+	// This return will never be used
+	return int32();
 }
 
+void ABlackMinimaxPlayer::CallMiniMaxAndFoundAttributes(int32 Depth)
+{
+	MiniMax(Depth, false);
+}

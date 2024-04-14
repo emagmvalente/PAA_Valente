@@ -87,7 +87,7 @@ void APiecePawn::Tick(float DeltaTime)
 
 }
 
-void APiecePawn::PossibleMoves()
+void APiecePawn::PossibleMoves(FVector2D StartingPosition)
 {
 	// Emptying from old moves (if there are any)
 	Moves.Empty();
@@ -95,8 +95,7 @@ void APiecePawn::PossibleMoves()
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FVector2D ActorLocation = Relative2DPosition();
-	ATile* StartTile = GameMode->CB->TileMap[ActorLocation];
+	ATile* StartTile = GameMode->CB->TileMap[StartingPosition];
 	ATile* NextTile = nullptr;
 
 	// If the pawn is black, then invert his movements
@@ -107,7 +106,7 @@ void APiecePawn::PossibleMoves()
 
 	for (const FVector2D& Direction : Directions)
 	{
-		FVector2D NextPosition = ActorLocation + Direction;
+		FVector2D NextPosition = StartingPosition + Direction;
 		if (GameMode->CB->TileMap.Contains(NextPosition))
 		{
 			NextTile = GameMode->CB->TileMap[NextPosition];

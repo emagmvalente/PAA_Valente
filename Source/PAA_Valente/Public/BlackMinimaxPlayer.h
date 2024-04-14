@@ -24,7 +24,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	bool bIsACapture;
-	APiece* SelectedPieceToMove;
+	APiece* BestPieceToMove;
+	ATile* BestTileToMove;
 
 public:	
 	// Called every frame
@@ -36,7 +37,7 @@ public:
 	void OnTurn();
 	void OnWin();
 
-	int32 EvaluateGrid(TMap<FVector2D, ATile*>& Board);
-	int32 MiniMax(TMap<FVector2D, ATile*>& Board, int32 Depth, bool IsMax);
-	FVector2D FindBestMove(bool IsMax);
+	int32 EvaluateGrid();
+	int32 MiniMax(int32 Depth, bool IsMax);
+	void CallMiniMaxAndFoundAttributes(int32 Depth);
 };

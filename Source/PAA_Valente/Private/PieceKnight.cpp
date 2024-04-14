@@ -39,7 +39,7 @@ void APieceKnight::Tick(float DeltaTime)
 
 }
 
-void APieceKnight::PossibleMoves()
+void APieceKnight::PossibleMoves(FVector2D StartingPosition)
 {
 	// Emptying from old moves (if there are any)
 	Moves.Empty();
@@ -47,14 +47,13 @@ void APieceKnight::PossibleMoves()
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FVector2D ActorLocation = Relative2DPosition();
-	ATile* StartTile = GameMode->CB->TileMap[ActorLocation];
+	ATile* StartTile = GameMode->CB->TileMap[StartingPosition];
 	ATile* NextTile = nullptr;
 
 	// For every direction check if the tile is occupied, if not add a possible move
 	for (const FVector2D& Direction : Directions)
 	{
-		FVector2D NextPosition = ActorLocation + Direction;
+		FVector2D NextPosition = StartingPosition + Direction;
 		if (GameMode->CB->TileMap.Contains(NextPosition))
 		{
 			NextTile = GameMode->CB->TileMap[NextPosition];

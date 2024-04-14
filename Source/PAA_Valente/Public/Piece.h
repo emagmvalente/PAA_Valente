@@ -27,6 +27,7 @@ public:
 protected:
 	int32 PieceValue;
 	EColor Color;
+	FVector2D VirtualPosition;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -48,12 +49,14 @@ public:
 	void ColorPossibleMoves();
 	void DecolorPossibleMoves();
 
-	virtual void PossibleMoves() {};
+	virtual void PossibleMoves(FVector2D StartingPosition) {};
 	void FilterOnlyLegalMoves();
 
 	int32 GetPieceValue() const;
 	EColor GetColor() const;
+	FVector2D GetVirtualPosition() const;
 
 	void SetColor(EColor NewColor);
+	void SetVirtualPosition(FVector2D PositionToVirtualize);
 
 };

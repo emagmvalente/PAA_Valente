@@ -36,10 +36,10 @@ void AChessGameMode::BeginPlay()
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 
 	// Random Player
-	auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+	//auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 
 	// MiniMax Player
-	//auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
+	auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
 
 	if (CBClass != nullptr)
 	{
@@ -85,8 +85,8 @@ void AChessGameMode::SetKings()
 void AChessGameMode::TurnPlayer()
 {
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
-	//ABlackMinimaxPlayer* AIPlayer = Cast<ABlackMinimaxPlayer>(*TActorIterator<ABlackMinimaxPlayer>(GetWorld()));
+	//ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
+	ABlackMinimaxPlayer* AIPlayer = Cast<ABlackMinimaxPlayer>(*TActorIterator<ABlackMinimaxPlayer>(GetWorld()));
 
 	if (TurnFlag == 0)
 	{
@@ -171,12 +171,29 @@ bool AChessGameMode::VerifyCheck()
 
 	for (APiece* AllyPiece : AllyPieces)
 	{
-		AllyPiece->PossibleMoves();
+		if (AllyPiece->GetVirtualPosition() == FVector2D(-1, -1))
+		{
+			AllyPiece->PossibleMoves(AllyPiece->Relative2DPosition());
+		}
+		else
+		{
+			AllyPiece->PossibleMoves(AllyPiece->GetVirtualPosition());
+		}
+		
 		AllyPiece->FilterOnlyLegalMoves();
 
 		// Check detection
 		if (AllyPiece->EatablePiecesPosition.Contains(EnemyKingTile))
 		{
+			if (TurnFlag == 0)
+			{
+				bIsBlackOnCheck = true;
+			}
+			else if (TurnFlag == 1)
+			{
+				bIsWhiteOnCheck = true;
+			}
+
 			return true;
 		}
 	}
@@ -199,7 +216,14 @@ bool AChessGameMode::VerifyCheckmate()
 
 	for (APiece* EnemyPiece : EnemyPieces)
 	{
-		EnemyPiece->PossibleMoves();
+		if (EnemyPiece->GetVirtualPosition() == FVector2D(-1, -1))
+		{
+			EnemyPiece->PossibleMoves(EnemyPiece->Relative2DPosition());
+		}
+		else
+		{
+			EnemyPiece->PossibleMoves(EnemyPiece->GetVirtualPosition());
+		}
 		EnemyPiece->FilterOnlyLegalMoves();
 		if (EnemyPiece->Moves.Num() > 0 || EnemyPiece->EatablePiecesPosition.Num() > 0)
 		{
@@ -333,6 +357,16 @@ bool AChessGameMode::Stalemate()
 		return VerifyCheckmate();
 	}
 	return false;
+}
+
+bool AChessGameMode::GetIsWhiteOnCheck() const
+{
+	return bIsWhiteOnCheck;
+}
+
+bool AChessGameMode::GetIsBlackOnCheck() const
+{
+	return bIsBlackOnCheck;
 }
 
 // Pawn Promotion
