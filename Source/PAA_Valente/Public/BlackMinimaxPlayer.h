@@ -37,7 +37,8 @@ public:
 	void OnTurn();
 	void OnWin();
 
-	int32 EvaluateGrid();
-	int32 MiniMax(int32 Depth, bool IsMax);
-	void CallMiniMaxAndFoundAttributes(int32 Depth);
+	int32 Maxi(int32 Depth);
+	int32 Mini(int32 Depth);
+	void Minimax(int32 Depth, bool IsMax);
+	int32 Evaluate();
 };
