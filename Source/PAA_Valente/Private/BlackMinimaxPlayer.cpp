@@ -163,7 +163,7 @@ int32 ABlackMinimaxPlayer::EvaluateGrid()
 				{
 					for (APiece* WhitePiece : GameMode->CB->WhitePieces)
 					{
-						WhitePiece->PossibleMoves(WhitePiece->GetVirtualPosition());
+						WhitePiece->PossibleMoves();
 						WhitePiece->FilterOnlyLegalMoves();
 						ATile* ThreatenPiecePosition = GameMode->CB->TileMap[BlackPiece->GetVirtualPosition()];
 						if (WhitePiece->EatablePiecesPosition.Contains(ThreatenPiecePosition))
@@ -194,7 +194,7 @@ int32 ABlackMinimaxPlayer::EvaluateGrid()
 				{
 					for (APiece* BlackPiece : GameMode->CB->BlackPieces)
 					{
-						BlackPiece->PossibleMoves(BlackPiece->GetVirtualPosition());
+						BlackPiece->PossibleMoves();
 						BlackPiece->FilterOnlyLegalMoves();
 						ATile* ThreatenPiecePosition = GameMode->CB->TileMap[WhitePiece->GetVirtualPosition()];
 						if (WhitePiece->EatablePiecesPosition.Contains(ThreatenPiecePosition))
@@ -231,7 +231,7 @@ int32 ABlackMinimaxPlayer::MiniMax(int32 Depth, bool IsMax)
 
 		for (APiece* WhitePiece : GameMode->CB->WhitePieces)
 		{
-			WhitePiece->PossibleMoves(WhitePiece->GetVirtualPosition());
+			WhitePiece->PossibleMoves();
 			WhitePiece->FilterOnlyLegalMoves();
 			
 			TArray<ATile*> MovesAndEatablePositions = WhitePiece->Moves;
@@ -270,7 +270,7 @@ int32 ABlackMinimaxPlayer::MiniMax(int32 Depth, bool IsMax)
 
 		for (APiece* BlackPiece : GameMode->CB->BlackPieces)
 		{
-			BlackPiece->PossibleMoves(BlackPiece->GetVirtualPosition());
+			BlackPiece->PossibleMoves();
 			BlackPiece->FilterOnlyLegalMoves();
 
 			TArray<ATile*> MovesAndEatablePositions = BlackPiece->Moves;

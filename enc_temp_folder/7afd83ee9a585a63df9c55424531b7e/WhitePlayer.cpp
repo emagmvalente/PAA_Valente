@@ -60,7 +60,9 @@ void AWhitePlayer::PieceSelection()
 	FHitResult Hit = FHitResult(ForceInit);
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
 
-	if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() == LastMoveDone))
+	// && (GameMode->CB->GenerateStringFromPositions() == LastMoveDone)
+
+	if (Hit.bBlockingHit && IsMyTurn)
 	{
 		if (APiece* PieceClicked = Cast<APiece>(Hit.GetActor()))
 		{
@@ -101,6 +103,7 @@ void AWhitePlayer::PieceSelection()
 		}
 	}
 
+	/*
 	else if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() != LastMoveDone))
 	{
 		if (CPC->SelectedPieceToMove)
@@ -111,6 +114,7 @@ void AWhitePlayer::PieceSelection()
 		GameMode->CB->SetTilesOwners();
 		GameMode->SetKings();
 	}
+	*/
 }
 
 void AWhitePlayer::TileSelection(ATile* CurrTile)

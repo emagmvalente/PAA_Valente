@@ -67,7 +67,7 @@ void ABlackRandomPlayer::OnTurn()
 				ChosenPiece = GameModeCallback->CB->BlackPieces[RandIdx0];
 
 				// Calculate piece's possible moves.
-				ChosenPiece->PossibleMoves(ChosenPiece->GetVirtualPosition());
+				ChosenPiece->PossibleMoves();
 				ChosenPiece->FilterOnlyLegalMoves();
 
 				MovesAndEatablePieces = ChosenPiece->Moves;

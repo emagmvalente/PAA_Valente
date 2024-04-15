@@ -40,7 +40,7 @@ void APieceBishop::Tick(float DeltaTime)
 
 }
 
-void APieceBishop::PossibleMoves(FVector2D StartingPosition)
+void APieceBishop::PossibleMoves()
 {
 	// Emptying from old moves (if there are any)
 	Moves.Empty();
@@ -48,7 +48,7 @@ void APieceBishop::PossibleMoves(FVector2D StartingPosition)
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	ATile* StartTile = GameMode->CB->TileMap[StartingPosition];
+	ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
 	ATile* NextTile = nullptr;
 
 	// For every direction check if the tile is occupied, if not add a possible move.
@@ -57,7 +57,7 @@ void APieceBishop::PossibleMoves(FVector2D StartingPosition)
 	// If black -> add as eatable
 	for (const FVector2D& Direction : Directions)
 	{
-		FVector2D NextPosition = StartingPosition + Direction;
+		FVector2D NextPosition = VirtualPosition + Direction;
 
 		if (GameMode->CB->TileMap.Contains(NextPosition))
 		{

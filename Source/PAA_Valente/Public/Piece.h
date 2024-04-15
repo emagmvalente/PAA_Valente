@@ -49,7 +49,7 @@ public:
 	void ColorPossibleMoves();
 	void DecolorPossibleMoves();
 
-	virtual void PossibleMoves(FVector2D StartingPosition) {};
+	virtual void PossibleMoves() {};
 	void FilterOnlyLegalMoves();
 
 	int32 GetPieceValue() const;

@@ -60,7 +60,7 @@ void APiece::ColorPossibleMoves()
 	// Loading the yellow material and changing the color for every move in moves
 	// Loading the red material for eating
 
-	PossibleMoves(this->VirtualPosition);
+	PossibleMoves();
 	FilterOnlyLegalMoves();
 
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
@@ -163,14 +163,8 @@ void APiece::FilterOnlyLegalMoves()
 			// Checking if the piece calculated isn't the threatening piece, if yes then skip its moves to simulate a capture
 			if (Move->GetGridPosition() != EnemyPiece->VirtualPosition)
 			{
-				if (EnemyPiece->GetVirtualPosition() != FVector2D(-1, -1))
-				{
-					EnemyPiece->PossibleMoves(EnemyPiece->GetVirtualPosition());
-				}
-				else
-				{
-					EnemyPiece->PossibleMoves(EnemyPiece->VirtualPosition);
-				}
+				EnemyPiece->PossibleMoves();
+
 				// Checking if the piece is a king, if yes then any move is equal to moving the king tile, 
 				// so don't consider "the king tile" but consinder "the move"
 				if (Cast<APieceKing>(this))

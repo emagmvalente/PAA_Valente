@@ -171,14 +171,7 @@ bool AChessGameMode::VerifyCheck()
 
 	for (APiece* AllyPiece : AllyPieces)
 	{
-		if (AllyPiece->GetVirtualPosition() == FVector2D(-1, -1))
-		{
-			AllyPiece->PossibleMoves(AllyPiece->GetVirtualPosition());
-		}
-		else
-		{
-			AllyPiece->PossibleMoves(AllyPiece->GetVirtualPosition());
-		}
+		AllyPiece->PossibleMoves();
 		
 		AllyPiece->FilterOnlyLegalMoves();
 
@@ -216,14 +209,7 @@ bool AChessGameMode::VerifyCheckmate()
 
 	for (APiece* EnemyPiece : EnemyPieces)
 	{
-		if (EnemyPiece->GetVirtualPosition() == FVector2D(-1, -1))
-		{
-			EnemyPiece->PossibleMoves(EnemyPiece->GetVirtualPosition());
-		}
-		else
-		{
-			EnemyPiece->PossibleMoves(EnemyPiece->GetVirtualPosition());
-		}
+		EnemyPiece->PossibleMoves();
 		EnemyPiece->FilterOnlyLegalMoves();
 		if (EnemyPiece->Moves.Num() > 0 || EnemyPiece->EatablePiecesPosition.Num() > 0)
 		{
