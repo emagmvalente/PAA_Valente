@@ -26,6 +26,7 @@ protected:
 	bool bIsACapture;
 	APiece* BestPieceToMove;
 	ATile* BestTileToMove;
+	int32 BestMoveValue;
 
 public:	
 	// Called every frame
