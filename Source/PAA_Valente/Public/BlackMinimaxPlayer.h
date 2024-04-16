@@ -24,9 +24,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	bool bIsACapture;
-	APiece* BestPieceToMove;
-	ATile* BestTileToMove;
-	int32 BestMoveValue;
+	APiece* BestPiece;
 
 public:	
 	// Called every frame
@@ -42,4 +40,5 @@ public:
 	int32 Mini(int32 Depth);
 	void Minimax(int32 Depth, bool IsMax);
 	int32 Evaluate();
+	ATile* FindBestMove();
 };

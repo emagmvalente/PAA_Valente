@@ -26,10 +26,6 @@ void APieceRook::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (Color == EColor::B)
-	{
-		PieceValue = -PieceValue;
-	}
 }
 
 // Called every frame

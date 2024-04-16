@@ -33,10 +33,6 @@ void APiecePawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (Color == EColor::B)
-	{
-		PieceValue = -PieceValue;
-	}
 }
 
 void APiecePawn::Promote()
