@@ -178,7 +178,6 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 					if (WhitePiece->GetVirtualPosition() == Move->GetGridPosition())
 					{
 						WhitePiece->SetVirtualPosition(FVector2D(-1, -1));
-						GameMode->CB->WhitePieces.Remove(WhitePiece);
 						PieceCaptured = WhitePiece;
 						break;
 					}
@@ -191,7 +190,7 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 			BlackPiece->SetVirtualPosition(Move->GetGridPosition());
 
 			// Call Maxi
-			int32 MoveVal = Maxi(0, -9999, 9999);
+			int32 MoveVal = Maxi(1, -9999, 9999);
 
 			// Undo move
 			StartTile->SetOccupantColor(EOccupantColor::B);
@@ -203,7 +202,6 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 			{
 				PieceCaptured->SetVirtualPosition(Move->GetGridPosition());
 				Move->SetOccupantColor(EOccupantColor::W);
-				GameMode->CB->WhitePieces.Add(PieceCaptured);
 				PieceCaptured = nullptr;
 			}
 
@@ -216,9 +214,6 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 			}
 		}
 	}
-
-	FString MyDoubleString = FString::Printf(TEXT("%d"), BestVal);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *MyDoubleString);
 
 	return BestMove;
 }
@@ -237,6 +232,12 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 	int Min = +99999;
 	for (APiece* BlackPiece : GameMode->CB->BlackPieces)
 	{
+		// (-1,-1) is a position that determines a virtual capture, then ignore that piece
+		if (BlackPiece->GetVirtualPosition() == FVector2D(-1, -1))
+		{
+			continue;
+		}
+
 		ATile* StartTile = GameMode->CB->TileMap[BlackPiece->GetVirtualPosition()];
 
 		BlackPiece->PossibleMoves();
@@ -258,7 +259,6 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 					if (WhitePiece->GetVirtualPosition() == Move->GetGridPosition())
 					{
 						WhitePiece->SetVirtualPosition(FVector2D(-1, -1));
-						GameMode->CB->WhitePieces.Remove(WhitePiece);
 						PieceCaptured = WhitePiece;
 						break;
 					}
@@ -278,21 +278,19 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 			Move->SetOccupantColor(EOccupantColor::E);
 			StartTile->SetOccupantColor(EOccupantColor::B);
 
-			// Alpha-beta pruning
-			Beta = FMath::Min(Beta, Min);
-			if (Beta <= Alpha)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Pruned in Mini"));
-				break;
-			}
-
 			// Restore captured piece
 			if (PieceCaptured)
 			{
 				PieceCaptured->SetVirtualPosition(Move->GetGridPosition());
 				Move->SetOccupantColor(EOccupantColor::W);
-				GameMode->CB->WhitePieces.Add(PieceCaptured);
 				PieceCaptured = nullptr;
+			}
+
+			// Alpha-beta pruning
+			Beta = FMath::Min(Beta, Min);
+			if (Beta <= Alpha)
+			{
+				break;
 			}
 		}
 	}
@@ -312,6 +310,11 @@ int32 ABlackMinimaxPlayer::Maxi(int32 Depth, int32 Alpha, int32 Beta)
 	int Max = -99999;
 	for (APiece* WhitePiece : GameMode->CB->WhitePieces)
 	{
+		if (WhitePiece->GetVirtualPosition() == FVector2D(-1, -1))
+		{
+			continue;
+		}
+
 		ATile* StartTile = GameMode->CB->TileMap[WhitePiece->GetVirtualPosition()];
 
 		WhitePiece->PossibleMoves();
@@ -331,7 +334,6 @@ int32 ABlackMinimaxPlayer::Maxi(int32 Depth, int32 Alpha, int32 Beta)
 					if (BlackPiece->GetVirtualPosition() == Move->GetGridPosition())
 					{
 						BlackPiece->SetVirtualPosition(FVector2D(-1, -1));
-						GameMode->CB->BlackPieces.Remove(BlackPiece);
 						PieceCaptured = BlackPiece;
 						break;
 					}
@@ -348,19 +350,17 @@ int32 ABlackMinimaxPlayer::Maxi(int32 Depth, int32 Alpha, int32 Beta)
 			Move->SetOccupantColor(EOccupantColor::E);
 			StartTile->SetOccupantColor(EOccupantColor::W);
 
-			Alpha = FMath::Max(Alpha, Max);
-			if (Beta <= Alpha)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, TEXT("Pruned in Maxi"));
-				break;
-			}
-
 			if (PieceCaptured)
 			{
 				PieceCaptured->SetVirtualPosition(Move->GetGridPosition());
 				Move->SetOccupantColor(EOccupantColor::B);
-				GameMode->CB->BlackPieces.Add(PieceCaptured);
 				PieceCaptured = nullptr;
+			}
+
+			Alpha = FMath::Max(Alpha, Max);
+			if (Beta <= Alpha)
+			{
+				break;
 			}
 		}
 	}
@@ -425,9 +425,6 @@ int32 ABlackMinimaxPlayer::Evaluate()
 
 		Result = (RemainingPiecesValues * 10 + MobilityValues * 5) / (10 + 5);
 	}
-	
-	// FString MyDoubleString = FString::Printf(TEXT("%d"), Result);
-	// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *MyDoubleString);
 
 	return Result;
 }

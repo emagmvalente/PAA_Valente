@@ -43,26 +43,29 @@ void APieceKnight::PossibleMoves()
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
-	ATile* NextTile = nullptr;
-
-	// For every direction check if the tile is occupied, if not add a possible move
-	for (const FVector2D& Direction : Directions)
+	if (GameMode->CB->TileMap.Contains(VirtualPosition))
 	{
-		FVector2D NextPosition = VirtualPosition + Direction;
-		if (GameMode->CB->TileMap.Contains(NextPosition))
+		ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
+		ATile* NextTile = nullptr;
+
+		// For every direction check if the tile is occupied, if not add a possible move
+		for (const FVector2D& Direction : Directions)
 		{
-			NextTile = GameMode->CB->TileMap[NextPosition];
-			
-			if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
+			FVector2D NextPosition = VirtualPosition + Direction;
+			if (GameMode->CB->TileMap.Contains(NextPosition))
 			{
-				if (NextTile->GetOccupantColor() == EOccupantColor::E)
+				NextTile = GameMode->CB->TileMap[NextPosition];
+
+				if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
 				{
-					Moves.Add(NextTile);
+					if (NextTile->GetOccupantColor() == EOccupantColor::E)
+					{
+						Moves.Add(NextTile);
+						continue;
+					}
+					EatablePiecesPosition.Add(NextTile);
 					continue;
 				}
-				EatablePiecesPosition.Add(NextTile);
-				continue;
 			}
 		}
 	}

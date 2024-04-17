@@ -43,47 +43,51 @@ void APieceRook::PossibleMoves()
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
-	ATile* NextTile = nullptr;
 
-	// For every direction check if the tile is occupied, if not add a possible move.
-	// If a piece interrupts a path, then check the color.
-	// If white -> break
-	// If black -> add as eatable
-	for (const FVector2D& Direction : Directions)
+	if (GameMode->CB->TileMap.Contains(VirtualPosition))
 	{
-		FVector2D NextPosition = VirtualPosition + Direction;
+		ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
+		ATile* NextTile = nullptr;
 
-		if (GameMode->CB->TileMap.Contains(NextPosition))
+		// For every direction check if the tile is occupied, if not add a possible move.
+		// If a piece interrupts a path, then check the color.
+		// If white -> break
+		// If black -> add as eatable
+		for (const FVector2D& Direction : Directions)
 		{
-			NextTile = GameMode->CB->TileMap[NextPosition];
+			FVector2D NextPosition = VirtualPosition + Direction;
 
-			while (true)
+			if (GameMode->CB->TileMap.Contains(NextPosition))
 			{
-				if (!GameMode->CB->TileMap.Contains(NextPosition))
-				{
-					break;
-				}
-
 				NextTile = GameMode->CB->TileMap[NextPosition];
 
-				if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
+				while (true)
 				{
-					if (NextTile->GetOccupantColor() == EOccupantColor::E)
+					if (!GameMode->CB->TileMap.Contains(NextPosition))
 					{
-						Moves.Add(NextTile);
+						break;
+					}
+
+					NextTile = GameMode->CB->TileMap[NextPosition];
+
+					if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
+					{
+						if (NextTile->GetOccupantColor() == EOccupantColor::E)
+						{
+							Moves.Add(NextTile);
+						}
+						else
+						{
+							EatablePiecesPosition.Add(NextTile);
+							break;
+						}
 					}
 					else
 					{
-						EatablePiecesPosition.Add(NextTile);
 						break;
 					}
+					NextPosition += Direction;
 				}
-				else
-				{
-					break;
-				}
-				NextPosition += Direction;
 			}
 		}
 	}
