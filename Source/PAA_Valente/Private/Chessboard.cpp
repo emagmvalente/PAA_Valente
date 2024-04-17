@@ -46,9 +46,11 @@ void AChessboard::BeginPlay()
 
 void AChessboard::ResetField()
 {
+	// Declaration
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 	
+	// Reset everything
 	if (!GameMode->bIsBlackThinking)
 	{
 		HistoryOfMoves.Empty();
@@ -57,10 +59,8 @@ void AChessboard::ResetField()
 			CPC->MainHUDWidget->DestroyButtons();
 		}
 
-		// Using FEN notation to generate every piece
 		FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 		GeneratePositionsFromString(GeneratingString);
-		// Using FEN notation for the replay mechanic too
 		HistoryOfMoves.Add(GeneratingString);
 
 		for (ATile* Tile : TileArray)
@@ -146,7 +146,7 @@ FString AChessboard::GenerateStringFromPositions()
 					FVector Location(Row, Col, 10.f);
 					APiece* PieceFound = WhitePieces[i];
 
-					if (Cast<APiecePawn>(PieceFound) && PieceFound->RelativePosition() == Location)
+					if (Cast<APiecePawn>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -156,7 +156,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('P');
 						break;
 					}
-					else if (Cast<APieceKing>(PieceFound) && PieceFound->RelativePosition() == Location)
+					else if (Cast<APieceKing>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -167,7 +167,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('K');
 						break;
 					}
-					else if (Cast<APieceKnight>(PieceFound) && PieceFound->RelativePosition() == Location)
+					else if (Cast<APieceKnight>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -177,7 +177,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('N');
 						break;
 					}
-					else if (Cast<APieceQueen>(PieceFound) && PieceFound->RelativePosition() == Location)
+					else if (Cast<APieceQueen>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -187,7 +187,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('Q');
 						break;
 					}
-					else if (Cast<APieceRook>(PieceFound) && PieceFound->RelativePosition() == Location)
+					else if (Cast<APieceRook>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -197,7 +197,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('R');
 						break;
 					}
-					else if (Cast<APieceBishop>(PieceFound) && PieceFound->RelativePosition() == Location)
+					else if (Cast<APieceBishop>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -218,7 +218,7 @@ FString AChessboard::GenerateStringFromPositions()
 					FVector Location(Row, Col, 10.f);
 					APiece* PieceFound = BlackPieces[i];
 
-					if (Cast<APiecePawn>(PieceFound) && PieceFound->RelativePosition() == Location)
+					if (Cast<APiecePawn>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -228,7 +228,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('p');
 						break;
 					}
-					else if (Cast<APieceKing>(PieceFound) && PieceFound->RelativePosition() == Location)
+					else if (Cast<APieceKing>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -238,7 +238,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('k');
 						break;
 					}
-					else if (Cast<APieceKnight>(PieceFound) && PieceFound->RelativePosition() == Location)
+					else if (Cast<APieceKnight>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -248,7 +248,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('n');
 						break;
 					}
-					else if (Cast<APieceQueen>(PieceFound) && PieceFound->RelativePosition() == Location)
+					else if (Cast<APieceQueen>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -258,7 +258,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('q');
 						break;
 					}
-					else if (Cast<APieceRook>(PieceFound) && PieceFound->RelativePosition() == Location)
+					else if (Cast<APieceRook>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -268,7 +268,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('r');
 						break;
 					}
-					else if (Cast<APieceBishop>(PieceFound) && PieceFound->RelativePosition() == Location)
+					else if (Cast<APieceBishop>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -375,6 +375,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			case 'P':
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::W);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				if (Row != 1)
 				{
 					Cast<APiecePawn>(Obj)->PawnMovedForTheFirstTime();
@@ -385,30 +386,35 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			case 'N':
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::W);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				WhitePieces.Add(Obj); 
 				break;
 
 			case 'B':
 				Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::W);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				WhitePieces.Add(Obj); 
 				break;
 
 			case 'R':
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::W);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				WhitePieces.Add(Obj);
 				break;
 
 			case 'Q':
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::W);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				WhitePieces.Add(Obj);
 				break;
 
 			case 'K':
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::W);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				WhitePieces.Add(Obj);
 				break;
 
@@ -417,6 +423,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			case 'p':
 				Obj = GetWorld()->SpawnActor<APiecePawn>(PawnsBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::B);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				if (Row != 6)
 				{
 					Cast<APiecePawn>(Obj)->PawnMovedForTheFirstTime();
@@ -428,6 +435,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			case 'n':
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::B);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackKnight);
 				BlackPieces.Add(Obj);
 				break;
@@ -435,6 +443,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			case 'b':
 				Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::B);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackBishop);
 				BlackPieces.Add(Obj);
 				break;
@@ -442,6 +451,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			case 'r':
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::B);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackRook); 
 				BlackPieces.Add(Obj);
 				break;
@@ -449,6 +459,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			case 'q':
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::B);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackQueen);
 				BlackPieces.Add(Obj); 
 				break;
@@ -456,6 +467,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 			case 'k':
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::B);
+				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackKing);
 				BlackPieces.Add(Obj); 
 				break;

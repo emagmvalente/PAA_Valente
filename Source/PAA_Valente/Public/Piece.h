@@ -27,6 +27,7 @@ public:
 protected:
 	int32 PieceValue;
 	EColor Color;
+	FVector2D VirtualPosition;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -42,20 +43,20 @@ public:
 	void ChangeMaterial(UMaterialInterface* NewMaterial);
 
 	// Returns piece's relative position with Z = 10.f
-	FVector RelativePosition() const;
-	FVector2D Relative2DPosition() const;
+	//FVector RelativePosition() const;
+	//FVector2D Relative2DPosition() const;
 
 	void ColorPossibleMoves();
 	void DecolorPossibleMoves();
-
-	bool IsSameColorAsTileOccupant(ATile* Tile);
 
 	virtual void PossibleMoves() {};
 	void FilterOnlyLegalMoves();
 
 	int32 GetPieceValue() const;
 	EColor GetColor() const;
+	FVector2D GetVirtualPosition() const;
 
 	void SetColor(EColor NewColor);
+	void SetVirtualPosition(FVector2D PositionToVirtualize);
 
 };

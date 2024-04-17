@@ -12,6 +12,9 @@ APiece::APiece()
 	PrimaryActorTick.bCanEverTick = false;
 
 	Color = EColor::E;
+	PieceValue = 0;
+	VirtualPosition.X = -1;
+	VirtualPosition.Y = -1;
 }
 
 // Called when the game starts or when spawned
@@ -37,6 +40,7 @@ void APiece::ChangeMaterial(UMaterialInterface* NewMaterial)
 	}
 }
 
+/*
 FVector APiece::RelativePosition() const
 {
 	return FVector(Relative2DPosition().X, Relative2DPosition().Y, 10.f);
@@ -47,6 +51,7 @@ FVector2D APiece::Relative2DPosition() const
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	return GameMode->CB->GetXYPositionByRelativeLocation(GetActorLocation());
 }
+*/
 
 void APiece::ColorPossibleMoves()
 {
@@ -60,6 +65,25 @@ void APiece::ColorPossibleMoves()
 
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
+	UMaterialInterface* LoadE = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_E"));
+	UMaterialInterface* LoadW = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_W"));
+	UMaterialInterface* LoadB = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_B"));
+
+	for (ATile* Tile : GameMode->CB->TileArray)
+	{
+		if (Tile->GetOccupantColor() == EOccupantColor::E)
+		{
+			Tile->ChangeMaterial(LoadE);
+		}
+		else if (Tile->GetOccupantColor() == EOccupantColor::W)
+		{
+			Tile->ChangeMaterial(LoadW);
+		}
+		else if (Tile->GetOccupantColor() == EOccupantColor::B)
+		{
+			Tile->ChangeMaterial(LoadB);
+		}
+	}
 
 	for (ATile* Move : Moves)
 	{
@@ -93,107 +117,99 @@ void APiece::DecolorPossibleMoves()
 	}
 }
 
-bool APiece::IsSameColorAsTileOccupant(ATile* Tile)
-{
-	if (Tile->GetOccupantColor() == EOccupantColor::B && Color == EColor::B)
-	{
-		return true;
-	}
-	if (Tile->GetOccupantColor() == EOccupantColor::W && Color == EColor::W)
-	{
-		return true;
-	}
-	return false;
-}
-
 void APiece::FilterOnlyLegalMoves()
 {
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	TArray<ATile*> MovesAndEatablePieces = Moves;
 	MovesAndEatablePieces.Append(EatablePiecesPosition);
-	ATile** StartTile = GameMode->CB->TileMap.Find(Relative2DPosition());
-	
-	ATile** KingTile = nullptr;
-	EOccupantColor AllyColor = EOccupantColor::E;
-	EOccupantColor EnemyColor = EOccupantColor::E;
-	TArray<APiece*> EnemyPieces;
 
-	// Assignments
-	if (Color == EColor::W)
+	if (GameMode->CB->TileMap.Contains(VirtualPosition) && !MovesAndEatablePieces.IsEmpty())
 	{
-		KingTile = GameMode->CB->TileMap.Find(GameMode->CB->Kings[0]->Relative2DPosition());
-		AllyColor = EOccupantColor::W;
-		EnemyColor = EOccupantColor::B;
-		EnemyPieces = GameMode->CB->BlackPieces;
-	}
-	else if (Color == EColor::B)
-	{
-		KingTile = GameMode->CB->TileMap.Find(GameMode->CB->Kings[1]->Relative2DPosition());
-		AllyColor = EOccupantColor::B;
-		EnemyColor = EOccupantColor::W;
-		EnemyPieces = GameMode->CB->WhitePieces;
-	}
+		ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
 
-	// Simulating the movement of the piece from the start tile
-	(*StartTile)->SetOccupantColor(EOccupantColor::E);
+		ATile* KingTile = nullptr;
+		EOccupantColor AllyColor = EOccupantColor::E;
+		EOccupantColor EnemyColor = EOccupantColor::E;
+		TArray<APiece*> EnemyPieces;
 
-	// Iterating through all possible moves and eatable pieces
-	for (ATile* Move : MovesAndEatablePieces)
-	{
-		// Storing the real occupant color to restore it later
-		EOccupantColor ActualOccupantColor = Move->GetOccupantColor();
-		Move->SetOccupantColor(AllyColor);
-		bool bIsMoveSafe = true;
-
-		// Checking if any enemy piece can threaten the move
-		for (APiece* EnemyPiece : EnemyPieces)
+		// Assignments
+		if (Color == EColor::W)
 		{
-			// Checking if the piece calculated isn't the threatening piece, if yes then skip its moves to simulate a capture
-			if (Move->GetGridPosition() != EnemyPiece->Relative2DPosition())
-			{
-				EnemyPiece->PossibleMoves();
-				// Checking if the piece is a king, if yes then any move is equal to moving the king tile, 
-				// so don't consider "the king tile" but consinder "the move"
-				if (Cast<APieceKing>(this))
-				{
-					if (EnemyPiece->EatablePiecesPosition.Contains(Move))
-					{
-						bIsMoveSafe = false;
-						break;
-					}
-				}
-				// Else consider "king tile"
-				else
-				{
-					if (EnemyPiece->EatablePiecesPosition.Contains(*KingTile))
-					{
-						bIsMoveSafe = false;
-						break;
-					}
-				}
-			}
+			KingTile = GameMode->CB->TileMap[GameMode->CB->Kings[0]->VirtualPosition];
+			AllyColor = EOccupantColor::W;
+			EnemyColor = EOccupantColor::B;
+			EnemyPieces = GameMode->CB->BlackPieces;
+		}
+		else if (Color == EColor::B)
+		{
+			KingTile = GameMode->CB->TileMap[GameMode->CB->Kings[1]->VirtualPosition];
+			AllyColor = EOccupantColor::B;
+			EnemyColor = EOccupantColor::W;
+			EnemyPieces = GameMode->CB->WhitePieces;
 		}
 
-		// Removing unsafe moves from the list
-		if (!bIsMoveSafe)
+		// Simulating the movement of the piece from the start tile
+		StartTile->SetOccupantColor(EOccupantColor::E);
+
+		// Iterating through all possible moves and eatable pieces
+		for (ATile* Move : MovesAndEatablePieces)
 		{
-			if (Moves.Contains(Move))
+			// Storing the real occupant color to restore it later
+			EOccupantColor ActualOccupantColor = Move->GetOccupantColor();
+			Move->SetOccupantColor(AllyColor);
+			bool bIsMoveSafe = true;
+
+			// Checking if any enemy piece can threaten the move
+			for (APiece* EnemyPiece : EnemyPieces)
 			{
-				Moves.Remove(Move);
+				// Checking if the piece calculated isn't the threatening piece, if yes then skip its moves to simulate a capture
+				if (Move->GetGridPosition() != EnemyPiece->VirtualPosition)
+				{
+					EnemyPiece->PossibleMoves();
+
+					// Checking if the piece is a king, if yes then any move is equal to moving the king tile, 
+					// so don't consider "the king tile" but consinder "the move"
+					if (Cast<APieceKing>(this))
+					{
+						if (EnemyPiece->EatablePiecesPosition.Contains(Move))
+						{
+							bIsMoveSafe = false;
+							break;
+						}
+					}
+					// Else consider "king tile"
+					else
+					{
+						if (EnemyPiece->EatablePiecesPosition.Contains(KingTile))
+						{
+							bIsMoveSafe = false;
+							break;
+						}
+					}
+				}
 			}
-			else if (EatablePiecesPosition.Contains(Move))
+
+			// Removing unsafe moves from the list
+			if (!bIsMoveSafe)
 			{
-				EatablePiecesPosition.Remove(Move);
+				if (Moves.Contains(Move))
+				{
+					Moves.Remove(Move);
+				}
+				else if (EatablePiecesPosition.Contains(Move))
+				{
+					EatablePiecesPosition.Remove(Move);
+				}
 			}
+
+			// Restoring the original occupant color of the tile
+			Move->SetOccupantColor(ActualOccupantColor);
 		}
 
-		// Restoring the original occupant color of the tile
-		Move->SetOccupantColor(ActualOccupantColor);
+		// Restoring the original occupant color of the start tile
+		StartTile->SetOccupantColor(AllyColor);
 	}
-
-	// Restoring the original occupant color of the start tile
-	(*StartTile)->SetOccupantColor(AllyColor);
 }
 
 int32 APiece::GetPieceValue() const
@@ -206,7 +222,17 @@ EColor APiece::GetColor() const
 	return Color;
 }
 
+FVector2D APiece::GetVirtualPosition() const
+{
+	return VirtualPosition;
+}
+
 void APiece::SetColor(EColor NewColor)
 {
 	Color = NewColor;
+}
+
+void APiece::SetVirtualPosition(FVector2D PositionToVirtualize)
+{
+	VirtualPosition = PositionToVirtualize;
 }

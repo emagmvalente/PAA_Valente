@@ -33,10 +33,6 @@ void APiecePawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (Color == EColor::B)
-	{
-		PieceValue = -PieceValue;
-	}
 }
 
 void APiecePawn::Promote()
@@ -44,7 +40,8 @@ void APiecePawn::Promote()
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	GameMode->PawnPromotionWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), GameMode->PawnPromotionWidgetClass);
 
-	if (Color == EColor::W && RelativePosition().X == 7)
+	// If it's white, show thw widget
+	if (Color == EColor::W && VirtualPosition.X == 7)
 	{
 		if (GameMode->PawnPromotionWidgetInstance)
 		{
@@ -53,11 +50,11 @@ void APiecePawn::Promote()
 		}
 	}
 
-	else if (Color == EColor::B && RelativePosition().X == 0)
+	// If it's black, chose randomly
+	else if (Color == EColor::B && VirtualPosition.X == 0)
 	{
 		GameMode->PawnToPromote = this;
 		int32 RandIdx0 = FMath::Rand() % 4;
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Randomly here"));
 		switch (RandIdx0)
 		{
 			case 0:
@@ -87,51 +84,62 @@ void APiecePawn::Tick(float DeltaTime)
 
 void APiecePawn::PossibleMoves()
 {
+	// Emptying from old moves (if there are any)
 	Moves.Empty();
 	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FVector ActorLocation = RelativePosition();
-	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
-	ATile** NextTile = GameMode->CB->TileMap.Find(TileLocation);
 
-	// If the pawn is black, then invert his movements
-	if (Color == EColor::B)
+	if (GameMode->CB->TileMap.Contains(VirtualPosition))
 	{
-		Directions = { FVector2D(-1, 0), FVector2D(-1, -1), FVector2D(-1, 1) };
-	}
+		ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
+		ATile* NextTile = nullptr;
 
-	for (const FVector2D& Direction : Directions)
-	{
-		FVector2D NextPosition = TileLocation + Direction;
-		NextTile = GameMode->CB->TileMap.Find(NextPosition);
-
-		if (NextTile != nullptr)
+		// If the pawn is black, then invert his movements
+		if (Color == EColor::B)
 		{
-			if (Direction == Directions[0] && (*NextTile)->GetOccupantColor() == EOccupantColor::E)
-			{
-				Moves.Add((*NextTile));
-
-				NextPosition += Direction;
-				NextTile = GameMode->CB->TileMap.Find(NextPosition);
-
-				if (NextTile != nullptr && Direction == Directions[0] && bIsFirstMove && (*NextTile)->GetOccupantColor() == EOccupantColor::E)
-				{
-					Moves.Add(*NextTile);
-				}
-
-				continue;
-			}
-			else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E && Direction != Directions[0])
-			{
-				EatablePiecesPosition.Add(*NextTile);
-				continue;
-			}
+			Directions = { FVector2D(-1, 0), FVector2D(-1, -1), FVector2D(-1, 1) };
 		}
-		else
+
+		for (const FVector2D& Direction : Directions)
 		{
-			continue;
+			FVector2D NextPosition = VirtualPosition + Direction;
+			if (GameMode->CB->TileMap.Contains(NextPosition))
+			{
+				NextTile = GameMode->CB->TileMap[NextPosition];
+				// If it's the upper / lower direction and the tile's empty, then add to moves
+				if (Direction == Directions[0] && NextTile->GetOccupantColor() == EOccupantColor::E)
+				{
+					Moves.Add(NextTile);
+
+					NextPosition += Direction;
+					if (GameMode->CB->TileMap.Contains(NextPosition))
+					{
+						NextTile = GameMode->CB->TileMap[NextPosition];
+						// If is pawn's first move, then add the next tile too to moves
+						if (NextTile != nullptr && Direction == Directions[0] && bIsFirstMove && NextTile->GetOccupantColor() == EOccupantColor::E)
+						{
+							Moves.Add(NextTile);
+						}
+					}
+
+					continue;
+				}
+				else if (Direction != Directions[0])
+				{
+					// If it's any other direction and the tile's occupied by an enemy, add to eatable moves
+					if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
+					{
+						if (NextTile->GetOccupantColor() != EOccupantColor::E)
+						{
+							EatablePiecesPosition.Add(NextTile);
+							continue;
+						}
+						continue;
+					}
+				}
+			}
 		}
 	}
 }

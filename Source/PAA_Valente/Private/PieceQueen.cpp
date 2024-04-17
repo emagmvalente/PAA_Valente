@@ -26,10 +26,6 @@ void APieceQueen::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (Color == EColor::B)
-	{
-		PieceValue = -PieceValue;
-	}
 }
 
 // Called every frame
@@ -41,45 +37,57 @@ void APieceQueen::Tick(float DeltaTime)
 
 void APieceQueen::PossibleMoves()
 {
+	// Emptying from old moves (if there are any)
 	Moves.Empty();
 	EatablePiecesPosition.Empty();
 
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	FVector ActorLocation = RelativePosition();
-	FVector2D TileLocation(ActorLocation.X, ActorLocation.Y);
-	ATile** NextTile = GameMode->CB->TileMap.Find(TileLocation);
 
-	// For every direction check if the tile is occupied, if not add a possible move.
-	// By the way, if a piece interrupts a path, then stop adding moves in that direction.
-	for (const FVector2D& Direction : Directions)
+	if (GameMode->CB->TileMap.Contains(VirtualPosition))
 	{
-		FVector2D NextPosition = TileLocation + Direction;
-		NextTile = GameMode->CB->TileMap.Find(NextPosition);
+		ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
+		ATile* NextTile = nullptr;
 
-		while (true)
+		// For every direction check if the tile is occupied, if not add a possible move.
+		// If a piece interrupts a path, then check the color.
+		// If white -> break
+		// If black -> add as eatable
+		for (const FVector2D& Direction : Directions)
 		{
-			if (NextTile != nullptr)
+			FVector2D NextPosition = VirtualPosition + Direction;
+
+			if (GameMode->CB->TileMap.Contains(NextPosition))
 			{
-				if ((*NextTile)->GetOccupantColor() == EOccupantColor::E)
+				NextTile = GameMode->CB->TileMap[NextPosition];
+
+				while (true)
 				{
-					Moves.Add((*NextTile));
+					if (!GameMode->CB->TileMap.Contains(NextPosition))
+					{
+						break;
+					}
+
+					NextTile = GameMode->CB->TileMap[NextPosition];
+
+					if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
+					{
+						if (NextTile->GetOccupantColor() == EOccupantColor::E)
+						{
+							Moves.Add(NextTile);
+						}
+						else
+						{
+							EatablePiecesPosition.Add(NextTile);
+							break;
+						}
+					}
+					else
+					{
+						break;
+					}
+					NextPosition += Direction;
 				}
-				else if (!IsSameColorAsTileOccupant(*NextTile) && (*NextTile)->GetOccupantColor() != EOccupantColor::E)
-				{
-					EatablePiecesPosition.Add(*NextTile);
-					break;
-				}
-				else
-				{
-					break;
-				}
-				NextPosition += Direction;
-				NextTile = GameMode->CB->TileMap.Find(NextPosition);
-			}
-			else
-			{
-				break;
 			}
 		}
 	}

@@ -11,10 +11,10 @@
 #include "ChessPlayerController.h"
 #include "WhitePlayer.h"
 #include "BlackRandomPlayer.h"
+#include "BlackMinimaxPlayer.h"
 #include "EngineUtils.h"
 #include "ChessPlayerController.h"
 #include "MainHUD.h"
-#include "Engine/DirectionalLight.h"
 
 AChessGameMode::AChessGameMode()
 {
@@ -36,10 +36,10 @@ void AChessGameMode::BeginPlay()
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 
 	// Random Player
-	auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+	//auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 
 	// MiniMax Player
-	//auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
+	auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
 
 	if (CBClass != nullptr)
 	{
@@ -85,83 +85,57 @@ void AChessGameMode::SetKings()
 void AChessGameMode::TurnPlayer()
 {
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
-
-	VerifyCheck();
-
-	if (!bIsGameOver)
-	{
-		VerifyDraw();
-	}
-
-	if (bIsWhiteOnCheck)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("White is on Check!"));
-	}
-	else if (bIsBlackOnCheck)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Black is on Check!"));
-	}
+	//ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
+	ABlackMinimaxPlayer* AIPlayer = Cast<ABlackMinimaxPlayer>(*TActorIterator<ABlackMinimaxPlayer>(GetWorld()));
 
 	if (TurnFlag == 0)
 	{
-		TurnFlag++;
+		bIsBlackOnCheck = VerifyCheck();
+		if (bIsBlackOnCheck)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Black is on Check!"));
+			bIsGameOver = VerifyCheckmate();
+		}
+
 		if (!bIsGameOver)
 		{
-			AIPlayer->OnTurn();
+			bIsGameOver = VerifyDraw();
+			if (!bIsGameOver)
+			{
+				TurnFlag++;
+				AIPlayer->OnTurn();
+			}
 		}
 		else if (bIsGameOver && bIsBlackOnCheck)
 		{
 			HumanPlayer->OnWin();
 		}
 	}
+
+
 	else if (TurnFlag == 1)
 	{
-		TurnFlag--;
+		bIsWhiteOnCheck = VerifyCheck();
+		if (bIsWhiteOnCheck)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("White is on Check!"));
+			bIsGameOver = VerifyCheckmate();
+		}
+
 		if (!bIsGameOver)
 		{
-			HumanPlayer->OnTurn();
+			bIsGameOver = VerifyDraw();
+			if (!bIsGameOver)
+			{
+				TurnFlag--;
+				HumanPlayer->OnTurn();
+			}
 		}
 		else if (bIsGameOver && bIsWhiteOnCheck)
 		{
 			AIPlayer->OnWin();
 		}
 	}
-}
-
-void AChessGameMode::SetWhiteCheckStatus(bool NewStatus)
-{
-	bIsWhiteOnCheck = NewStatus;
-}
-
-void AChessGameMode::SetBlackCheckStatus(bool NewStatus)
-{
-	bIsBlackOnCheck = NewStatus;
-}
-
-void AChessGameMode::SetGameOver(bool NewStatus)
-{
-	bIsGameOver = NewStatus;
-}
-
-bool AChessGameMode::GetWhiteCheckStatus() const
-{
-	return bIsWhiteOnCheck;
-}
-
-bool AChessGameMode::GetBlackCheckStatus() const
-{
-	return bIsBlackOnCheck;
-}
-
-bool AChessGameMode::GetGameOver() const
-{
-	return bIsGameOver;
-}
-
-int32 AChessGameMode::GetCurrentTurnFlag() const
-{
-	return TurnFlag;
 }
 
 void AChessGameMode::ResetVariablesForRematch()
@@ -176,35 +150,30 @@ void AChessGameMode::ResetVariablesForRematch()
 
 // Winning / Draw / Losing
 
-// ANCORA MIGLIORABILE ELIMINANDO LE VARIABILI BOOLEANE DI CHECK E SPEZZANDO VERIFYCHECK IN DUE METODI BOOLEANI
-void AChessGameMode::VerifyCheck()
+bool AChessGameMode::VerifyCheck()
 {
-	ATile** WhiteKingTile = CB->TileMap.Find(FVector2D(CB->Kings[0]->RelativePosition().X, CB->Kings[0]->RelativePosition().Y));
-	ATile** BlackKingTile = CB->TileMap.Find(FVector2D(CB->Kings[1]->RelativePosition().X, CB->Kings[1]->RelativePosition().Y));
+	ATile** WhiteKingTile = CB->TileMap.Find(CB->Kings[0]->GetVirtualPosition());
+	ATile** BlackKingTile = CB->TileMap.Find(CB->Kings[1]->GetVirtualPosition());
 
-	// White puts black on check
-
-	bool bEnemyTeamOnCheck = false;
 	ATile* EnemyKingTile = nullptr;
 	TArray<APiece*> AllyPieces;
-	TArray<APiece*> EnemyPieces;
 
 	if (TurnFlag == 0)
 	{
 		EnemyKingTile = *BlackKingTile;
 		AllyPieces = CB->WhitePieces;
-		EnemyPieces = CB->BlackPieces;
 	}
 	else if (TurnFlag == 1)
 	{
 		EnemyKingTile = *WhiteKingTile;
 		AllyPieces = CB->BlackPieces;
-		EnemyPieces = CB->WhitePieces;
 	}
 
 	for (APiece* AllyPiece : AllyPieces)
 	{
 		AllyPiece->PossibleMoves();
+		
+		AllyPiece->FilterOnlyLegalMoves();
 
 		// Check detection
 		if (AllyPiece->EatablePiecesPosition.Contains(EnemyKingTile))
@@ -212,56 +181,54 @@ void AChessGameMode::VerifyCheck()
 			if (TurnFlag == 0)
 			{
 				bIsBlackOnCheck = true;
-				break;
 			}
 			else if (TurnFlag == 1)
 			{
 				bIsWhiteOnCheck = true;
-				break;
 			}
-			break;
-		}
-		else
-		{
-			if (TurnFlag == 0)
-			{
-				bIsBlackOnCheck = false;
-			}
-			else if (TurnFlag == 1)
-			{
-				bIsWhiteOnCheck = false;
-			}
+
+			return true;
 		}
 	}
 
-	if (bIsBlackOnCheck || bIsWhiteOnCheck)
-	{
-		bool bCanMove = false;
-		for (APiece* EnemyPiece : EnemyPieces)
-		{
-			EnemyPiece->PossibleMoves();
-			EnemyPiece->FilterOnlyLegalMoves();
-			if (EnemyPiece->Moves.Num() > 0 || EnemyPiece->EatablePiecesPosition.Num() > 0)
-			{
-				bCanMove = true;
-				break;
-			}
-		}
-		if (!bCanMove)
-		{
-			bIsGameOver = true;
-		}
-	}
+	return false;
 }
 
-void AChessGameMode::VerifyDraw()
+bool AChessGameMode::VerifyCheckmate()
+{
+	TArray<APiece*> EnemyPieces;
+
+	if (TurnFlag == 0)
+	{
+		EnemyPieces = CB->BlackPieces;
+	}
+	else if (TurnFlag == 1)
+	{
+		EnemyPieces = CB->WhitePieces;
+	}
+
+	for (APiece* EnemyPiece : EnemyPieces)
+	{
+		EnemyPiece->PossibleMoves();
+		EnemyPiece->FilterOnlyLegalMoves();
+		if (EnemyPiece->Moves.Num() > 0 || EnemyPiece->EatablePiecesPosition.Num() > 0)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool AChessGameMode::VerifyDraw()
 {
 	// TODO: Dead Positions
-	if (CheckThreeOccurrences() || KingvsKing() || FiftyMovesRule() || Stalemate())
+	if (CheckThreeOccurrences() || KingvsKing() || /*FiftyMovesRule() ||*/ Stalemate())
 	{
-		bIsGameOver = true;
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
+		return true;
 	}
+	return false;
 }
 
 bool AChessGameMode::CheckThreeOccurrences()
@@ -373,39 +340,19 @@ bool AChessGameMode::Stalemate()
 {
 	if (!bIsWhiteOnCheck || !bIsBlackOnCheck)
 	{
-		bool bCanMove = false;
-		if (TurnFlag == 0)
-		{
-			for (APiece* BlackPiece : CB->BlackPieces)
-			{
-				BlackPiece->PossibleMoves();
-				BlackPiece->FilterOnlyLegalMoves();
-				if (BlackPiece->Moves.Num() > 0 || BlackPiece->EatablePiecesPosition.Num() > 0)
-				{
-					bCanMove = true;
-					break;
-				}
-			}
-		}
-		else if (TurnFlag == 1)
-		{
-			for (APiece* WhitePiece : CB->WhitePieces)
-			{
-				WhitePiece->PossibleMoves();
-				WhitePiece->FilterOnlyLegalMoves();
-				if (WhitePiece->Moves.Num() > 0 || WhitePiece->EatablePiecesPosition.Num() > 0)
-				{
-					bCanMove = true;
-					break;
-				}
-			}
-		}
-		if (!bCanMove)
-		{
-			return true;
-		}
+		return VerifyCheckmate();
 	}
 	return false;
+}
+
+bool AChessGameMode::GetIsWhiteOnCheck() const
+{
+	return bIsWhiteOnCheck;
+}
+
+bool AChessGameMode::GetIsBlackOnCheck() const
+{
+	return bIsBlackOnCheck;
 }
 
 // Pawn Promotion
@@ -415,6 +362,7 @@ void AChessGameMode::PromoteToQueen()
 	APiece* Obj = nullptr;
 
 	FVector Location = PawnToPromote->GetActorLocation();
+	FVector2D Location2D = CB->GetXYPositionByRelativeLocation(Location);
 
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
@@ -425,6 +373,7 @@ void AChessGameMode::PromoteToQueen()
 
 		Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 		Obj->SetColor(EColor::W);
+		Obj->SetVirtualPosition(Location2D);
 		CB->WhitePieces.Add(Obj);
 	}
 	else if (PawnToPromote->GetColor() == EColor::B)
@@ -437,6 +386,7 @@ void AChessGameMode::PromoteToQueen()
 		Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 		Obj->ChangeMaterial(LoadBlackQueen);
 		Obj->SetColor(EColor::B);
+		Obj->SetVirtualPosition(Location2D);
 		CB->BlackPieces.Add(Obj);
 	}
 
@@ -449,6 +399,7 @@ void AChessGameMode::PromoteToRook()
 	APiece* Obj = nullptr;
 
 	FVector Location = PawnToPromote->GetActorLocation();
+	FVector2D Location2D = CB->GetXYPositionByRelativeLocation(Location);
 
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
@@ -459,6 +410,7 @@ void AChessGameMode::PromoteToRook()
 
 		Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 		Obj->SetColor(EColor::W);
+		Obj->SetVirtualPosition(Location2D);
 		CB->WhitePieces.Add(Obj);
 	}
 	else if (PawnToPromote->GetColor() == EColor::B)
@@ -471,6 +423,7 @@ void AChessGameMode::PromoteToRook()
 		Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 		Obj->ChangeMaterial(LoadBlackRook);
 		Obj->SetColor(EColor::B);
+		Obj->SetVirtualPosition(Location2D);
 		CB->BlackPieces.Add(Obj);
 	}
 
@@ -483,6 +436,7 @@ void AChessGameMode::PromoteToBishop()
 	APiece* Obj = nullptr;
 
 	FVector Location = PawnToPromote->GetActorLocation();
+	FVector2D Location2D = CB->GetXYPositionByRelativeLocation(Location);
 
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
@@ -493,6 +447,7 @@ void AChessGameMode::PromoteToBishop()
 
 		Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 		Obj->SetColor(EColor::W);
+		Obj->SetVirtualPosition(Location2D);
 		CB->WhitePieces.Add(Obj);
 	}
 	else if (PawnToPromote->GetColor() == EColor::B)
@@ -505,6 +460,7 @@ void AChessGameMode::PromoteToBishop()
 		Obj = GetWorld()->SpawnActor<APieceBishop>(BishopBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 		Obj->ChangeMaterial(LoadBlackBishop);
 		Obj->SetColor(EColor::B);
+		Obj->SetVirtualPosition(Location2D);
 		CB->BlackPieces.Add(Obj);
 	}
 
@@ -517,6 +473,7 @@ void AChessGameMode::PromoteToKnight()
 	APiece* Obj = nullptr;
 
 	FVector Location = PawnToPromote->GetActorLocation();
+	FVector2D Location2D = CB->GetXYPositionByRelativeLocation(Location);
 
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
@@ -527,6 +484,7 @@ void AChessGameMode::PromoteToKnight()
 
 		Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 		Obj->SetColor(EColor::W);
+		Obj->SetVirtualPosition(Location2D);
 		CB->WhitePieces.Add(Obj);
 	}
 	else if (PawnToPromote->GetColor() == EColor::B)
@@ -539,6 +497,7 @@ void AChessGameMode::PromoteToKnight()
 		Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 		Obj->ChangeMaterial(LoadBlackKnight);
 		Obj->SetColor(EColor::B);
+		Obj->SetVirtualPosition(Location2D);
 		CB->BlackPieces.Add(Obj);
 	}
 

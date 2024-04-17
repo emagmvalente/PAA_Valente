@@ -77,15 +77,18 @@ void AWhitePlayer::PieceSelection()
 			// Enemy Piece
 			else if (PieceClicked->GetColor() == EColor::B && CPC->SelectedPieceToMove != nullptr)
 			{
-				ATile** TilePtr = GameMode->CB->TileMap.Find(FVector2D(PieceClicked->RelativePosition().X, PieceClicked->RelativePosition().Y));
-
-				if (CPC->SelectedPieceToMove->EatablePiecesPosition.Contains(*TilePtr))
+				if (GameMode->CB->TileMap.Contains(PieceClicked->GetVirtualPosition()))
 				{
-					GameMode->CB->BlackPieces.Remove(PieceClicked);
-					PieceClicked->Destroy();
-					bIsACapture = true;
-					(*TilePtr)->SetOccupantColor(EOccupantColor::E);
-					TileSelection(*TilePtr);
+					ATile* DestinationTile = GameMode->CB->TileMap[PieceClicked->GetVirtualPosition()];
+
+					if (CPC->SelectedPieceToMove->EatablePiecesPosition.Contains(DestinationTile))
+					{
+						GameMode->CB->BlackPieces.Remove(PieceClicked);
+						PieceClicked->Destroy();
+						bIsACapture = true;
+						DestinationTile->SetOccupantColor(EOccupantColor::E);
+						TileSelection(DestinationTile);
+					}
 				}
 			}
 		}
@@ -115,9 +118,9 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
-	FVector2D OldPosition = CPC->SelectedPieceToMove->Relative2DPosition();
-	ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(OldPosition);
-	ATile** ActualTilePtr = GameMode->CB->TileMap.Find(CurrTile->GetGridPosition());
+	FVector2D OldPosition = CPC->SelectedPieceToMove->GetVirtualPosition();
+	ATile* PreviousTilePtr = GameMode->CB->TileMap[OldPosition];
+	ATile* ActualTilePtr = GameMode->CB->TileMap[CurrTile->GetGridPosition()];
 	UMainHUD* MainHUD = CPC->MainHUDWidget;
 
 	if (CurrTile->GetOccupantColor() == EOccupantColor::E)
@@ -131,10 +134,19 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 			FVector ActorPositioning = GameMode->CB->GetRelativeLocationByXYPosition(CurrTile->GetGridPosition().X, CurrTile->GetGridPosition().Y);
 			ActorPositioning.Z = 10.0f;
 			CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);
+			CPC->SelectedPieceToMove->SetVirtualPosition(ActualTilePtr->GetGridPosition());
 
 			if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
 			{
 				Cast<APiecePawn>(CPC->SelectedPieceToMove)->ResetTurnsWithoutMoving();
+				for (APiece* WhitePawn : GameMode->CB->WhitePieces)
+				{
+					if (Cast<APiecePawn>(WhitePawn) && WhitePawn != CPC->SelectedPieceToMove)
+					{
+						Cast<APiecePawn>(WhitePawn)->IncrementTurnsWithoutMoving();
+					}
+				}
+
 				// Checks if the pawn could be promoted
 				Cast<APiecePawn>(CPC->SelectedPieceToMove)->Promote();
 				// Disables the first move variable if it's true
@@ -156,10 +168,10 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 		}
 
 		// Setting the actual tile occupied by a white, setting the old one empty
-		if (CPC->SelectedPieceToMove->RelativePosition() == FVector(CurrTile->GetGridPosition().X, CurrTile->GetGridPosition().Y, 10.f))
+		if (CPC->SelectedPieceToMove->GetVirtualPosition() == CurrTile->GetGridPosition())
 		{
-			(*ActualTilePtr)->SetOccupantColor(EOccupantColor::W);
-			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
+			ActualTilePtr->SetOccupantColor(EOccupantColor::W);
+			PreviousTilePtr->SetOccupantColor(EOccupantColor::E);
 
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameMode->CB->GenerateStringFromPositions();
@@ -175,15 +187,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 					if (LastButton)
 					{
 						LastButton->SetAssociatedString(GameMode->CB->HistoryOfMoves.Last());
-						LastButton->SetPieceToPrint(CPC->SelectedPieceToMove);
-						LastButton->SetItWasACapture(bIsACapture);
-						LastButton->SetNewLocationToPrint(CPC->SelectedPieceToMove->Relative2DPosition());
-						if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
-						{
-							LastButton->SetOldLocationToPrint(OldPosition);
-						}
-
-						LastButton->CreateText();
+						LastButton->CreateText(CPC->SelectedPieceToMove, bIsACapture, CPC->SelectedPieceToMove->GetVirtualPosition(), OldPosition);
 					}
 				}
 			}
@@ -192,11 +196,12 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 
 			// Turn ending
 			IsMyTurn = false;
-			if (!Cast<APiecePawn>(CPC->SelectedPieceToMove) || Cast<APiecePawn>(CPC->SelectedPieceToMove)->Relative2DPosition().X != 7)
+			if (!Cast<APiecePawn>(CPC->SelectedPieceToMove) || Cast<APiecePawn>(CPC->SelectedPieceToMove)->GetVirtualPosition().X != 7)
 			{
 				CPC->SelectedPieceToMove = nullptr;
 				GameMode->TurnPlayer();
 			}
+			// Else -> A pawn has been promoted, then the turn's passed in GameMode promotion's segment
 		}
 	}
 }
