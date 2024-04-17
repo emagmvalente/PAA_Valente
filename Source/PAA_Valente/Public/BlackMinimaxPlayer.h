@@ -36,9 +36,8 @@ public:
 	void OnTurn();
 	void OnWin();
 
-	int32 Maxi(int32 Depth);
-	int32 Mini(int32 Depth);
-	void Minimax(int32 Depth, bool IsMax);
+	int32 Maxi(int32 Depth, int32 Alpha, int32 Beta);
+	int32 Mini(int32 Depth, int32 Alpha, int32 Beta);
 	int32 Evaluate();
 	ATile* FindBestMove();
 };

@@ -223,7 +223,7 @@ bool AChessGameMode::VerifyCheckmate()
 bool AChessGameMode::VerifyDraw()
 {
 	// TODO: Dead Positions
-	if (CheckThreeOccurrences() || KingvsKing() || FiftyMovesRule() || Stalemate())
+	if (CheckThreeOccurrences() || KingvsKing() || /*FiftyMovesRule() ||*/ Stalemate())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
 		return true;

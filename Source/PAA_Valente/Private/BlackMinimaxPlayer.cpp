@@ -144,6 +144,9 @@ void ABlackMinimaxPlayer::OnTurn()
 
 void ABlackMinimaxPlayer::OnWin()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Wins!"));
+	GameInstance->SetTurnMessage(TEXT("AI Wins!"));
+	GameInstance->IncrementScoreAiPlayer();
 }
 
 ATile* ABlackMinimaxPlayer::FindBestMove()
@@ -188,7 +191,7 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 			BlackPiece->SetVirtualPosition(Move->GetGridPosition());
 
 			// Call Maxi
-			int32 MoveVal = Maxi(1);
+			int32 MoveVal = Maxi(0, -9999, 9999);
 
 			// Undo move
 			StartTile->SetOccupantColor(EOccupantColor::B);
@@ -220,7 +223,7 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 	return BestMove;
 }
 
-int32 ABlackMinimaxPlayer::Mini(int32 Depth)
+int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
@@ -267,13 +270,21 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth)
 			Move->SetOccupantColor(EOccupantColor::B);
 			BlackPiece->SetVirtualPosition(Move->GetGridPosition());
 
-			// Call maxi
-			Min = FMath::Min(Maxi(Depth - 1), Min);
+			// Call maxi with updated alpha and beta values
+			Min = FMath::Min(Maxi(Depth - 1, Alpha, Beta), Min);
 
 			// Restore original values
 			BlackPiece->SetVirtualPosition(StartTile->GetGridPosition());
 			Move->SetOccupantColor(EOccupantColor::E);
 			StartTile->SetOccupantColor(EOccupantColor::B);
+
+			// Alpha-beta pruning
+			Beta = FMath::Min(Beta, Min);
+			if (Beta <= Alpha)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Pruned in Mini"));
+				break;
+			}
 
 			// Restore captured piece
 			if (PieceCaptured)
@@ -289,7 +300,7 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth)
 	return Min;
 }
 
-int32 ABlackMinimaxPlayer::Maxi(int32 Depth)
+int32 ABlackMinimaxPlayer::Maxi(int32 Depth, int32 Alpha, int32 Beta)
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
@@ -331,11 +342,18 @@ int32 ABlackMinimaxPlayer::Maxi(int32 Depth)
 			Move->SetOccupantColor(EOccupantColor::W);
 			WhitePiece->SetVirtualPosition(Move->GetGridPosition());
 
-			Max = FMath::Max(Mini(Depth - 1), Max);
+			Max = FMath::Max(Mini(Depth - 1, Alpha, Beta), Max);
 
 			WhitePiece->SetVirtualPosition(StartTile->GetGridPosition());
 			Move->SetOccupantColor(EOccupantColor::E);
 			StartTile->SetOccupantColor(EOccupantColor::W);
+
+			Alpha = FMath::Max(Alpha, Max);
+			if (Beta <= Alpha)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, TEXT("Pruned in Maxi"));
+				break;
+			}
 
 			if (PieceCaptured)
 			{
@@ -380,18 +398,36 @@ int32 ABlackMinimaxPlayer::Evaluate()
 	}
 	else
 	{
+		int32 RemainingPiecesValues = 0;
+		int32 MobilityValues = 0;
+		int32 CenterControlValue = 0;
+
 		for (APiece* WhitePiece : GameMode->CB->WhitePieces)
 		{
-			Result += WhitePiece->GetPieceValue();
+			RemainingPiecesValues += WhitePiece->GetPieceValue();
+
+			WhitePiece->PossibleMoves();
+			WhitePiece->FilterOnlyLegalMoves();
+
+			MobilityValues += WhitePiece->Moves.Num();
+			MobilityValues += WhitePiece->EatablePiecesPosition.Num();
 		}
 		for (APiece* BlackPiece : GameMode->CB->BlackPieces)
 		{
-			Result -= BlackPiece->GetPieceValue();
+			RemainingPiecesValues -= BlackPiece->GetPieceValue();
+
+			BlackPiece->PossibleMoves();
+			BlackPiece->FilterOnlyLegalMoves();
+
+			MobilityValues -= BlackPiece->Moves.Num();
+			MobilityValues -= BlackPiece->EatablePiecesPosition.Num();
 		}
+
+		Result = (RemainingPiecesValues * 10 + MobilityValues * 5) / (10 + 5);
 	}
 	
-	FString MyDoubleString = FString::Printf(TEXT("%d"), Result);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *MyDoubleString);
+	// FString MyDoubleString = FString::Printf(TEXT("%d"), Result);
+	// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *MyDoubleString);
 
 	return Result;
 }
