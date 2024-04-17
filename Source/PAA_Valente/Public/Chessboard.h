@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ChessboardFrame.h"
 #include "Tile.h"
 #include "GameFramework/Actor.h"
 #include "Chessboard.generated.h"
@@ -45,6 +46,14 @@ public:
 	// tile size
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float TileSize;
+
+	// TSubclassOf template class that provides UClass type safety
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AChessboardFrame> CBFrameClass;
+
+	// tile size
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float CBFrameSize;
 
 	// Sets default values for this actor's properties
 	AChessboard();
