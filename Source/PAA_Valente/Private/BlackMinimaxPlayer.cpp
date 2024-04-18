@@ -164,10 +164,9 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 		BlackPiece->PossibleMoves();
 		BlackPiece->FilterOnlyLegalMoves();
 
-		TArray<ATile*> MovesAndEatingPositions = BlackPiece->Moves;
-		MovesAndEatingPositions.Append(BlackPiece->EatablePiecesPosition);
+		TArray OriginalMoves = BlackPiece->Moves;
 
-		for (ATile* Move : MovesAndEatingPositions)
+		for (ATile* Move : OriginalMoves)
 		{
 			// Manage a possible capture
 			APiece* PieceCaptured = nullptr;
@@ -213,6 +212,7 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 				BestVal = MoveVal;
 			}
 		}
+		OriginalMoves.Empty();
 	}
 
 	return BestMove;
@@ -243,11 +243,10 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 		BlackPiece->PossibleMoves();
 		BlackPiece->FilterOnlyLegalMoves();
 
-		TArray MovesAndEatablePositions = BlackPiece->Moves;
-		MovesAndEatablePositions.Append(BlackPiece->EatablePiecesPosition);
+		TArray OriginalMoves = BlackPiece->Moves;
 
 		// For each move in moves and possible captures
-		for (ATile* Move : MovesAndEatablePositions)
+		for (ATile* Move : OriginalMoves)
 		{
 			APiece* PieceCaptured = nullptr;
 
@@ -293,6 +292,7 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 				break;
 			}
 		}
+		OriginalMoves.Empty();
 	}
 
 	return Min;
@@ -320,10 +320,9 @@ int32 ABlackMinimaxPlayer::Maxi(int32 Depth, int32 Alpha, int32 Beta)
 		WhitePiece->PossibleMoves();
 		WhitePiece->FilterOnlyLegalMoves();
 
-		TArray MovesAndEatablePositions = WhitePiece->Moves;
-		MovesAndEatablePositions.Append(WhitePiece->EatablePiecesPosition);
+		TArray OriginalMoves = WhitePiece->Moves;
 
-		for (ATile* Move : MovesAndEatablePositions)
+		for (ATile* Move : OriginalMoves)
 		{
 			APiece* PieceCaptured = nullptr;
 
@@ -363,6 +362,7 @@ int32 ABlackMinimaxPlayer::Maxi(int32 Depth, int32 Alpha, int32 Beta)
 				break;
 			}
 		}
+		OriginalMoves.Empty();
 	}
 
 	return Max;
@@ -410,7 +410,6 @@ int32 ABlackMinimaxPlayer::Evaluate()
 			WhitePiece->FilterOnlyLegalMoves();
 
 			MobilityValues += WhitePiece->Moves.Num();
-			MobilityValues += WhitePiece->EatablePiecesPosition.Num();
 		}
 		for (APiece* BlackPiece : GameMode->CB->BlackPieces)
 		{
@@ -420,7 +419,6 @@ int32 ABlackMinimaxPlayer::Evaluate()
 			BlackPiece->FilterOnlyLegalMoves();
 
 			MobilityValues -= BlackPiece->Moves.Num();
-			MobilityValues -= BlackPiece->EatablePiecesPosition.Num();
 		}
 
 		Result = (RemainingPiecesValues * 10 + MobilityValues * 5) / (10 + 5);

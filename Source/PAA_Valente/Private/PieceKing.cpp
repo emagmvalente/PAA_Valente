@@ -37,15 +37,14 @@ void APieceKing::Tick(float DeltaTime)
 
 void APieceKing::PossibleMoves()
 {
-	// Emptying from old moves (if there are any)
-	Moves.Empty();
-	EatablePiecesPosition.Empty();
-
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	
 	if (GameMode->CB->TileMap.Contains(VirtualPosition))
 	{
+		// Emptying from old moves (if there are any)
+		Moves.Empty();
+
 		ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
 		ATile* NextTile = nullptr;
 
@@ -59,13 +58,7 @@ void APieceKing::PossibleMoves()
 
 				if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
 				{
-					if (NextTile->GetOccupantColor() == EOccupantColor::E)
-					{
-						Moves.Add(NextTile);
-						continue;
-					}
-					EatablePiecesPosition.Add(NextTile);
-					continue;
+					Moves.Add(NextTile);
 				}
 			}
 		}

@@ -37,22 +37,21 @@ void APieceRook::Tick(float DeltaTime)
 
 void APieceRook::PossibleMoves()
 {
-	// Emptying from old moves (if there are any)
-	Moves.Empty();
-	EatablePiecesPosition.Empty();
-
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
 	if (GameMode->CB->TileMap.Contains(VirtualPosition))
 	{
+		// Emptying from old moves (if there are any)
+		Moves.Empty();
+
 		ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
 		ATile* NextTile = nullptr;
 
 		// For every direction check if the tile is occupied, if not add a possible move.
 		// If a piece interrupts a path, then check the color.
 		// If white -> break
-		// If black -> add as eatable
+		// If black -> add in moves
 		for (const FVector2D& Direction : Directions)
 		{
 			FVector2D NextPosition = VirtualPosition + Direction;
@@ -61,24 +60,17 @@ void APieceRook::PossibleMoves()
 			{
 				NextTile = GameMode->CB->TileMap[NextPosition];
 
-				while (true)
+				while (GameMode->CB->TileMap.Contains(NextPosition))
 				{
-					if (!GameMode->CB->TileMap.Contains(NextPosition))
-					{
-						break;
-					}
-
 					NextTile = GameMode->CB->TileMap[NextPosition];
 
+					// If I don't find an ally piece
 					if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
 					{
-						if (NextTile->GetOccupantColor() == EOccupantColor::E)
+						Moves.Add(NextTile);
+						// If tile isn't empty (found an enemy piece) then break
+						if (NextTile->GetOccupantColor() != EOccupantColor::E)
 						{
-							Moves.Add(NextTile);
-						}
-						else
-						{
-							EatablePiecesPosition.Add(NextTile);
 							break;
 						}
 					}

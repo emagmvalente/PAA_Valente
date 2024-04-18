@@ -55,13 +55,10 @@ void ABlackRandomPlayer::OnTurn()
 			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			APiece* ChosenPiece = nullptr;
-			TArray<ATile*> MovesAndEatablePieces;
 			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
 			do
 			{
-				MovesAndEatablePieces.Empty();
-
 				// Picking a random piece
 				int32 RandIdx0 = FMath::Rand() % GameModeCallback->CB->BlackPieces.Num();
 				ChosenPiece = GameModeCallback->CB->BlackPieces[RandIdx0];
@@ -70,18 +67,15 @@ void ABlackRandomPlayer::OnTurn()
 				ChosenPiece->PossibleMoves();
 				ChosenPiece->FilterOnlyLegalMoves();
 
-				MovesAndEatablePieces = ChosenPiece->Moves;
-				MovesAndEatablePieces.Append(ChosenPiece->EatablePiecesPosition);
-
-			} while (MovesAndEatablePieces.Num() == 0);
+			} while (ChosenPiece->Moves.Num() == 0);
 
 			// Getting previous tile
 			ATile** PreviousTilePtr = GameModeCallback->CB->TileMap.Find(ChosenPiece->GetVirtualPosition());
 			FVector2D OldPosition = ChosenPiece->GetVirtualPosition();
 
 			// Getting the new tile and the new position
-			int32 RandIdx1 = FMath::Rand() % MovesAndEatablePieces.Num();
-			ATile* DestinationTile = MovesAndEatablePieces[RandIdx1];
+			int32 RandIdx1 = FMath::Rand() % ChosenPiece->Moves.Num();
+			ATile* DestinationTile = ChosenPiece->Moves[RandIdx1];
 			FVector TilePositioning = GameModeCallback->CB->GetRelativeLocationByXYPosition(DestinationTile->GetGridPosition().X, DestinationTile->GetGridPosition().Y);
 			TilePositioning.Z = 10.0f;
 

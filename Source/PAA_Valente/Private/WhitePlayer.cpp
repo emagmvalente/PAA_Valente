@@ -81,7 +81,7 @@ void AWhitePlayer::PieceSelection()
 				{
 					ATile* DestinationTile = GameMode->CB->TileMap[PieceClicked->GetVirtualPosition()];
 
-					if (CPC->SelectedPieceToMove->EatablePiecesPosition.Contains(DestinationTile))
+					if (CPC->SelectedPieceToMove->Moves.Contains(DestinationTile))
 					{
 						GameMode->CB->BlackPieces.Remove(PieceClicked);
 						PieceClicked->Destroy();
@@ -129,7 +129,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 		CPC->SelectedPieceToMove->DecolorPossibleMoves();
 
 		// If the move is legal, move the piece
-		if (CPC->SelectedPieceToMove->Moves.Contains(CurrTile) || CPC->SelectedPieceToMove->EatablePiecesPosition.Contains(CurrTile))
+		if (CPC->SelectedPieceToMove->Moves.Contains(CurrTile))
 		{
 			FVector ActorPositioning = GameMode->CB->GetRelativeLocationByXYPosition(CurrTile->GetGridPosition().X, CurrTile->GetGridPosition().Y);
 			ActorPositioning.Z = 10.0f;

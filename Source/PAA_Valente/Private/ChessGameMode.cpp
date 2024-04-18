@@ -172,11 +172,10 @@ bool AChessGameMode::VerifyCheck()
 	for (APiece* AllyPiece : AllyPieces)
 	{
 		AllyPiece->PossibleMoves();
-		
 		AllyPiece->FilterOnlyLegalMoves();
 
 		// Check detection
-		if (AllyPiece->EatablePiecesPosition.Contains(EnemyKingTile))
+		if (AllyPiece->Moves.Contains(EnemyKingTile))
 		{
 			if (TurnFlag == 0)
 			{
@@ -211,7 +210,7 @@ bool AChessGameMode::VerifyCheckmate()
 	{
 		EnemyPiece->PossibleMoves();
 		EnemyPiece->FilterOnlyLegalMoves();
-		if (EnemyPiece->Moves.Num() > 0 || EnemyPiece->EatablePiecesPosition.Num() > 0)
+		if (EnemyPiece->Moves.Num() > 0)
 		{
 			return false;
 		}
