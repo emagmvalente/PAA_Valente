@@ -344,6 +344,14 @@ bool AChessGameMode::Stalemate()
 	return false;
 }
 
+void AChessGameMode::IncrementTurnsWithoutMoving()
+{
+}
+
+void AChessGameMode::ResetTurnsWithoutMoving()
+{
+}
+
 bool AChessGameMode::GetIsWhiteOnCheck() const
 {
 	return bIsWhiteOnCheck;

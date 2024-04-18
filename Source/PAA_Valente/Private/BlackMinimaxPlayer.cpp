@@ -55,7 +55,6 @@ void ABlackMinimaxPlayer::OnTurn()
 			// Declarations
 			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
-			TArray<ATile*> MovesAndEatablePieces;
 			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
 			ATile* BestTile = FindBestMove();
@@ -86,30 +85,21 @@ void ABlackMinimaxPlayer::OnTurn()
 
 			// Moving the piece
 			BestPiece->SetActorLocation(TilePositioning);
-			if (Cast<APiecePawn>(BestPiece))
+			BestPiece->SetVirtualPosition(BestTile->GetGridPosition());
+
+			// Pawn tie / promote check procedure
+			if (BestPiece->IsA<APiecePawn>())
 			{
-				Cast<APiecePawn>(BestPiece)->ResetTurnsWithoutMoving();
-				Cast<APiecePawn>(BestPiece)->Promote();
 				if (Cast<APiecePawn>(BestPiece)->GetIsFirstMove())
 				{
 					Cast<APiecePawn>(BestPiece)->PawnMovedForTheFirstTime();
 				}
-			}
-			else
-			{
-				for (APiece* BlackPawn : GameModeCallback->CB->BlackPieces)
-				{
-					if (Cast<APiecePawn>(BlackPawn))
-					{
-						Cast<APiecePawn>(BlackPawn)->IncrementTurnsWithoutMoving();
-					}
-				}
+				Cast<APiecePawn>(BestPiece)->Promote();
 			}
 
 			// Setting the actual tile occupied by a black, setting the old one empty
 			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
 			BestTile->SetOccupantColor(EOccupantColor::B);
-			BestPiece->SetVirtualPosition(BestTile->GetGridPosition());
 
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
@@ -118,16 +108,7 @@ void ABlackMinimaxPlayer::OnTurn()
 			// Create dinamically the move button
 			if (MainHUD)
 			{
-				MainHUD->AddButton();
-				if (MainHUD->ButtonArray.Num() > 0)
-				{
-					UOldMovesButtons* LastButton = MainHUD->ButtonArray.Last();
-					if (LastButton)
-					{
-						LastButton->SetAssociatedString(GameModeCallback->CB->HistoryOfMoves.Last());
-						LastButton->CreateText(BestPiece, bIsACapture, BestPiece->GetVirtualPosition(), OldPosition);
-					}
-				}
+				MainHUD->AddButton(LastMove, BestPiece, bIsACapture, BestPiece->GetVirtualPosition(), OldPosition);
 			}
 
 			bIsACapture = false;

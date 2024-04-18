@@ -136,16 +136,6 @@ void APiecePawn::PossibleMoves()
 	}
 }
 
-void APiecePawn::IncrementTurnsWithoutMoving()
-{
-	TurnsWithoutMoving++;
-}
-
-void APiecePawn::ResetTurnsWithoutMoving()
-{
-	TurnsWithoutMoving = 0;
-}
-
 void APiecePawn::PawnMovedForTheFirstTime()
 {
 	bIsFirstMove = false;

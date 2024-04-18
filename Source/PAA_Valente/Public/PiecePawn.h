@@ -38,8 +38,6 @@ public:
 
 	virtual void PossibleMoves() override;
 
-	void IncrementTurnsWithoutMoving();
-	void ResetTurnsWithoutMoving();
 	void PawnMovedForTheFirstTime();
 
 	int32 GetTurnsWithoutMoving() const;

@@ -57,6 +57,8 @@ public:
 	bool KingvsKing();
 	bool FiftyMovesRule();
 	bool Stalemate();
+	void IncrementTurnsWithoutMoving();
+	void ResetTurnsWithoutMoving();
 	bool GetIsWhiteOnCheck() const;
 	bool GetIsBlackOnCheck() const;
 

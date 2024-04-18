@@ -136,34 +136,14 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 			CPC->SelectedPieceToMove->SetActorLocation(ActorPositioning);
 			CPC->SelectedPieceToMove->SetVirtualPosition(ActualTilePtr->GetGridPosition());
 
-			if (Cast<APiecePawn>(CPC->SelectedPieceToMove))
+			// Pawn tie / promote check procedure
+			if (CPC->SelectedPieceToMove->IsA<APiecePawn>())
 			{
-				Cast<APiecePawn>(CPC->SelectedPieceToMove)->ResetTurnsWithoutMoving();
-				for (APiece* WhitePawn : GameMode->CB->WhitePieces)
-				{
-					if (Cast<APiecePawn>(WhitePawn) && WhitePawn != CPC->SelectedPieceToMove)
-					{
-						Cast<APiecePawn>(WhitePawn)->IncrementTurnsWithoutMoving();
-					}
-				}
-
-				// Checks if the pawn could be promoted
-				Cast<APiecePawn>(CPC->SelectedPieceToMove)->Promote();
-				// Disables the first move variable if it's true
 				if (Cast<APiecePawn>(CPC->SelectedPieceToMove)->GetIsFirstMove())
 				{
 					Cast<APiecePawn>(CPC->SelectedPieceToMove)->PawnMovedForTheFirstTime();
 				}
-			}
-			else
-			{
-				for (APiece* WhitePawn : GameMode->CB->WhitePieces)
-				{
-					if (Cast<APiecePawn>(WhitePawn))
-					{
-						Cast<APiecePawn>(WhitePawn)->IncrementTurnsWithoutMoving();
-					}
-				}
+				Cast<APiecePawn>(CPC->SelectedPieceToMove)->Promote();
 			}
 		}
 
@@ -180,16 +160,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 			// Create dinamically the move button
 			if (MainHUD)
 			{
-				MainHUD->AddButton();
-				if (MainHUD->ButtonArray.Num() > 0)
-				{
-					UOldMovesButtons* LastButton = MainHUD->ButtonArray.Last();
-					if (LastButton)
-					{
-						LastButton->SetAssociatedString(GameMode->CB->HistoryOfMoves.Last());
-						LastButton->CreateText(CPC->SelectedPieceToMove, bIsACapture, CPC->SelectedPieceToMove->GetVirtualPosition(), OldPosition);
-					}
-				}
+				MainHUD->AddButton(LastMove, CPC->SelectedPieceToMove, bIsACapture, CPC->SelectedPieceToMove->GetVirtualPosition(), OldPosition);
 			}
 
 			bIsACapture = false;

@@ -54,12 +54,12 @@ void ABlackRandomPlayer::OnTurn()
 			// Declarations
 			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
-			APiece* ChosenPiece = nullptr;
 			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
+			// Picking a random piece
+			APiece* ChosenPiece = nullptr;
 			do
 			{
-				// Picking a random piece
 				int32 RandIdx0 = FMath::Rand() % GameModeCallback->CB->BlackPieces.Num();
 				ChosenPiece = GameModeCallback->CB->BlackPieces[RandIdx0];
 
@@ -70,7 +70,7 @@ void ABlackRandomPlayer::OnTurn()
 			} while (ChosenPiece->Moves.Num() == 0);
 
 			// Getting previous tile
-			ATile** PreviousTilePtr = GameModeCallback->CB->TileMap.Find(ChosenPiece->GetVirtualPosition());
+			ATile* PreviousTilePtr = GameModeCallback->CB->TileMap[ChosenPiece->GetVirtualPosition()];
 			FVector2D OldPosition = ChosenPiece->GetVirtualPosition();
 
 			// Getting the new tile and the new position
@@ -97,30 +97,21 @@ void ABlackRandomPlayer::OnTurn()
 
 			// Moving the piece
 			ChosenPiece->SetActorLocation(TilePositioning);
-			if (Cast<APiecePawn>(ChosenPiece))
+			ChosenPiece->SetVirtualPosition(DestinationTile->GetGridPosition());
+
+			// Pawn tie / promote check procedure
+			if (ChosenPiece->IsA<APiecePawn>())
 			{
-				Cast<APiecePawn>(ChosenPiece)->ResetTurnsWithoutMoving();
-				Cast<APiecePawn>(ChosenPiece)->Promote();
 				if (Cast<APiecePawn>(ChosenPiece)->GetIsFirstMove())
 				{
 					Cast<APiecePawn>(ChosenPiece)->PawnMovedForTheFirstTime();
 				}
-			}
-			else
-			{
-				for (APiece* BlackPawn : GameModeCallback->CB->BlackPieces)
-				{
-					if (Cast<APiecePawn>(BlackPawn))
-					{
-						Cast<APiecePawn>(BlackPawn)->IncrementTurnsWithoutMoving();
-					}
-				}
+				Cast<APiecePawn>(ChosenPiece)->Promote();
 			}
 
 			// Setting the actual tile occupied by a black, setting the old one empty
-			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
+			PreviousTilePtr->SetOccupantColor(EOccupantColor::E);
 			DestinationTile->SetOccupantColor(EOccupantColor::B);
-			ChosenPiece->SetVirtualPosition(DestinationTile->GetGridPosition());
 
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
@@ -129,16 +120,7 @@ void ABlackRandomPlayer::OnTurn()
 			// Create dinamically the move button
 			if (MainHUD)
 			{
-				MainHUD->AddButton();
-				if (MainHUD->ButtonArray.Num() > 0)
-				{
-					UOldMovesButtons* LastButton = MainHUD->ButtonArray.Last();
-					if (LastButton)
-					{
-						LastButton->SetAssociatedString(GameModeCallback->CB->HistoryOfMoves.Last());
-						LastButton->CreateText(ChosenPiece, bIsACapture, ChosenPiece->GetVirtualPosition(), OldPosition);
-					}
-				}
+				MainHUD->AddButton(LastMove, ChosenPiece, bIsACapture, ChosenPiece->GetVirtualPosition(), OldPosition);
 			}
 
 			bIsACapture = false;
