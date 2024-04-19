@@ -28,7 +28,17 @@ FString UChessGameInstance::GetTurnMessage()
 	return CurrentTurnMessage;
 }
 
+FString UChessGameInstance::GetNotificationMessage()
+{
+	return NotificationMessage;
+}
+
 void UChessGameInstance::SetTurnMessage(FString Message)
 {
 	CurrentTurnMessage = Message;
+}
+
+void UChessGameInstance::SetNotificationMessage(FString Message)
+{
+	NotificationMessage = Message;
 }

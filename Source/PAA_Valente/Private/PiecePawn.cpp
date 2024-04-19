@@ -24,7 +24,6 @@ APiecePawn::APiecePawn()
 	StaticMeshComponent->SetupAttachment(Scene);
 
 	PieceValue = 1;
-	TurnsWithoutMoving = 0;
 	bIsFirstMove = true;
 }
 
@@ -84,15 +83,14 @@ void APiecePawn::Tick(float DeltaTime)
 
 void APiecePawn::PossibleMoves()
 {
-	// Emptying from old moves (if there are any)
-	Moves.Empty();
-	EatablePiecesPosition.Empty();
-
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
 	if (GameMode->CB->TileMap.Contains(VirtualPosition))
 	{
+		// Emptying from old moves (if there are any)
+		Moves.Empty();
+
 		ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
 		ATile* NextTile = nullptr;
 
@@ -113,30 +111,23 @@ void APiecePawn::PossibleMoves()
 				{
 					Moves.Add(NextTile);
 
+					// If is pawn's first move, then add the next tile too to moves
 					NextPosition += Direction;
 					if (GameMode->CB->TileMap.Contains(NextPosition))
 					{
 						NextTile = GameMode->CB->TileMap[NextPosition];
-						// If is pawn's first move, then add the next tile too to moves
 						if (NextTile != nullptr && Direction == Directions[0] && bIsFirstMove && NextTile->GetOccupantColor() == EOccupantColor::E)
 						{
 							Moves.Add(NextTile);
 						}
 					}
-
-					continue;
 				}
-				else if (Direction != Directions[0])
+				else if (Direction != Directions[0] && NextTile->GetOccupantColor() != EOccupantColor::E)
 				{
-					// If it's any other direction and the tile's occupied by an enemy, add to eatable moves
+					// If it's any other direction and the tile's occupied by an enemy, add to moves
 					if (StartTile->GetOccupantColor() != NextTile->GetOccupantColor())
 					{
-						if (NextTile->GetOccupantColor() != EOccupantColor::E)
-						{
-							EatablePiecesPosition.Add(NextTile);
-							continue;
-						}
-						continue;
+						Moves.Add(NextTile);
 					}
 				}
 			}
@@ -144,24 +135,9 @@ void APiecePawn::PossibleMoves()
 	}
 }
 
-void APiecePawn::IncrementTurnsWithoutMoving()
-{
-	TurnsWithoutMoving++;
-}
-
-void APiecePawn::ResetTurnsWithoutMoving()
-{
-	TurnsWithoutMoving = 0;
-}
-
 void APiecePawn::PawnMovedForTheFirstTime()
 {
 	bIsFirstMove = false;
-}
-
-int32 APiecePawn::GetTurnsWithoutMoving() const
-{
-	return TurnsWithoutMoving;
 }
 
 bool APiecePawn::GetIsFirstMove() const

@@ -18,9 +18,6 @@ class PAA_VALENTE_API AChessGameMode : public AGameModeBase
 
 	int32 TurnFlag;
 	int32 MovesWithoutCaptureOrPawnMove;
-	bool bIsWhiteOnCheck;
-	bool bIsBlackOnCheck;
-	bool bIsGameOver;
 
 public:
 
@@ -45,9 +42,9 @@ public:
 	int32 FieldSize;
 
 	// Logic and Utilities - METHODS
-	void SetKings();
 	void TurnPlayer();
 	void ResetVariablesForRematch();
+	int32 GetTurnFlag() const;
 
 	// Winning / Draw / Losing - METHODS
 	bool VerifyCheck();
@@ -57,8 +54,6 @@ public:
 	bool KingvsKing();
 	bool FiftyMovesRule();
 	bool Stalemate();
-	bool GetIsWhiteOnCheck() const;
-	bool GetIsBlackOnCheck() const;
 
 	// Pawn Promotion - METHODS
 	UFUNCTION(BlueprintCallable)

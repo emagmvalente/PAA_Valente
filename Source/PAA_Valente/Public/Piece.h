@@ -34,7 +34,7 @@ protected:
 
 public:	
 	TArray<ATile*> Moves;
-	TArray<ATile*> EatablePiecesPosition;
+	//TArray<ATile*> EatablePiecesPosition;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

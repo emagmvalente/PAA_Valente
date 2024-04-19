@@ -32,6 +32,7 @@ protected:
 	// keeps track of turn
 	bool IsMyTurn;
 	bool bIsACapture;
+	APiece* SelectedPieceToMove;
 
 public:
 	// Called every frame
@@ -42,6 +43,8 @@ public:
 
 	void PieceSelection();
 	void TileSelection(ATile* CurrTile);
+
+	APiece* GetSelectedPieceToMove() const;
 
 	void OnTurn();
 	void OnWin();

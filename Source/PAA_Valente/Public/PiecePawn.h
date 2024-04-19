@@ -27,7 +27,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	TArray<FVector2D> Directions = { FVector2D(1, 0), FVector2D(1, -1), FVector2D(1, 1) };
-	int32 TurnsWithoutMoving;
 	bool bIsFirstMove;
 
 public:
@@ -38,10 +37,6 @@ public:
 
 	virtual void PossibleMoves() override;
 
-	void IncrementTurnsWithoutMoving();
-	void ResetTurnsWithoutMoving();
 	void PawnMovedForTheFirstTime();
-
-	int32 GetTurnsWithoutMoving() const;
 	bool GetIsFirstMove() const;
 };

@@ -6,6 +6,7 @@
 #include "PiecePawn.h"
 #include "EngineUtils.h"
 #include "MainHUD.h"
+#include "ChessPlayerController.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
 // Sets default values
@@ -41,7 +42,7 @@ void ABlackMinimaxPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 void ABlackMinimaxPlayer::OnTurn()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Minimax) Turn"));
 
 	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
@@ -55,7 +56,6 @@ void ABlackMinimaxPlayer::OnTurn()
 			// Declarations
 			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
-			TArray<ATile*> MovesAndEatablePieces;
 			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
 			ATile* BestTile = FindBestMove();
@@ -86,30 +86,21 @@ void ABlackMinimaxPlayer::OnTurn()
 
 			// Moving the piece
 			BestPiece->SetActorLocation(TilePositioning);
-			if (Cast<APiecePawn>(BestPiece))
+			BestPiece->SetVirtualPosition(BestTile->GetGridPosition());
+
+			// Pawn tie / promote check procedure
+			if (BestPiece->IsA<APiecePawn>())
 			{
-				Cast<APiecePawn>(BestPiece)->ResetTurnsWithoutMoving();
-				Cast<APiecePawn>(BestPiece)->Promote();
 				if (Cast<APiecePawn>(BestPiece)->GetIsFirstMove())
 				{
 					Cast<APiecePawn>(BestPiece)->PawnMovedForTheFirstTime();
 				}
-			}
-			else
-			{
-				for (APiece* BlackPawn : GameModeCallback->CB->BlackPieces)
-				{
-					if (Cast<APiecePawn>(BlackPawn))
-					{
-						Cast<APiecePawn>(BlackPawn)->IncrementTurnsWithoutMoving();
-					}
-				}
+				Cast<APiecePawn>(BestPiece)->Promote();
 			}
 
 			// Setting the actual tile occupied by a black, setting the old one empty
 			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
 			BestTile->SetOccupantColor(EOccupantColor::B);
-			BestPiece->SetVirtualPosition(BestTile->GetGridPosition());
 
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
@@ -118,16 +109,7 @@ void ABlackMinimaxPlayer::OnTurn()
 			// Create dinamically the move button
 			if (MainHUD)
 			{
-				MainHUD->AddButton();
-				if (MainHUD->ButtonArray.Num() > 0)
-				{
-					UOldMovesButtons* LastButton = MainHUD->ButtonArray.Last();
-					if (LastButton)
-					{
-						LastButton->SetAssociatedString(GameModeCallback->CB->HistoryOfMoves.Last());
-						LastButton->CreateText(BestPiece, bIsACapture, BestPiece->GetVirtualPosition(), OldPosition);
-					}
-				}
+				MainHUD->AddButton(LastMove, BestPiece, bIsACapture, BestPiece->GetVirtualPosition(), OldPosition);
 			}
 
 			bIsACapture = false;
@@ -144,7 +126,7 @@ void ABlackMinimaxPlayer::OnTurn()
 
 void ABlackMinimaxPlayer::OnWin()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Wins!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Wins!"));
 	GameInstance->SetTurnMessage(TEXT("AI Wins!"));
 	GameInstance->IncrementScoreAiPlayer();
 }
@@ -164,10 +146,9 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 		BlackPiece->PossibleMoves();
 		BlackPiece->FilterOnlyLegalMoves();
 
-		TArray<ATile*> MovesAndEatingPositions = BlackPiece->Moves;
-		MovesAndEatingPositions.Append(BlackPiece->EatablePiecesPosition);
+		TArray OriginalMoves = BlackPiece->Moves;
 
-		for (ATile* Move : MovesAndEatingPositions)
+		for (ATile* Move : OriginalMoves)
 		{
 			// Manage a possible capture
 			APiece* PieceCaptured = nullptr;
@@ -213,6 +194,7 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 				BestVal = MoveVal;
 			}
 		}
+		OriginalMoves.Empty();
 	}
 
 	return BestMove;
@@ -243,11 +225,10 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 		BlackPiece->PossibleMoves();
 		BlackPiece->FilterOnlyLegalMoves();
 
-		TArray MovesAndEatablePositions = BlackPiece->Moves;
-		MovesAndEatablePositions.Append(BlackPiece->EatablePiecesPosition);
+		TArray OriginalMoves = BlackPiece->Moves;
 
 		// For each move in moves and possible captures
-		for (ATile* Move : MovesAndEatablePositions)
+		for (ATile* Move : OriginalMoves)
 		{
 			APiece* PieceCaptured = nullptr;
 
@@ -293,6 +274,7 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 				break;
 			}
 		}
+		OriginalMoves.Empty();
 	}
 
 	return Min;
@@ -320,10 +302,9 @@ int32 ABlackMinimaxPlayer::Maxi(int32 Depth, int32 Alpha, int32 Beta)
 		WhitePiece->PossibleMoves();
 		WhitePiece->FilterOnlyLegalMoves();
 
-		TArray MovesAndEatablePositions = WhitePiece->Moves;
-		MovesAndEatablePositions.Append(WhitePiece->EatablePiecesPosition);
+		TArray OriginalMoves = WhitePiece->Moves;
 
-		for (ATile* Move : MovesAndEatablePositions)
+		for (ATile* Move : OriginalMoves)
 		{
 			APiece* PieceCaptured = nullptr;
 
@@ -363,6 +344,7 @@ int32 ABlackMinimaxPlayer::Maxi(int32 Depth, int32 Alpha, int32 Beta)
 				break;
 			}
 		}
+		OriginalMoves.Empty();
 	}
 
 	return Max;
@@ -375,7 +357,7 @@ int32 ABlackMinimaxPlayer::Evaluate()
 
 	if (GameMode->VerifyCheck())
 	{
-		if (GameMode->GetIsBlackOnCheck())
+		if (GameMode->GetTurnFlag() == 0)
 		{
 			if (GameMode->VerifyCheckmate())
 			{
@@ -383,7 +365,7 @@ int32 ABlackMinimaxPlayer::Evaluate()
 			}
 			Result = 10;
 		}
-		if (GameMode->GetIsWhiteOnCheck())
+		if (GameMode->GetTurnFlag() == 1)
 		{
 			if (GameMode->VerifyCheckmate())
 			{
@@ -410,7 +392,6 @@ int32 ABlackMinimaxPlayer::Evaluate()
 			WhitePiece->FilterOnlyLegalMoves();
 
 			MobilityValues += WhitePiece->Moves.Num();
-			MobilityValues += WhitePiece->EatablePiecesPosition.Num();
 		}
 		for (APiece* BlackPiece : GameMode->CB->BlackPieces)
 		{
@@ -420,7 +401,6 @@ int32 ABlackMinimaxPlayer::Evaluate()
 			BlackPiece->FilterOnlyLegalMoves();
 
 			MobilityValues -= BlackPiece->Moves.Num();
-			MobilityValues -= BlackPiece->EatablePiecesPosition.Num();
 		}
 
 		Result = (RemainingPiecesValues * 10 + MobilityValues * 5) / (10 + 5);

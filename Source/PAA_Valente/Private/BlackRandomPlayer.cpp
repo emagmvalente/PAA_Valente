@@ -6,6 +6,7 @@
 #include "PiecePawn.h"
 #include "EngineUtils.h"
 #include "MainHUD.h"
+#include "ChessPlayerController.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
 // Sets default values
@@ -41,7 +42,7 @@ void ABlackRandomPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 void ABlackRandomPlayer::OnTurn()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
@@ -54,15 +55,12 @@ void ABlackRandomPlayer::OnTurn()
 			// Declarations
 			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
-			APiece* ChosenPiece = nullptr;
-			TArray<ATile*> MovesAndEatablePieces;
 			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
+			// Picking a random piece
+			APiece* ChosenPiece = nullptr;
 			do
 			{
-				MovesAndEatablePieces.Empty();
-
-				// Picking a random piece
 				int32 RandIdx0 = FMath::Rand() % GameModeCallback->CB->BlackPieces.Num();
 				ChosenPiece = GameModeCallback->CB->BlackPieces[RandIdx0];
 
@@ -70,18 +68,15 @@ void ABlackRandomPlayer::OnTurn()
 				ChosenPiece->PossibleMoves();
 				ChosenPiece->FilterOnlyLegalMoves();
 
-				MovesAndEatablePieces = ChosenPiece->Moves;
-				MovesAndEatablePieces.Append(ChosenPiece->EatablePiecesPosition);
-
-			} while (MovesAndEatablePieces.Num() == 0);
+			} while (ChosenPiece->Moves.Num() == 0);
 
 			// Getting previous tile
-			ATile** PreviousTilePtr = GameModeCallback->CB->TileMap.Find(ChosenPiece->GetVirtualPosition());
+			ATile* PreviousTilePtr = GameModeCallback->CB->TileMap[ChosenPiece->GetVirtualPosition()];
 			FVector2D OldPosition = ChosenPiece->GetVirtualPosition();
 
 			// Getting the new tile and the new position
-			int32 RandIdx1 = FMath::Rand() % MovesAndEatablePieces.Num();
-			ATile* DestinationTile = MovesAndEatablePieces[RandIdx1];
+			int32 RandIdx1 = FMath::Rand() % ChosenPiece->Moves.Num();
+			ATile* DestinationTile = ChosenPiece->Moves[RandIdx1];
 			FVector TilePositioning = GameModeCallback->CB->GetRelativeLocationByXYPosition(DestinationTile->GetGridPosition().X, DestinationTile->GetGridPosition().Y);
 			TilePositioning.Z = 10.0f;
 
@@ -103,30 +98,21 @@ void ABlackRandomPlayer::OnTurn()
 
 			// Moving the piece
 			ChosenPiece->SetActorLocation(TilePositioning);
-			if (Cast<APiecePawn>(ChosenPiece))
+			ChosenPiece->SetVirtualPosition(DestinationTile->GetGridPosition());
+
+			// Pawn tie / promote check procedure
+			if (ChosenPiece->IsA<APiecePawn>())
 			{
-				Cast<APiecePawn>(ChosenPiece)->ResetTurnsWithoutMoving();
-				Cast<APiecePawn>(ChosenPiece)->Promote();
 				if (Cast<APiecePawn>(ChosenPiece)->GetIsFirstMove())
 				{
 					Cast<APiecePawn>(ChosenPiece)->PawnMovedForTheFirstTime();
 				}
-			}
-			else
-			{
-				for (APiece* BlackPawn : GameModeCallback->CB->BlackPieces)
-				{
-					if (Cast<APiecePawn>(BlackPawn))
-					{
-						Cast<APiecePawn>(BlackPawn)->IncrementTurnsWithoutMoving();
-					}
-				}
+				Cast<APiecePawn>(ChosenPiece)->Promote();
 			}
 
 			// Setting the actual tile occupied by a black, setting the old one empty
-			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
+			PreviousTilePtr->SetOccupantColor(EOccupantColor::E);
 			DestinationTile->SetOccupantColor(EOccupantColor::B);
-			ChosenPiece->SetVirtualPosition(DestinationTile->GetGridPosition());
 
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
@@ -135,16 +121,7 @@ void ABlackRandomPlayer::OnTurn()
 			// Create dinamically the move button
 			if (MainHUD)
 			{
-				MainHUD->AddButton();
-				if (MainHUD->ButtonArray.Num() > 0)
-				{
-					UOldMovesButtons* LastButton = MainHUD->ButtonArray.Last();
-					if (LastButton)
-					{
-						LastButton->SetAssociatedString(GameModeCallback->CB->HistoryOfMoves.Last());
-						LastButton->CreateText(ChosenPiece, bIsACapture, ChosenPiece->GetVirtualPosition(), OldPosition);
-					}
-				}
+				MainHUD->AddButton(LastMove, ChosenPiece, bIsACapture, ChosenPiece->GetVirtualPosition(), OldPosition);
 			}
 
 			bIsACapture = false;
@@ -162,7 +139,7 @@ void ABlackRandomPlayer::OnTurn()
 
 void ABlackRandomPlayer::OnWin()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Wins!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Wins!"));
 	GameInstance->SetTurnMessage(TEXT("AI Wins!"));
 	GameInstance->IncrementScoreAiPlayer();
 }

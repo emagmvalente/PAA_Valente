@@ -27,6 +27,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	FString CurrentTurnMessage = "Current Player";
 
+	FString NotificationMessage = "";
+
 	// increment the score for human player
 	void IncrementScoreHumanPlayer();
 
@@ -45,9 +47,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FString GetTurnMessage();
 
+	// get the wait message
+	UFUNCTION(BlueprintCallable)
+	FString GetNotificationMessage();
+
 	// set the turn message
 	UFUNCTION(BlueprintCallable)
 	void SetTurnMessage(FString Message);
+
+	// set the wait message
+	UFUNCTION(BlueprintCallable)
+	void SetNotificationMessage(FString Message);
 
 };
 

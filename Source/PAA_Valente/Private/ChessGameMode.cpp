@@ -21,9 +21,6 @@ AChessGameMode::AChessGameMode()
 	DefaultPawnClass = AWhitePlayer::StaticClass();
 	PlayerControllerClass = AChessPlayerController::StaticClass();
 	FieldSize = 8;
-	bIsGameOver = false;
-	bIsWhiteOnCheck = false;
-	bIsBlackOnCheck = false;
 	bIsBlackThinking = false;
 	TurnFlag = 0;
 	MovesWithoutCaptureOrPawnMove = 0;
@@ -36,10 +33,10 @@ void AChessGameMode::BeginPlay()
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 
 	// Random Player
-	//auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+	auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 
 	// MiniMax Player
-	auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
+	//auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
 
 	if (CBClass != nullptr)
 	{
@@ -48,145 +45,107 @@ void AChessGameMode::BeginPlay()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Game Field is null"));
+		UE_LOG(LogTemp, Error, TEXT("Chessboard is null"));
 	}
 
 	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
-	FVector CameraPos(CameraPosX, CameraPosX, 1000.0f);
+	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
 	HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
-	SetKings();
 	HumanPlayer->OnTurn();
 }
 
 // Logic and Utilities
-void AChessGameMode::SetKings()
-{
-	// Finds WhiteKing
-	for (APiece* WhitePiece : CB->WhitePieces)
-	{
-		if (Cast<APieceKing>(WhitePiece))
-		{
-			CB->Kings[0] = WhitePiece;
-			break;
-		}
-	}
-	// Finds BlackKing
-	for (APiece* BlackPiece : CB->BlackPieces)
-	{
-		if (Cast<APieceKing>(BlackPiece))
-		{
-			CB->Kings[1] = BlackPiece;
-			break;
-		}
-	}
-}
-
 void AChessGameMode::TurnPlayer()
 {
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	//ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
-	ABlackMinimaxPlayer* AIPlayer = Cast<ABlackMinimaxPlayer>(*TActorIterator<ABlackMinimaxPlayer>(GetWorld()));
+	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
+	//ABlackMinimaxPlayer* AIPlayer = Cast<ABlackMinimaxPlayer>(*TActorIterator<ABlackMinimaxPlayer>(GetWorld()));
 
-	if (TurnFlag == 0)
+	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
+	GameInstance->SetNotificationMessage(TEXT(""));
+
+	// Draw case
+	if (VerifyDraw())
 	{
-		bIsBlackOnCheck = VerifyCheck();
-		if (bIsBlackOnCheck)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Black is on Check!"));
-			bIsGameOver = VerifyCheckmate();
-		}
+		GameInstance->SetTurnMessage(TEXT("Draw!"));
+	}
 
-		if (!bIsGameOver)
-		{
-			bIsGameOver = VerifyDraw();
-			if (!bIsGameOver)
-			{
-				TurnFlag++;
-				AIPlayer->OnTurn();
-			}
-		}
-		else if (bIsGameOver && bIsBlackOnCheck)
+	// Win case
+	else if (VerifyCheck() && VerifyCheckmate())
+	{
+		GameInstance->SetNotificationMessage(TEXT("Checkmate!"));
+		if (TurnFlag == 0)
 		{
 			HumanPlayer->OnWin();
 		}
-	}
-
-
-	else if (TurnFlag == 1)
-	{
-		bIsWhiteOnCheck = VerifyCheck();
-		if (bIsWhiteOnCheck)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("White is on Check!"));
-			bIsGameOver = VerifyCheckmate();
-		}
-
-		if (!bIsGameOver)
-		{
-			bIsGameOver = VerifyDraw();
-			if (!bIsGameOver)
-			{
-				TurnFlag--;
-				HumanPlayer->OnTurn();
-			}
-		}
-		else if (bIsGameOver && bIsWhiteOnCheck)
+		else if (TurnFlag == 1)
 		{
 			AIPlayer->OnWin();
+		}
+	}
+
+	// Turn passing
+	else
+	{
+		// Comunicate check
+		if (VerifyCheck())
+		{
+			GameInstance->SetNotificationMessage(TEXT("Check!"));
+		}
+
+		// Anyway, pass the turn
+		if (TurnFlag == 0)
+		{
+			TurnFlag++;
+			AIPlayer->OnTurn();
+		}
+		else if (TurnFlag == 1)
+		{
+			TurnFlag--;
+			HumanPlayer->OnTurn();
 		}
 	}
 }
 
 void AChessGameMode::ResetVariablesForRematch()
 {
-	bIsGameOver = false;
-	bIsWhiteOnCheck = false;
-	bIsBlackOnCheck = false;
-	SetKings();
 	TurnFlag = 0;
 	MovesWithoutCaptureOrPawnMove = 0;
+}
+
+int32 AChessGameMode::GetTurnFlag() const
+{
+	return TurnFlag;
 }
 
 // Winning / Draw / Losing
 
 bool AChessGameMode::VerifyCheck()
 {
-	ATile** WhiteKingTile = CB->TileMap.Find(CB->Kings[0]->GetVirtualPosition());
-	ATile** BlackKingTile = CB->TileMap.Find(CB->Kings[1]->GetVirtualPosition());
-
 	ATile* EnemyKingTile = nullptr;
 	TArray<APiece*> AllyPieces;
 
 	if (TurnFlag == 0)
 	{
-		EnemyKingTile = *BlackKingTile;
+		EnemyKingTile = *CB->TileMap.Find(CB->Kings[1]->GetVirtualPosition());
 		AllyPieces = CB->WhitePieces;
 	}
 	else if (TurnFlag == 1)
 	{
-		EnemyKingTile = *WhiteKingTile;
+		EnemyKingTile = *CB->TileMap.Find(CB->Kings[0]->GetVirtualPosition());;
 		AllyPieces = CB->BlackPieces;
 	}
 
 	for (APiece* AllyPiece : AllyPieces)
 	{
 		AllyPiece->PossibleMoves();
-		
 		AllyPiece->FilterOnlyLegalMoves();
 
 		// Check detection
-		if (AllyPiece->EatablePiecesPosition.Contains(EnemyKingTile))
+		if (AllyPiece->Moves.Contains(EnemyKingTile))
 		{
-			if (TurnFlag == 0)
-			{
-				bIsBlackOnCheck = true;
-			}
-			else if (TurnFlag == 1)
-			{
-				bIsWhiteOnCheck = true;
-			}
-
 			return true;
 		}
 	}
@@ -211,7 +170,7 @@ bool AChessGameMode::VerifyCheckmate()
 	{
 		EnemyPiece->PossibleMoves();
 		EnemyPiece->FilterOnlyLegalMoves();
-		if (EnemyPiece->Moves.Num() > 0 || EnemyPiece->EatablePiecesPosition.Num() > 0)
+		if (EnemyPiece->Moves.Num() > 0)
 		{
 			return false;
 		}
@@ -222,10 +181,13 @@ bool AChessGameMode::VerifyCheckmate()
 
 bool AChessGameMode::VerifyDraw()
 {
+	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
 	// TODO: Dead Positions
 	if (CheckThreeOccurrences() || KingvsKing() || /*FiftyMovesRule() ||*/ Stalemate())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
+		GameInstance->SetTurnMessage(TEXT("Draw!"));
 		return true;
 	}
 	return false;
@@ -265,6 +227,7 @@ bool AChessGameMode::KingvsKing()
 
 bool AChessGameMode::FiftyMovesRule()
 {
+	/*
 	// If the number reaches 50, then it's a draw situation
 	if (MovesWithoutCaptureOrPawnMove >= 50)
 	{
@@ -332,27 +295,18 @@ bool AChessGameMode::FiftyMovesRule()
 	{
 		MovesWithoutCaptureOrPawnMove = 0;
 	}
+	*/
 
 	return false;
 }
 
 bool AChessGameMode::Stalemate()
 {
-	if (!bIsWhiteOnCheck || !bIsBlackOnCheck)
+	if (!VerifyCheck())
 	{
 		return VerifyCheckmate();
 	}
 	return false;
-}
-
-bool AChessGameMode::GetIsWhiteOnCheck() const
-{
-	return bIsWhiteOnCheck;
-}
-
-bool AChessGameMode::GetIsBlackOnCheck() const
-{
-	return bIsBlackOnCheck;
 }
 
 // Pawn Promotion

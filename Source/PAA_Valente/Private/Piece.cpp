@@ -40,19 +40,6 @@ void APiece::ChangeMaterial(UMaterialInterface* NewMaterial)
 	}
 }
 
-/*
-FVector APiece::RelativePosition() const
-{
-	return FVector(Relative2DPosition().X, Relative2DPosition().Y, 10.f);
-}
-
-FVector2D APiece::Relative2DPosition() const
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	return GameMode->CB->GetXYPositionByRelativeLocation(GetActorLocation());
-}
-*/
-
 void APiece::ColorPossibleMoves()
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -65,10 +52,13 @@ void APiece::ColorPossibleMoves()
 
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
+	
+	/*
 	UMaterialInterface* LoadE = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_E"));
 	UMaterialInterface* LoadW = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_W"));
 	UMaterialInterface* LoadB = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_B"));
 
+	
 	for (ATile* Tile : GameMode->CB->TileArray)
 	{
 		if (Tile->GetOccupantColor() == EOccupantColor::E)
@@ -84,14 +74,16 @@ void APiece::ColorPossibleMoves()
 			Tile->ChangeMaterial(LoadB);
 		}
 	}
+	*/
 
 	for (ATile* Move : Moves)
 	{
+		if (Move->GetOccupantColor() == EOccupantColor::B)
+		{
+			Move->ChangeMaterial(LoadRedMaterial);
+			continue;
+		}
 		Move->ChangeMaterial(LoadYellowMaterial);
-	}
-	for (ATile* EatablePiecePosition : EatablePiecesPosition)
-	{
-		EatablePiecePosition->ChangeMaterial(LoadRedMaterial);
 	}
 }
 
@@ -121,39 +113,34 @@ void APiece::FilterOnlyLegalMoves()
 {
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	TArray<ATile*> MovesAndEatablePieces = Moves;
-	MovesAndEatablePieces.Append(EatablePiecesPosition);
 
-	if (GameMode->CB->TileMap.Contains(VirtualPosition) && !MovesAndEatablePieces.IsEmpty())
+	if (GameMode->CB->TileMap.Contains(VirtualPosition) && !Moves.IsEmpty())
 	{
 		ATile* StartTile = GameMode->CB->TileMap[VirtualPosition];
 
 		ATile* KingTile = nullptr;
-		EOccupantColor AllyColor = EOccupantColor::E;
-		EOccupantColor EnemyColor = EOccupantColor::E;
 		TArray<APiece*> EnemyPieces;
 
 		// Assignments
 		if (Color == EColor::W)
 		{
 			KingTile = GameMode->CB->TileMap[GameMode->CB->Kings[0]->VirtualPosition];
-			AllyColor = EOccupantColor::W;
-			EnemyColor = EOccupantColor::B;
 			EnemyPieces = GameMode->CB->BlackPieces;
 		}
 		else if (Color == EColor::B)
 		{
 			KingTile = GameMode->CB->TileMap[GameMode->CB->Kings[1]->VirtualPosition];
-			AllyColor = EOccupantColor::B;
-			EnemyColor = EOccupantColor::W;
 			EnemyPieces = GameMode->CB->WhitePieces;
 		}
 
 		// Simulating the movement of the piece from the start tile
+		EOccupantColor AllyColor = StartTile->GetOccupantColor();
 		StartTile->SetOccupantColor(EOccupantColor::E);
 
-		// Iterating through all possible moves and eatable pieces
-		for (ATile* Move : MovesAndEatablePieces)
+		TArray OriginalMoves = Moves;
+
+		// Iterating through all possible moves
+		for (ATile* Move : OriginalMoves)
 		{
 			// Storing the real occupant color to restore it later
 			EOccupantColor ActualOccupantColor = Move->GetOccupantColor();
@@ -172,7 +159,7 @@ void APiece::FilterOnlyLegalMoves()
 					// so don't consider "the king tile" but consinder "the move"
 					if (Cast<APieceKing>(this))
 					{
-						if (EnemyPiece->EatablePiecesPosition.Contains(Move))
+						if (EnemyPiece->Moves.Contains(Move))
 						{
 							bIsMoveSafe = false;
 							break;
@@ -181,7 +168,7 @@ void APiece::FilterOnlyLegalMoves()
 					// Else consider "king tile"
 					else
 					{
-						if (EnemyPiece->EatablePiecesPosition.Contains(KingTile))
+						if (EnemyPiece->Moves.Contains(KingTile))
 						{
 							bIsMoveSafe = false;
 							break;
@@ -191,16 +178,9 @@ void APiece::FilterOnlyLegalMoves()
 			}
 
 			// Removing unsafe moves from the list
-			if (!bIsMoveSafe)
+			if (!bIsMoveSafe && Moves.Contains(Move))
 			{
-				if (Moves.Contains(Move))
-				{
-					Moves.Remove(Move);
-				}
-				else if (EatablePiecesPosition.Contains(Move))
-				{
-					EatablePiecesPosition.Remove(Move);
-				}
+				Moves.Remove(Move);
 			}
 
 			// Restoring the original occupant color of the tile
@@ -209,6 +189,7 @@ void APiece::FilterOnlyLegalMoves()
 
 		// Restoring the original occupant color of the start tile
 		StartTile->SetOccupantColor(AllyColor);
+		OriginalMoves.Empty();
 	}
 }
 
