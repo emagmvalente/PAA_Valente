@@ -32,8 +32,6 @@ public:
 
 	UMainHUD* MainHUDWidget;
 
-	APiece* SelectedPieceToMove = nullptr;
-
 	void ClickOnBoard();
 
 protected:

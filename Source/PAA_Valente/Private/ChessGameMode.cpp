@@ -48,40 +48,17 @@ void AChessGameMode::BeginPlay()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Game Field is null"));
+		UE_LOG(LogTemp, Error, TEXT("Chessboard is null"));
 	}
 
 	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
 	FVector CameraPos(CameraPosX, CameraPosX, 1000.0f);
 	HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
-	SetKings();
 	HumanPlayer->OnTurn();
 }
 
 // Logic and Utilities
-void AChessGameMode::SetKings()
-{
-	// Finds WhiteKing
-	for (APiece* WhitePiece : CB->WhitePieces)
-	{
-		if (Cast<APieceKing>(WhitePiece))
-		{
-			CB->Kings[0] = WhitePiece;
-			break;
-		}
-	}
-	// Finds BlackKing
-	for (APiece* BlackPiece : CB->BlackPieces)
-	{
-		if (Cast<APieceKing>(BlackPiece))
-		{
-			CB->Kings[1] = BlackPiece;
-			break;
-		}
-	}
-}
-
 void AChessGameMode::TurnPlayer()
 {
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
@@ -143,7 +120,6 @@ void AChessGameMode::ResetVariablesForRematch()
 	bIsGameOver = false;
 	bIsWhiteOnCheck = false;
 	bIsBlackOnCheck = false;
-	SetKings();
 	TurnFlag = 0;
 	MovesWithoutCaptureOrPawnMove = 0;
 }

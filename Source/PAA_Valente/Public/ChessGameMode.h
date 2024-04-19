@@ -45,7 +45,6 @@ public:
 	int32 FieldSize;
 
 	// Logic and Utilities - METHODS
-	void SetKings();
 	void TurnPlayer();
 	void ResetVariablesForRematch();
 

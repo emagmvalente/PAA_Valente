@@ -29,7 +29,6 @@ void UOldMovesButtons::ButtonOnClickFunction()
 		}
 		GameMode->CB->GeneratePositionsFromString(AssociatedString);
 		GameMode->CB->SetTilesOwners();
-		GameMode->SetKings();
 	}
 	// If the black player is moving, replay is not allowed
 	else if (GameMode->bIsBlackThinking)

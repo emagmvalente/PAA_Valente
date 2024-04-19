@@ -32,6 +32,7 @@ protected:
 	// keeps track of turn
 	bool IsMyTurn;
 	bool bIsACapture;
+	APiece* SelectedPieceToMove;
 
 public:
 	// Called every frame

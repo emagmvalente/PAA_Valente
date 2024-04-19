@@ -24,7 +24,6 @@ APiecePawn::APiecePawn()
 	StaticMeshComponent->SetupAttachment(Scene);
 
 	PieceValue = 1;
-	TurnsWithoutMoving = 0;
 	bIsFirstMove = true;
 }
 
@@ -139,11 +138,6 @@ void APiecePawn::PossibleMoves()
 void APiecePawn::PawnMovedForTheFirstTime()
 {
 	bIsFirstMove = false;
-}
-
-int32 APiecePawn::GetTurnsWithoutMoving() const
-{
-	return TurnsWithoutMoving;
 }
 
 bool APiecePawn::GetIsFirstMove() const
