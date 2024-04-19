@@ -12,6 +12,7 @@
 #include "PieceRook.h"
 #include "WhitePlayer.h"
 #include "ChessPlayerController.h"
+#include "ChessGameInstance.h"
 #include "MainHUD.h"
 #include "EngineUtils.h"
 
@@ -49,6 +50,7 @@ void AChessboard::ResetField()
 	// Declaration
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
+	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	
 	// Reset everything
 	if (!GameMode->bIsBlackThinking)
@@ -89,7 +91,8 @@ void AChessboard::ResetField()
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Shhh! Black is thinking... Reset later."));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Shhh! Black is thinking... Reset later."));
+		GameInstance->SetNotificationMessage(TEXT("Shhh! Black is thinking... Reset later."));
 	}
 }
 
@@ -475,7 +478,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				break;
 
 			default:
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Invalid String."));
+				UE_LOG(LogTemp, Error, TEXT("Invalid string."));
 				break;
 			}
 

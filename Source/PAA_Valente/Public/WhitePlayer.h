@@ -44,6 +44,8 @@ public:
 	void PieceSelection();
 	void TileSelection(ATile* CurrTile);
 
+	APiece* GetSelectedPieceToMove() const;
+
 	void OnTurn();
 	void OnWin();
 

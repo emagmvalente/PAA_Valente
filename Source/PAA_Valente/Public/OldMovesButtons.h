@@ -6,7 +6,7 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "ChessGameMode.h"
-#include "ChessPlayerController.h"
+#include "WhitePlayer.h"
 #include "OldMovesButtons.generated.h"
 
 /**
@@ -24,7 +24,8 @@ class PAA_VALENTE_API UOldMovesButtons : public UButton
 public:
 
 	AChessGameMode* GameMode;
-	AChessPlayerController* CPC;
+	UChessGameInstance* GameInstance;
+	AWhitePlayer* HumanPlayer;
 
 	UOldMovesButtons(const FObjectInitializer& ObjectInitializer);
 

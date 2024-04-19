@@ -40,19 +40,6 @@ void APiece::ChangeMaterial(UMaterialInterface* NewMaterial)
 	}
 }
 
-/*
-FVector APiece::RelativePosition() const
-{
-	return FVector(Relative2DPosition().X, Relative2DPosition().Y, 10.f);
-}
-
-FVector2D APiece::Relative2DPosition() const
-{
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	return GameMode->CB->GetXYPositionByRelativeLocation(GetActorLocation());
-}
-*/
-
 void APiece::ColorPossibleMoves()
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
@@ -65,11 +52,13 @@ void APiece::ColorPossibleMoves()
 
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
+	
+	/*
 	UMaterialInterface* LoadE = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_E"));
 	UMaterialInterface* LoadW = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_W"));
 	UMaterialInterface* LoadB = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_B"));
 
-	/*
+	
 	for (ATile* Tile : GameMode->CB->TileArray)
 	{
 		if (Tile->GetOccupantColor() == EOccupantColor::E)

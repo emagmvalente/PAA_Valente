@@ -6,6 +6,7 @@
 #include "PiecePawn.h"
 #include "EngineUtils.h"
 #include "MainHUD.h"
+#include "ChessPlayerController.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
 // Sets default values
@@ -41,7 +42,7 @@ void ABlackMinimaxPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 void ABlackMinimaxPlayer::OnTurn()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Minimax) Turn"));
 
 	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
@@ -125,7 +126,7 @@ void ABlackMinimaxPlayer::OnTurn()
 
 void ABlackMinimaxPlayer::OnWin()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Wins!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Wins!"));
 	GameInstance->SetTurnMessage(TEXT("AI Wins!"));
 	GameInstance->IncrementScoreAiPlayer();
 }
@@ -356,7 +357,7 @@ int32 ABlackMinimaxPlayer::Evaluate()
 
 	if (GameMode->VerifyCheck())
 	{
-		if (GameMode->GetIsBlackOnCheck())
+		if (GameMode->GetTurnFlag() == 0)
 		{
 			if (GameMode->VerifyCheckmate())
 			{
@@ -364,7 +365,7 @@ int32 ABlackMinimaxPlayer::Evaluate()
 			}
 			Result = 10;
 		}
-		if (GameMode->GetIsWhiteOnCheck())
+		if (GameMode->GetTurnFlag() == 1)
 		{
 			if (GameMode->VerifyCheckmate())
 			{

@@ -23,9 +23,9 @@ void UOldMovesButtons::ButtonOnClickFunction()
 	// Recreating the chessboard in its old state
 	if (AssociatedString != FString("") && !GameMode->bIsBlackThinking)
 	{
-		if (CPC->SelectedPieceToMove)
+		if (HumanPlayer->GetSelectedPieceToMove())
 		{
-			CPC->SelectedPieceToMove->DecolorPossibleMoves();
+			HumanPlayer->GetSelectedPieceToMove()->DecolorPossibleMoves();
 		}
 		GameMode->CB->GeneratePositionsFromString(AssociatedString);
 		GameMode->CB->SetTilesOwners();
@@ -33,7 +33,8 @@ void UOldMovesButtons::ButtonOnClickFunction()
 	// If the black player is moving, replay is not allowed
 	else if (GameMode->bIsBlackThinking)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Shhh! Black is thinking... Replay later."));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Shhh! Black is thinking... Replay later."));
+		GameInstance->SetNotificationMessage(TEXT("Shhh! Black is thinking... Replay later."));
 	}
 }
 
