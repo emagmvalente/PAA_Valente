@@ -26,6 +26,7 @@ AChessGameMode::AChessGameMode()
 	MovesWithoutCaptureOrPawnMove = 0;
 }
 
+// OK
 void AChessGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -56,6 +57,7 @@ void AChessGameMode::BeginPlay()
 }
 
 // Logic and Utilities
+// OK
 void AChessGameMode::TurnPlayer()
 {
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
@@ -127,14 +129,16 @@ bool AChessGameMode::VerifyCheck()
 	ATile* EnemyKingTile = nullptr;
 	TArray<APiece*> AllyPieces;
 
+	// If human turn
 	if (TurnFlag == 0)
 	{
-		EnemyKingTile = *CB->TileMap.Find(CB->Kings[1]->GetVirtualPosition());
+		EnemyKingTile = CB->TileMap[CB->Kings[1]->GetVirtualPosition()];
 		AllyPieces = CB->WhitePieces;
 	}
+	// If AI turn
 	else if (TurnFlag == 1)
 	{
-		EnemyKingTile = *CB->TileMap.Find(CB->Kings[0]->GetVirtualPosition());;
+		EnemyKingTile = CB->TileMap[CB->Kings[0]->GetVirtualPosition()];
 		AllyPieces = CB->BlackPieces;
 	}
 
@@ -186,7 +190,7 @@ bool AChessGameMode::VerifyDraw()
 	// TODO: Dead Positions
 	if (CheckThreeOccurrences() || KingvsKing() || /*FiftyMovesRule() ||*/ Stalemate())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
+		// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
 		GameInstance->SetTurnMessage(TEXT("Draw!"));
 		return true;
 	}
@@ -316,7 +320,7 @@ void AChessGameMode::PromoteToQueen()
 	APiece* Obj = nullptr;
 
 	FVector Location = PawnToPromote->GetActorLocation();
-	FVector2D Location2D = CB->GetXYPositionByRelativeLocation(Location);
+	FVector2D Location2D = PawnToPromote->GetVirtualPosition();
 
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
@@ -353,7 +357,7 @@ void AChessGameMode::PromoteToRook()
 	APiece* Obj = nullptr;
 
 	FVector Location = PawnToPromote->GetActorLocation();
-	FVector2D Location2D = CB->GetXYPositionByRelativeLocation(Location);
+	FVector2D Location2D = PawnToPromote->GetVirtualPosition();
 
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
@@ -390,7 +394,7 @@ void AChessGameMode::PromoteToBishop()
 	APiece* Obj = nullptr;
 
 	FVector Location = PawnToPromote->GetActorLocation();
-	FVector2D Location2D = CB->GetXYPositionByRelativeLocation(Location);
+	FVector2D Location2D = PawnToPromote->GetVirtualPosition();
 
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
@@ -427,8 +431,9 @@ void AChessGameMode::PromoteToKnight()
 	APiece* Obj = nullptr;
 
 	FVector Location = PawnToPromote->GetActorLocation();
-	FVector2D Location2D = CB->GetXYPositionByRelativeLocation(Location);
+	FVector2D Location2D = PawnToPromote->GetVirtualPosition();
 
+	// If white then remove the widget and spawn the wanted piece
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
 		PawnPromotionWidgetInstance->RemoveFromParent();
@@ -441,6 +446,7 @@ void AChessGameMode::PromoteToKnight()
 		Obj->SetVirtualPosition(Location2D);
 		CB->WhitePieces.Add(Obj);
 	}
+	// If black then spawn the wanted piece
 	else if (PawnToPromote->GetColor() == EColor::B)
 	{
 		UMaterialInterface* LoadBlackKnight = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKnight"));

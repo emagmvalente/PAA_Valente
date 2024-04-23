@@ -100,7 +100,7 @@ void ABlackRandomPlayer::OnTurn()
 			ChosenPiece->SetActorLocation(TilePositioning);
 			ChosenPiece->SetVirtualPosition(DestinationTile->GetGridPosition());
 
-			// Pawn tie / promote check procedure
+			// Promote procedure
 			if (ChosenPiece->IsA<APiecePawn>())
 			{
 				if (Cast<APiecePawn>(ChosenPiece)->GetIsFirstMove())

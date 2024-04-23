@@ -53,7 +53,7 @@ void APiece::ColorPossibleMoves()
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
 	
-	/*
+	
 	UMaterialInterface* LoadE = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_E"));
 	UMaterialInterface* LoadW = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_W"));
 	UMaterialInterface* LoadB = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_B"));
@@ -74,7 +74,6 @@ void APiece::ColorPossibleMoves()
 			Tile->ChangeMaterial(LoadB);
 		}
 	}
-	*/
 
 	for (ATile* Move : Moves)
 	{

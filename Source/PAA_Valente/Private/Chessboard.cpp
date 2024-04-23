@@ -65,26 +65,8 @@ void AChessboard::ResetField()
 		GeneratePositionsFromString(GeneratingString);
 		HistoryOfMoves.Add(GeneratingString);
 
-		for (ATile* Tile : TileArray)
-		{
-			for (APiece* WhitePiece : WhitePieces)
-			{
-				if (WhitePiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
-				{
-					Tile->SetOccupantColor(EOccupantColor::W);
-					break;
-				}
-			}
+		SetTilesOwners();
 
-			for (APiece* BlackPiece : BlackPieces)
-			{
-				if (BlackPiece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
-				{
-					Tile->SetOccupantColor(EOccupantColor::B);
-					break;
-				}
-			}
-		}
 		GameMode->ResetVariablesForRematch();
 		AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 		HumanPlayer->OnTurn();
@@ -383,6 +365,9 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				{
 					Cast<APiecePawn>(Obj)->PawnMovedForTheFirstTime();
 				}
+
+				TileMap[FVector2D(Row, Col)]->SetOccupantColor(EOccupantColor::W);
+
 				WhitePieces.Add(Obj);
 				break;
 
@@ -390,6 +375,9 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APieceKnight>(KnightBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::W);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
+
+				TileMap[FVector2D(Row, Col)]->SetOccupantColor(EOccupantColor::W);
+
 				WhitePieces.Add(Obj); 
 				break;
 
@@ -404,6 +392,9 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::W);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
+
+				TileMap[FVector2D(Row, Col)]->SetOccupantColor(EOccupantColor::W);
+
 				WhitePieces.Add(Obj);
 				break;
 
@@ -411,6 +402,9 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APieceQueen>(QueenBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::W);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
+
+				TileMap[FVector2D(Row, Col)]->SetOccupantColor(EOccupantColor::W);
+
 				WhitePieces.Add(Obj);
 				break;
 
@@ -419,6 +413,9 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetColor(EColor::W);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Kings[0] = (Obj);
+
+				TileMap[FVector2D(Row, Col)]->SetOccupantColor(EOccupantColor::W);
+
 				WhitePieces.Add(Obj);
 				break;
 
@@ -433,6 +430,9 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 					Cast<APiecePawn>(Obj)->PawnMovedForTheFirstTime();
 				}
 				Obj->ChangeMaterial(LoadBlackPawn);
+
+				TileMap[FVector2D(Row, Col)]->SetOccupantColor(EOccupantColor::B);
+
 				BlackPieces.Add(Obj);
 				break;
 
@@ -441,6 +441,9 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetColor(EColor::B);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackKnight);
+
+				TileMap[FVector2D(Row, Col)]->SetOccupantColor(EOccupantColor::B);
+
 				BlackPieces.Add(Obj);
 				break;
 
@@ -449,6 +452,9 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetColor(EColor::B);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackBishop);
+
+				TileMap[FVector2D(Row, Col)]->SetOccupantColor(EOccupantColor::B);
+
 				BlackPieces.Add(Obj);
 				break;
 
@@ -457,6 +463,9 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetColor(EColor::B);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackRook); 
+
+				TileMap[FVector2D(Row, Col)]->SetOccupantColor(EOccupantColor::B);
+
 				BlackPieces.Add(Obj);
 				break;
 
@@ -465,6 +474,9 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetColor(EColor::B);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackQueen);
+
+				TileMap[FVector2D(Row, Col)]->SetOccupantColor(EOccupantColor::B);
+
 				BlackPieces.Add(Obj); 
 				break;
 
@@ -474,6 +486,9 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackKing);
 				Kings[1] = (Obj);
+
+				TileMap[FVector2D(Row, Col)]->SetOccupantColor(EOccupantColor::B);
+
 				BlackPieces.Add(Obj); 
 				break;
 

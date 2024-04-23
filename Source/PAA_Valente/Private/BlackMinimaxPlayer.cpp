@@ -355,6 +355,7 @@ int32 ABlackMinimaxPlayer::Evaluate()
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	int32 Result = 0;
 
+	// Check / Win / Lose case
 	if (GameMode->VerifyCheck())
 	{
 		if (GameMode->GetTurnFlag() == 0)
@@ -374,10 +375,14 @@ int32 ABlackMinimaxPlayer::Evaluate()
 			Result = -10;
 		}
 	}
+
+	// Draw case
 	else if (GameMode->VerifyDraw())
 	{
 		Result = 0;
 	}
+
+	// Normal move case
 	else
 	{
 		int32 RemainingPiecesValues = 0;
