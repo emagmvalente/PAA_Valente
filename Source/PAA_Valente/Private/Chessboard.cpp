@@ -53,7 +53,7 @@ void AChessboard::ResetField()
 	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	
 	// Reset everything
-	if (!GameMode->bIsBlackThinking)
+	if (!GameMode->Players[1]->GetThinkingStatus())
 	{
 		HistoryOfMoves.Empty();
 		if (CPC->MainHUDWidget)

@@ -21,7 +21,6 @@ AChessGameMode::AChessGameMode()
 	DefaultPawnClass = AWhitePlayer::StaticClass();
 	PlayerControllerClass = AChessPlayerController::StaticClass();
 	FieldSize = 8;
-	bIsBlackThinking = false;
 	TurnFlag = 0;
 	MovesWithoutCaptureOrPawnMove = 0;
 }
@@ -32,12 +31,15 @@ void AChessGameMode::BeginPlay()
 	Super::BeginPlay();
 
 	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+	Players.Add(HumanPlayer);
 
 	// Random Player
-	auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+	//auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 
 	// MiniMax Player
-	//auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
+	auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
+
+	Players.Add(AI);
 
 	if (CBClass != nullptr)
 	{
@@ -60,10 +62,6 @@ void AChessGameMode::BeginPlay()
 // OK
 void AChessGameMode::TurnPlayer()
 {
-	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
-	//ABlackMinimaxPlayer* AIPlayer = Cast<ABlackMinimaxPlayer>(*TActorIterator<ABlackMinimaxPlayer>(GetWorld()));
-
 	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 
 	GameInstance->SetNotificationMessage(TEXT(""));
@@ -78,14 +76,7 @@ void AChessGameMode::TurnPlayer()
 	else if (VerifyCheck() && VerifyCheckmate())
 	{
 		GameInstance->SetNotificationMessage(TEXT("Checkmate!"));
-		if (TurnFlag == 0)
-		{
-			HumanPlayer->OnWin();
-		}
-		else if (TurnFlag == 1)
-		{
-			AIPlayer->OnWin();
-		}
+		Players[TurnFlag]->OnWin();
 	}
 
 	// Turn passing
@@ -97,17 +88,9 @@ void AChessGameMode::TurnPlayer()
 			GameInstance->SetNotificationMessage(TEXT("Check!"));
 		}
 
-		// Anyway, pass the turn
-		if (TurnFlag == 0)
-		{
-			TurnFlag++;
-			AIPlayer->OnTurn();
-		}
-		else if (TurnFlag == 1)
-		{
-			TurnFlag--;
-			HumanPlayer->OnTurn();
-		}
+		// Pass the turn
+		TurnFlag = (TurnFlag == 0) ? 1 : 0;
+		Players[TurnFlag]->OnTurn();
 	}
 }
 
@@ -126,21 +109,10 @@ int32 AChessGameMode::GetTurnFlag() const
 
 bool AChessGameMode::VerifyCheck()
 {
-	ATile* EnemyKingTile = nullptr;
-	TArray<APiece*> AllyPieces;
+	ATile* EnemyKingTile = (TurnFlag == 0) ? CB->TileMap[CB->Kings[1]->GetVirtualPosition()] : 
+											 CB->TileMap[CB->Kings[0]->GetVirtualPosition()];
 
-	// If human turn
-	if (TurnFlag == 0)
-	{
-		EnemyKingTile = CB->TileMap[CB->Kings[1]->GetVirtualPosition()];
-		AllyPieces = CB->WhitePieces;
-	}
-	// If AI turn
-	else if (TurnFlag == 1)
-	{
-		EnemyKingTile = CB->TileMap[CB->Kings[0]->GetVirtualPosition()];
-		AllyPieces = CB->BlackPieces;
-	}
+	TArray<APiece*> AllyPieces = (TurnFlag == 0) ? CB->WhitePieces : CB->BlackPieces;
 
 	for (APiece* AllyPiece : AllyPieces)
 	{
@@ -159,16 +131,7 @@ bool AChessGameMode::VerifyCheck()
 
 bool AChessGameMode::VerifyCheckmate()
 {
-	TArray<APiece*> EnemyPieces;
-
-	if (TurnFlag == 0)
-	{
-		EnemyPieces = CB->BlackPieces;
-	}
-	else if (TurnFlag == 1)
-	{
-		EnemyPieces = CB->WhitePieces;
-	}
+	TArray<APiece*> EnemyPieces = (TurnFlag == 0) ? CB->BlackPieces : CB->WhitePieces;
 
 	for (APiece* EnemyPiece : EnemyPieces)
 	{

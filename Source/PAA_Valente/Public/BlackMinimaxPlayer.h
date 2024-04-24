@@ -7,11 +7,12 @@
 #include "ChessGameInstance.h"
 #include "ChessGameMode.h"
 #include "Piece.h"
+#include "PlayerInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "BlackMinimaxPlayer.generated.h"
 
 UCLASS()
-class PAA_VALENTE_API ABlackMinimaxPlayer : public APawn
+class PAA_VALENTE_API ABlackMinimaxPlayer : public APawn, public IPlayerInterface
 {
 	GENERATED_BODY()
 
@@ -24,6 +25,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	bool bIsACapture;
+	bool bThinking;
 	APiece* BestPiece;
 
 public:	
@@ -33,8 +35,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void OnTurn();
-	void OnWin();
+	virtual void OnTurn() override;
+	virtual void OnWin() override;
+	virtual bool GetThinkingStatus() const override;
 
 	int32 Maxi(int32 Depth, int32 Alpha, int32 Beta);
 	int32 Mini(int32 Depth, int32 Alpha, int32 Beta);

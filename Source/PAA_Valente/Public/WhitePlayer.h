@@ -6,12 +6,13 @@
 #include "GameFramework/Pawn.h"
 #include "ChessGameInstance.h"
 #include "Piece.h"
+#include "PlayerInterface.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "WhitePlayer.generated.h"
 
 UCLASS()
-class PAA_VALENTE_API AWhitePlayer : public APawn
+class PAA_VALENTE_API AWhitePlayer : public APawn, public IPlayerInterface
 {
 	GENERATED_BODY()
 
@@ -46,7 +47,8 @@ public:
 
 	APiece* GetSelectedPieceToMove() const;
 
-	void OnTurn();
-	void OnWin();
+	virtual void OnTurn() override;
+	virtual void OnWin() override;
+	virtual bool GetThinkingStatus() const override;
 
 };

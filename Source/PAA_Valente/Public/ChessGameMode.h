@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Chessboard.h"
 #include "Blueprint/UserWidget.h"
+#include "PlayerInterface.h"
 #include "GameFramework/GameModeBase.h"
 #include "ChessGameMode.generated.h"
 
@@ -24,8 +25,7 @@ public:
 	AChessGameMode();
 	virtual void BeginPlay() override;
 
-	// Winning / Draw / Losing - FIELDS
-	bool bIsBlackThinking;
+	TArray<IPlayerInterface*> Players;
 
 	// Pawn Promotion - FIELDS
 	APiece* PawnToPromote;

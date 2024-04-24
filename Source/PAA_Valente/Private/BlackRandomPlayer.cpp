@@ -40,6 +40,11 @@ void ABlackRandomPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 }
 
+bool ABlackRandomPlayer::GetThinkingStatus() const
+{
+	return bThinking;
+}
+
 void ABlackRandomPlayer::OnTurn()
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
@@ -48,7 +53,7 @@ void ABlackRandomPlayer::OnTurn()
 
 	FTimerHandle TimerHandle;
 
-	GameMode->bIsBlackThinking = true;
+	bThinking = true;
 
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
@@ -127,7 +132,7 @@ void ABlackRandomPlayer::OnTurn()
 			bIsACapture = false;
 
 			// Turn ending
-			GameModeCallback->bIsBlackThinking = false;
+			bThinking = false;
 			if (!Cast<APiecePawn>(ChosenPiece) || Cast<APiecePawn>(ChosenPiece)->GetVirtualPosition().X != 0)
 			{
 				GameModeCallback->TurnPlayer();

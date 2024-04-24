@@ -21,7 +21,7 @@ UOldMovesButtons::UOldMovesButtons(const FObjectInitializer& ObjectInitializer)
 void UOldMovesButtons::ButtonOnClickFunction()
 {
 	// Recreating the chessboard in its old state
-	if (AssociatedString != FString("") && !GameMode->bIsBlackThinking)
+	if (AssociatedString != FString("") && !GameMode->Players[1]->GetThinkingStatus())
 	{
 		if (HumanPlayer->GetSelectedPieceToMove())
 		{
@@ -31,7 +31,7 @@ void UOldMovesButtons::ButtonOnClickFunction()
 		GameMode->CB->SetTilesOwners();
 	}
 	// If the black player is moving, replay is not allowed
-	else if (GameMode->bIsBlackThinking)
+	else if (GameMode->Players[1]->GetThinkingStatus())
 	{
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Shhh! Black is thinking... Replay later."));
 		GameInstance->SetNotificationMessage(TEXT("Shhh! Black is thinking... Replay later."));

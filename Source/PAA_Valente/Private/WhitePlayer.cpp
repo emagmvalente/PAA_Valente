@@ -192,3 +192,8 @@ void AWhitePlayer::OnWin()
 	GameInstance->SetTurnMessage(TEXT("Human Wins!"));
 	GameInstance->IncrementScoreHumanPlayer();
 }
+
+bool AWhitePlayer::GetThinkingStatus() const
+{
+	return false;
+}

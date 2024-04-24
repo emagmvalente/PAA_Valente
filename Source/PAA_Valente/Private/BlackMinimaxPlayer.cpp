@@ -40,6 +40,11 @@ void ABlackMinimaxPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 }
 
+bool ABlackMinimaxPlayer::GetThinkingStatus() const
+{
+	return bThinking;
+}
+
 void ABlackMinimaxPlayer::OnTurn()
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
@@ -49,7 +54,7 @@ void ABlackMinimaxPlayer::OnTurn()
 
 	FTimerHandle TimerHandle;
 
-	GameMode->bIsBlackThinking = true;
+	bThinking = true;
 
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
@@ -115,7 +120,7 @@ void ABlackMinimaxPlayer::OnTurn()
 			bIsACapture = false;
 
 			// Turn ending
-			GameModeCallback->bIsBlackThinking = false;
+			bThinking = false;
 			if (!Cast<APiecePawn>(BestPiece) || Cast<APiecePawn>(BestPiece)->GetVirtualPosition().X != 0)
 			{
 				GameModeCallback->TurnPlayer();
