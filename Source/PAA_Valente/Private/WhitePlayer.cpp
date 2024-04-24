@@ -55,6 +55,11 @@ void AWhitePlayer::PieceSelection()
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	FString LastMoveDone = GameMode->CB->HistoryOfMoves.Last();
 
+	// Find enemy team attributes
+	TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameMode->CB->BlackPieces : &GameMode->CB->WhitePieces;
+	EColor EnemyColor = (AllyColor == EColor::W) ? EColor::B : EColor::W;
+	EOccupantColor EnemyOccupantColor = (AllyColor == EColor::W) ? EOccupantColor::B : EOccupantColor::W;
+
 	// Detecting player's click
 	FHitResult Hit = FHitResult(ForceInit);
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
@@ -64,7 +69,7 @@ void AWhitePlayer::PieceSelection()
 		if (APiece* PieceClicked = Cast<APiece>(Hit.GetActor()))
 		{
 			// Ally Piece
-			if (PieceClicked->GetColor() == EColor::W)
+			if (PieceClicked->GetColor() == AllyColor)
 			{
 				// Save the piece
 				SelectedPieceToMove = PieceClicked;
@@ -74,7 +79,7 @@ void AWhitePlayer::PieceSelection()
 				PieceClicked->ColorPossibleMoves();
 			}
 			// Enemy Piece
-			else if (PieceClicked->GetColor() == EColor::B && SelectedPieceToMove != nullptr)
+			else if (PieceClicked->GetColor() == EnemyColor && SelectedPieceToMove != nullptr)
 			{
 				if (GameMode->CB->TileMap.Contains(PieceClicked->GetVirtualPosition()))
 				{
@@ -83,7 +88,7 @@ void AWhitePlayer::PieceSelection()
 					// Capture enemy's piece and call tile method
 					if (SelectedPieceToMove->Moves.Contains(DestinationTile))
 					{
-						GameMode->CB->BlackPieces.Remove(PieceClicked);
+						EnemyPieces->Remove(PieceClicked);
 						PieceClicked->Destroy();
 						bIsACapture = true;
 						DestinationTile->SetOccupantColor(EOccupantColor::E);
@@ -120,6 +125,11 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 	ATile* PreviousTile = GameMode->CB->TileMap[OldPosition];
 	UMainHUD* MainHUD = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController())->MainHUDWidget;
 
+	// Find enemy team attributes
+	TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameMode->CB->BlackPieces : &GameMode->CB->WhitePieces;
+	EColor EnemyColor = (AllyColor == EColor::W) ? EColor::B : EColor::W;
+	EOccupantColor EnemyOccupantColor = (AllyColor == EColor::W) ? EOccupantColor::B : EOccupantColor::W;
+
 	if (CurrTile->GetOccupantColor() == EOccupantColor::E)
 	{
 		// If a tile is clicked, decolor possible moves
@@ -147,7 +157,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 		// Setting the actual tile occupied by a white, setting the old one empty
 		if (SelectedPieceToMove->GetVirtualPosition() == CurrTile->GetGridPosition())
 		{
-			CurrTile->SetOccupantColor(EOccupantColor::W);
+			CurrTile->SetOccupantColor(AllyOccupantColor);
 			PreviousTile->SetOccupantColor(EOccupantColor::E);
 
 			// Generate the FEN string and add it to the history of moves for replays
@@ -196,4 +206,13 @@ void AWhitePlayer::OnWin()
 bool AWhitePlayer::GetThinkingStatus() const
 {
 	return false;
+}
+
+void AWhitePlayer::SetTeam(EColor TeamColor)
+{
+	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
+
+	AllyColor = TeamColor;
+	AllyOccupantColor = (TeamColor == EColor::W) ? EOccupantColor::W : EOccupantColor::B;
+	AllyPieces = (TeamColor == EColor::W) ? &GameMode->CB->WhitePieces : &GameMode->CB->BlackPieces;
 }

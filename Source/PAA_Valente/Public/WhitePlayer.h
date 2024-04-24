@@ -35,6 +35,10 @@ protected:
 	bool bIsACapture;
 	APiece* SelectedPieceToMove;
 
+	EColor AllyColor;
+	EOccupantColor AllyOccupantColor;
+	TArray<APiece*>* AllyPieces;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -50,5 +54,7 @@ public:
 	virtual void OnTurn() override;
 	virtual void OnWin() override;
 	virtual bool GetThinkingStatus() const override;
+
+	void SetTeam(EColor TeamColor);
 
 };

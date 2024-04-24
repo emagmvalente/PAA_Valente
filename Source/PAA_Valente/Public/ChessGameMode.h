@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Chessboard.h"
 #include "Blueprint/UserWidget.h"
+#include "Camera/CameraComponent.h"
 #include "PlayerInterface.h"
 #include "GameFramework/GameModeBase.h"
 #include "ChessGameMode.generated.h"
@@ -45,6 +46,10 @@ public:
 	void TurnPlayer();
 	void ResetVariablesForRematch();
 	int32 GetTurnFlag() const;
+	UFUNCTION(BlueprintCallable)
+	void SpawnHumanAndRandom();
+	UFUNCTION(BlueprintCallable)
+	void SpawnHumanAndMinimax();
 
 	// Winning / Draw / Losing - METHODS
 	bool VerifyCheck();

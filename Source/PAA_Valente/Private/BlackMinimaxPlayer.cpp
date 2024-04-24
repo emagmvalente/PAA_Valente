@@ -45,14 +45,27 @@ bool ABlackMinimaxPlayer::GetThinkingStatus() const
 	return bThinking;
 }
 
+void ABlackMinimaxPlayer::SetTeam(EColor TeamColor)
+{
+	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
+
+	AllyColor = TeamColor;
+	AllyOccupantColor = (TeamColor == EColor::W) ? EOccupantColor::W : EOccupantColor::B;
+	AllyPieces = (TeamColor == EColor::W) ? &GameMode->CB->WhitePieces : &GameMode->CB->BlackPieces;
+}
+
+FTimerHandle* ABlackMinimaxPlayer::GetTimerHandle()
+{
+	FTimerHandle* HandlerPtr = &TimerHandle;
+	return HandlerPtr;
+}
+
 void ABlackMinimaxPlayer::OnTurn()
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Minimax) Turn"));
 
 	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
-
-	FTimerHandle TimerHandle;
 
 	bThinking = true;
 
@@ -63,26 +76,31 @@ void ABlackMinimaxPlayer::OnTurn()
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
+			// Find enemy team attributes
+			TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameModeCallback->CB->BlackPieces : &GameModeCallback->CB->WhitePieces;
+			EColor EnemyColor = (AllyColor == EColor::W) ? EColor::B : EColor::W;
+			EOccupantColor EnemyOccupantColor = (AllyColor == EColor::W) ? EOccupantColor::B : EOccupantColor::W;
+
+			// Find the best move with the best piece
 			ATile* BestTile = FindBestMove();
 
 			// Getting previous tile
-			ATile** PreviousTilePtr = GameModeCallback->CB->TileMap.Find(BestPiece->GetVirtualPosition());
+			ATile* PreviousTilePtr = GameModeCallback->CB->TileMap[BestPiece->GetVirtualPosition()];
 			FVector2D OldPosition = BestPiece->GetVirtualPosition();
-
 			// Getting the new tile and the new position
 			FVector TilePositioning = GameModeCallback->CB->GetRelativeLocationByXYPosition(BestTile->GetGridPosition().X, BestTile->GetGridPosition().Y);
 			TilePositioning.Z = 10.0f;
 
 			// If it's an eating move, then delete the white piece
-			if (BestTile->GetOccupantColor() == EOccupantColor::W)
+			if (BestTile->GetOccupantColor() == AllyOccupantColor)
 			{
 				// Search the white piece who occupies the tile and capture it
-				for (APiece* WhitePiece : GameModeCallback->CB->WhitePieces)
+				for (APiece* EnemyPiece : *EnemyPieces)
 				{
-					if (WhitePiece->GetActorLocation() == TilePositioning)
+					if (EnemyPiece->GetActorLocation() == TilePositioning)
 					{
-						GameModeCallback->CB->WhitePieces.Remove(WhitePiece);
-						WhitePiece->Destroy();
+						EnemyPieces->Remove(EnemyPiece);
+						EnemyPiece->Destroy();
 						bIsACapture = true;
 						break;
 					}
@@ -104,8 +122,8 @@ void ABlackMinimaxPlayer::OnTurn()
 			}
 
 			// Setting the actual tile occupied by a black, setting the old one empty
-			(*PreviousTilePtr)->SetOccupantColor(EOccupantColor::E);
-			BestTile->SetOccupantColor(EOccupantColor::B);
+			PreviousTilePtr->SetOccupantColor(EOccupantColor::E);
+			BestTile->SetOccupantColor(AllyOccupantColor);
 
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
@@ -140,31 +158,36 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
+	// Find enemy team attributes
+	TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameMode->CB->BlackPieces : &GameMode->CB->WhitePieces;
+	EColor EnemyColor = (AllyColor == EColor::W) ? EColor::B : EColor::W;
+	EOccupantColor EnemyOccupantColor = (AllyColor == EColor::W) ? EOccupantColor::B : EOccupantColor::W;
+
 	int32 BestVal = 1000;
 	ATile* BestMove = nullptr;
 
 	// Find the best move for the best piece to move
-	for (APiece* BlackPiece : GameMode->CB->BlackPieces)
+	for (APiece* AllyPiece : *AllyPieces)
 	{
-		ATile* StartTile = GameMode->CB->TileMap[BlackPiece->GetVirtualPosition()];
+		ATile* StartTile = GameMode->CB->TileMap[AllyPiece->GetVirtualPosition()];
 
-		BlackPiece->PossibleMoves();
-		BlackPiece->FilterOnlyLegalMoves();
+		AllyPiece->PossibleMoves();
+		AllyPiece->FilterOnlyLegalMoves();
 
-		TArray OriginalMoves = BlackPiece->Moves;
+		TArray OriginalMoves = AllyPiece->Moves;
 
 		for (ATile* Move : OriginalMoves)
 		{
 			// Manage a possible capture
 			APiece* PieceCaptured = nullptr;
-			if (Move->GetOccupantColor() == EOccupantColor::W)
+			if (Move->GetOccupantColor() == EnemyOccupantColor)
 			{
-				for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+				for (APiece* EnemyPiece : *EnemyPieces)
 				{
-					if (WhitePiece->GetVirtualPosition() == Move->GetGridPosition())
+					if (EnemyPiece->GetVirtualPosition() == Move->GetGridPosition())
 					{
-						WhitePiece->SetVirtualPosition(FVector2D(-1, -1));
-						PieceCaptured = WhitePiece;
+						EnemyPiece->SetVirtualPosition(FVector2D(-1, -1));
+						PieceCaptured = EnemyPiece;
 						break;
 					}
 				}
@@ -172,22 +195,22 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 
 			// Simulate move
 			StartTile->SetOccupantColor(EOccupantColor::E);
-			Move->SetOccupantColor(EOccupantColor::B);
-			BlackPiece->SetVirtualPosition(Move->GetGridPosition());
+			Move->SetOccupantColor(AllyOccupantColor);
+			AllyPiece->SetVirtualPosition(Move->GetGridPosition());
 
 			// Call Maxi
 			int32 MoveVal = Maxi(1, -9999, 9999);
 
 			// Undo move
-			StartTile->SetOccupantColor(EOccupantColor::B);
+			StartTile->SetOccupantColor(AllyOccupantColor);
 			Move->SetOccupantColor(EOccupantColor::E);
-			BlackPiece->SetVirtualPosition(StartTile->GetGridPosition());
+			AllyPiece->SetVirtualPosition(StartTile->GetGridPosition());
 
 			// Undo a possible capture
 			if (PieceCaptured)
 			{
 				PieceCaptured->SetVirtualPosition(Move->GetGridPosition());
-				Move->SetOccupantColor(EOccupantColor::W);
+				Move->SetOccupantColor(EnemyOccupantColor);
 				PieceCaptured = nullptr;
 			}
 
@@ -195,7 +218,7 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 			if (MoveVal < BestVal)
 			{
 				BestMove = Move;
-				BestPiece = BlackPiece;
+				BestPiece = AllyPiece;
 				BestVal = MoveVal;
 			}
 		}
@@ -209,6 +232,11 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
+	// Find enemy team attributes
+	TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameMode->CB->BlackPieces : &GameMode->CB->WhitePieces;
+	EColor EnemyColor = (AllyColor == EColor::W) ? EColor::B : EColor::W;
+	EOccupantColor EnemyOccupantColor = (AllyColor == EColor::W) ? EOccupantColor::B : EOccupantColor::W;
+
 	// Evaluate
 	if (Depth == 0)
 	{
@@ -217,20 +245,20 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 
 	// Start simulation for each black piece
 	int Min = +99999;
-	for (APiece* BlackPiece : GameMode->CB->BlackPieces)
+	for (APiece* AllyPiece : *AllyPieces)
 	{
 		// (-1,-1) is a position that determines a virtual capture, then ignore that piece
-		if (BlackPiece->GetVirtualPosition() == FVector2D(-1, -1))
+		if (AllyPiece->GetVirtualPosition() == FVector2D(-1, -1))
 		{
 			continue;
 		}
 
-		ATile* StartTile = GameMode->CB->TileMap[BlackPiece->GetVirtualPosition()];
+		ATile* StartTile = GameMode->CB->TileMap[AllyPiece->GetVirtualPosition()];
 
-		BlackPiece->PossibleMoves();
-		BlackPiece->FilterOnlyLegalMoves();
+		AllyPiece->PossibleMoves();
+		AllyPiece->FilterOnlyLegalMoves();
 
-		TArray OriginalMoves = BlackPiece->Moves;
+		TArray OriginalMoves = AllyPiece->Moves;
 
 		// For each move in moves and possible captures
 		for (ATile* Move : OriginalMoves)
@@ -238,14 +266,14 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 			APiece* PieceCaptured = nullptr;
 
 			// If it's a capture move, then simulate it
-			if (Move->GetOccupantColor() == EOccupantColor::W)
+			if (Move->GetOccupantColor() == EnemyOccupantColor)
 			{
-				for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+				for (APiece* EnemyPiece : *EnemyPieces)
 				{
-					if (WhitePiece->GetVirtualPosition() == Move->GetGridPosition())
+					if (EnemyPiece->GetVirtualPosition() == Move->GetGridPosition())
 					{
-						WhitePiece->SetVirtualPosition(FVector2D(-1, -1));
-						PieceCaptured = WhitePiece;
+						EnemyPiece->SetVirtualPosition(FVector2D(-1, -1));
+						PieceCaptured = EnemyPiece;
 						break;
 					}
 				}
@@ -253,22 +281,22 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 
 			// Simulate move
 			StartTile->SetOccupantColor(EOccupantColor::E);
-			Move->SetOccupantColor(EOccupantColor::B);
-			BlackPiece->SetVirtualPosition(Move->GetGridPosition());
+			Move->SetOccupantColor(AllyOccupantColor);
+			AllyPiece->SetVirtualPosition(Move->GetGridPosition());
 
 			// Call maxi with updated alpha and beta values
 			Min = FMath::Min(Maxi(Depth - 1, Alpha, Beta), Min);
 
 			// Restore original values
-			BlackPiece->SetVirtualPosition(StartTile->GetGridPosition());
+			AllyPiece->SetVirtualPosition(StartTile->GetGridPosition());
 			Move->SetOccupantColor(EOccupantColor::E);
-			StartTile->SetOccupantColor(EOccupantColor::B);
+			StartTile->SetOccupantColor(AllyOccupantColor);
 
 			// Restore captured piece
 			if (PieceCaptured)
 			{
 				PieceCaptured->SetVirtualPosition(Move->GetGridPosition());
-				Move->SetOccupantColor(EOccupantColor::W);
+				Move->SetOccupantColor(EnemyOccupantColor);
 				PieceCaptured = nullptr;
 			}
 
@@ -289,57 +317,62 @@ int32 ABlackMinimaxPlayer::Maxi(int32 Depth, int32 Alpha, int32 Beta)
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
+	// Find enemy team attributes
+	TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameMode->CB->BlackPieces : &GameMode->CB->WhitePieces;
+	EColor EnemyColor = (AllyColor == EColor::W) ? EColor::B : EColor::W;
+	EOccupantColor EnemyOccupantColor = (AllyColor == EColor::W) ? EOccupantColor::B : EOccupantColor::W;
+
 	if (Depth == 0)
 	{
 		return Evaluate();
 	}
 
 	int Max = -99999;
-	for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+	for (APiece* EnemyPiece : *EnemyPieces)
 	{
-		if (WhitePiece->GetVirtualPosition() == FVector2D(-1, -1))
+		if (EnemyPiece->GetVirtualPosition() == FVector2D(-1, -1))
 		{
 			continue;
 		}
 
-		ATile* StartTile = GameMode->CB->TileMap[WhitePiece->GetVirtualPosition()];
+		ATile* StartTile = GameMode->CB->TileMap[EnemyPiece->GetVirtualPosition()];
 
-		WhitePiece->PossibleMoves();
-		WhitePiece->FilterOnlyLegalMoves();
+		EnemyPiece->PossibleMoves();
+		EnemyPiece->FilterOnlyLegalMoves();
 
-		TArray OriginalMoves = WhitePiece->Moves;
+		TArray OriginalMoves = EnemyPiece->Moves;
 
 		for (ATile* Move : OriginalMoves)
 		{
 			APiece* PieceCaptured = nullptr;
 
-			if (Move->GetOccupantColor() == EOccupantColor::B)
+			if (Move->GetOccupantColor() == AllyOccupantColor)
 			{
-				for (APiece* BlackPiece : GameMode->CB->BlackPieces)
+				for (APiece* AllyPiece : *AllyPieces)
 				{
-					if (BlackPiece->GetVirtualPosition() == Move->GetGridPosition())
+					if (AllyPiece->GetVirtualPosition() == Move->GetGridPosition())
 					{
-						BlackPiece->SetVirtualPosition(FVector2D(-1, -1));
-						PieceCaptured = BlackPiece;
+						AllyPiece->SetVirtualPosition(FVector2D(-1, -1));
+						PieceCaptured = AllyPiece;
 						break;
 					}
 				}
 			}
 
 			StartTile->SetOccupantColor(EOccupantColor::E);
-			Move->SetOccupantColor(EOccupantColor::W);
-			WhitePiece->SetVirtualPosition(Move->GetGridPosition());
+			Move->SetOccupantColor(EnemyOccupantColor);
+			EnemyPiece->SetVirtualPosition(Move->GetGridPosition());
 
 			Max = FMath::Max(Mini(Depth - 1, Alpha, Beta), Max);
 
-			WhitePiece->SetVirtualPosition(StartTile->GetGridPosition());
+			EnemyPiece->SetVirtualPosition(StartTile->GetGridPosition());
 			Move->SetOccupantColor(EOccupantColor::E);
-			StartTile->SetOccupantColor(EOccupantColor::W);
+			StartTile->SetOccupantColor(EnemyOccupantColor);
 
 			if (PieceCaptured)
 			{
 				PieceCaptured->SetVirtualPosition(Move->GetGridPosition());
-				Move->SetOccupantColor(EOccupantColor::B);
+				Move->SetOccupantColor(AllyOccupantColor);
 				PieceCaptured = nullptr;
 			}
 

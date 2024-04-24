@@ -28,6 +28,11 @@ protected:
 	bool bThinking;
 	APiece* BestPiece;
 
+	EColor AllyColor;
+	EOccupantColor AllyOccupantColor;
+	TArray<APiece*>* AllyPieces;
+	FTimerHandle TimerHandle;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -38,6 +43,9 @@ public:
 	virtual void OnTurn() override;
 	virtual void OnWin() override;
 	virtual bool GetThinkingStatus() const override;
+
+	void SetTeam(EColor TeamColor);
+	FTimerHandle* GetTimerHandle();
 
 	int32 Maxi(int32 Depth, int32 Alpha, int32 Beta);
 	int32 Mini(int32 Depth, int32 Alpha, int32 Beta);

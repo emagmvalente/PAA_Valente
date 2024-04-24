@@ -23,7 +23,7 @@ void UOldMovesButtons::ButtonOnClickFunction()
 	// Recreating the chessboard in its old state
 	if (AssociatedString != FString("") && !GameMode->Players[1]->GetThinkingStatus())
 	{
-		if (HumanPlayer->GetSelectedPieceToMove())
+		if (HumanPlayer && HumanPlayer->GetSelectedPieceToMove())
 		{
 			HumanPlayer->GetSelectedPieceToMove()->DecolorPossibleMoves();
 		}

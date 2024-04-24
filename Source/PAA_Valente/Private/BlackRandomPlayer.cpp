@@ -16,7 +16,6 @@ ABlackRandomPlayer::ABlackRandomPlayer()
 	PrimaryActorTick.bCanEverTick = true;
 	GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	bIsACapture = false;
-
 }
 
 // Called when the game starts or when spawned
@@ -45,13 +44,26 @@ bool ABlackRandomPlayer::GetThinkingStatus() const
 	return bThinking;
 }
 
+void ABlackRandomPlayer::SetTeam(EColor TeamColor)
+{
+	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
+
+	AllyColor = TeamColor;
+	AllyOccupantColor = (TeamColor == EColor::W) ? EOccupantColor::W : EOccupantColor::B;
+	AllyPieces = (TeamColor == EColor::W) ? &GameMode->CB->WhitePieces : &GameMode->CB->BlackPieces;
+}
+
+FTimerHandle* ABlackRandomPlayer::GetTimerHandle()
+{
+	FTimerHandle* HandlerPtr = &TimerHandle;
+	return HandlerPtr;
+}
+
 void ABlackRandomPlayer::OnTurn()
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-
-	FTimerHandle TimerHandle;
 
 	bThinking = true;
 
@@ -62,12 +74,17 @@ void ABlackRandomPlayer::OnTurn()
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
+			// Find enemy team attributes
+			TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameModeCallback->CB->BlackPieces : &GameModeCallback->CB->WhitePieces;
+			EColor EnemyColor = (AllyColor == EColor::W) ? EColor::B : EColor::W;
+			EOccupantColor EnemyOccupantColor = (AllyColor == EColor::W) ? EOccupantColor::B : EOccupantColor::W;
+
 			// Picking a random piece
 			APiece* ChosenPiece = nullptr;
 			do
 			{
-				int32 RandIdx0 = FMath::Rand() % GameModeCallback->CB->BlackPieces.Num();
-				ChosenPiece = GameModeCallback->CB->BlackPieces[RandIdx0];
+				int32 RandIdx0 = FMath::Rand() % AllyPieces->Num();
+				ChosenPiece = (*AllyPieces)[RandIdx0];
 
 				// Calculate piece's possible moves.
 				ChosenPiece->PossibleMoves();
@@ -86,15 +103,15 @@ void ABlackRandomPlayer::OnTurn()
 			TilePositioning.Z = 10.0f;
 
 			// If it's an eating move, then delete the white piece
-			if (DestinationTile->GetOccupantColor() == EOccupantColor::W)
+			if (DestinationTile->GetOccupantColor() == EnemyOccupantColor)
 			{
 				// Search the white piece who occupies the tile and capture it
-				for (APiece* WhitePiece : GameModeCallback->CB->WhitePieces)
+				for (APiece* EnemyPiece : *EnemyPieces)
 				{
-					if (WhitePiece->GetActorLocation() == TilePositioning)
+					if (EnemyPiece->GetActorLocation() == TilePositioning)
 					{
-						GameModeCallback->CB->WhitePieces.Remove(WhitePiece);
-						WhitePiece->Destroy();
+						EnemyPieces->Remove(EnemyPiece);
+						EnemyPiece->Destroy();
 						bIsACapture = true;
 						break;
 					}
@@ -117,7 +134,7 @@ void ABlackRandomPlayer::OnTurn()
 
 			// Setting the actual tile occupied by a black, setting the old one empty
 			PreviousTilePtr->SetOccupantColor(EOccupantColor::E);
-			DestinationTile->SetOccupantColor(EOccupantColor::B);
+			DestinationTile->SetOccupantColor(AllyOccupantColor);
 
 			// Generate the FEN string and add it to the history of moves for replays
 			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();

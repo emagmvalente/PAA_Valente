@@ -13,8 +13,8 @@
 #include "BlackRandomPlayer.h"
 #include "BlackMinimaxPlayer.h"
 #include "EngineUtils.h"
-#include "ChessPlayerController.h"
 #include "MainHUD.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 AChessGameMode::AChessGameMode()
 {
@@ -25,21 +25,15 @@ AChessGameMode::AChessGameMode()
 	MovesWithoutCaptureOrPawnMove = 0;
 }
 
-// OK
 void AChessGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	Players.Add(HumanPlayer);
+	auto* WhitePlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+	auto* BlackPlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 
-	// Random Player
-	//auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
-
-	// MiniMax Player
-	auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
-
-	Players.Add(AI);
+	Players.Add(WhitePlayer);
+	Players.Add(BlackPlayer);
 
 	if (CBClass != nullptr)
 	{
@@ -51,15 +45,19 @@ void AChessGameMode::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("Chessboard is null"));
 	}
 
+	WhitePlayer->SetTeam(EColor::W);
+	BlackPlayer->SetTeam(EColor::B);
+
 	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
 	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
-	HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
-	HumanPlayer->OnTurn();
+	auto Camera = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
+	Camera->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
+
+	WhitePlayer->OnTurn();
 }
 
 // Logic and Utilities
-// OK
 void AChessGameMode::TurnPlayer()
 {
 	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
@@ -103,6 +101,78 @@ void AChessGameMode::ResetVariablesForRematch()
 int32 AChessGameMode::GetTurnFlag() const
 {
 	return TurnFlag;
+}
+
+void AChessGameMode::SpawnHumanAndRandom()
+{
+	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
+
+	ABlackRandomPlayer* AI1 = Cast<ABlackRandomPlayer>(Players[0]);
+	ABlackRandomPlayer* AI2 = Cast<ABlackRandomPlayer>(Players[1]);
+	auto Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+
+	GetWorldTimerManager().ClearTimer(*AI1->GetTimerHandle());
+	GetWorldTimerManager().ClearTimer(*AI2->GetTimerHandle());
+
+	AI1->Destroy();		AI2->Destroy();		Players.Empty();		Camera->Destroy();
+
+	auto* WhitePlayer = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
+	auto* BlackPlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+
+	Players.Add(WhitePlayer);
+	Players.Add(BlackPlayer);
+
+	WhitePlayer->SetTeam(EColor::W);
+	BlackPlayer->SetTeam(EColor::B);
+
+	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
+	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
+
+	WhitePlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
+
+	CB->ResetField();
+
+	TArray<UUserWidget*> FoundWidgets;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
+	CPC->MainHUDWidget = Cast<UMainHUD>(FoundWidgets[0]);
+
+	WhitePlayer->OnTurn();
+}
+
+void AChessGameMode::SpawnHumanAndMinimax()
+{
+	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
+
+	ABlackRandomPlayer* AI1 = Cast<ABlackRandomPlayer>(Players[0]);
+	ABlackRandomPlayer* AI2 = Cast<ABlackRandomPlayer>(Players[1]);
+	auto Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+
+	GetWorldTimerManager().ClearTimer(*AI1->GetTimerHandle());
+	GetWorldTimerManager().ClearTimer(*AI2->GetTimerHandle());
+
+	AI1->Destroy();		AI2->Destroy();		Players.Empty();		Camera->Destroy();
+
+	auto* WhitePlayer = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
+	auto* BlackPlayer = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
+
+	Players.Add(WhitePlayer);
+	Players.Add(BlackPlayer);
+
+	WhitePlayer->SetTeam(EColor::W);
+	BlackPlayer->SetTeam(EColor::B);
+
+	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
+	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
+
+	WhitePlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
+
+	CB->ResetField();
+
+	TArray<UUserWidget*> FoundWidgets;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
+	CPC->MainHUDWidget = Cast<UMainHUD>(FoundWidgets[0]);
+
+	WhitePlayer->OnTurn();
 }
 
 // Winning / Draw / Losing
