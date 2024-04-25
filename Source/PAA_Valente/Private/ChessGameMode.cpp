@@ -107,14 +107,25 @@ void AChessGameMode::SpawnHumanAndRandom()
 {
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 
-	ABlackRandomPlayer* AI1 = Cast<ABlackRandomPlayer>(Players[0]);
-	ABlackRandomPlayer* AI2 = Cast<ABlackRandomPlayer>(Players[1]);
-	auto Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+	// If white's random, then it's the menu screen
+	if (Cast<ABlackRandomPlayer>(Players[0]))
+	{
+		auto* AI1 = Cast<ABlackRandomPlayer>(Players[0]);
+		GetWorldTimerManager().ClearTimer(*AI1->GetTimerHandle());
+		auto* AI2 = Cast<ABlackRandomPlayer>(Players[1]);
+		GetWorldTimerManager().ClearTimer(*AI2->GetTimerHandle());
 
-	GetWorldTimerManager().ClearTimer(*AI1->GetTimerHandle());
-	GetWorldTimerManager().ClearTimer(*AI2->GetTimerHandle());
+		auto Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 
-	AI1->Destroy();		AI2->Destroy();		Players.Empty();		Camera->Destroy();
+		AI1->Destroy();		AI2->Destroy();		Players.Empty();		Camera->Destroy();
+	}
+	else
+	{
+		auto* HumanPlayer = Cast<AWhitePlayer>(Players[0]);
+		auto* AI = Cast<ABlackRandomPlayer>(Players[1]);
+
+		HumanPlayer->Destroy();		AI->Destroy();		Players.Empty();
+	}
 
 	auto* WhitePlayer = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
 	auto* BlackPlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
