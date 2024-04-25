@@ -110,6 +110,7 @@ void AChessGameMode::SpawnHumanAndRandom()
 	// If white's random, then it's the menu screen
 	if (Cast<ABlackRandomPlayer>(Players[0]))
 	{
+		// Clear every timer
 		auto* AI1 = Cast<ABlackRandomPlayer>(Players[0]);
 		GetWorldTimerManager().ClearTimer(*AI1->GetTimerHandle());
 		auto* AI2 = Cast<ABlackRandomPlayer>(Players[1]);
@@ -117,15 +118,21 @@ void AChessGameMode::SpawnHumanAndRandom()
 
 		auto Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 
-		AI1->Destroy();		AI2->Destroy();		Players.Empty();		Camera->Destroy();
+		Camera->Destroy();
 	}
 	else
 	{
-		auto* HumanPlayer = Cast<AWhitePlayer>(Players[0]);
-		auto* AI = Cast<ABlackRandomPlayer>(Players[1]);
-
-		HumanPlayer->Destroy();		AI->Destroy();		Players.Empty();
+		if (Cast<ABlackRandomPlayer>(Players[1]))
+		{
+			GetWorldTimerManager().ClearTimer(*Cast<ABlackRandomPlayer>(Players[1])->GetTimerHandle());
+		}
+		if (Cast<ABlackMinimaxPlayer>(Players[1]))
+		{
+			GetWorldTimerManager().ClearTimer(*Cast<ABlackMinimaxPlayer>(Players[1])->GetTimerHandle());
+		}
 	}
+	
+	Players[0]->DestroyPlayer();	Players[1]->DestroyPlayer();	Players.Empty();
 
 	auto* WhitePlayer = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
 	auto* BlackPlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
@@ -154,14 +161,31 @@ void AChessGameMode::SpawnHumanAndMinimax()
 {
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 
-	ABlackRandomPlayer* AI1 = Cast<ABlackRandomPlayer>(Players[0]);
-	ABlackRandomPlayer* AI2 = Cast<ABlackRandomPlayer>(Players[1]);
-	auto Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+	// If white's random, then it's the menu screen
+	if (Cast<ABlackRandomPlayer>(Players[0]))
+	{
+		auto* AI1 = Cast<ABlackRandomPlayer>(Players[0]);
+		GetWorldTimerManager().ClearTimer(*AI1->GetTimerHandle());
+		auto* AI2 = Cast<ABlackRandomPlayer>(Players[1]);
+		GetWorldTimerManager().ClearTimer(*AI2->GetTimerHandle());
 
-	GetWorldTimerManager().ClearTimer(*AI1->GetTimerHandle());
-	GetWorldTimerManager().ClearTimer(*AI2->GetTimerHandle());
+		auto Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 
-	AI1->Destroy();		AI2->Destroy();		Players.Empty();		Camera->Destroy();
+		Camera->Destroy();
+	}
+	else
+	{
+		if (Cast<ABlackRandomPlayer>(Players[1]))
+		{
+			GetWorldTimerManager().ClearTimer(*Cast<ABlackRandomPlayer>(Players[1])->GetTimerHandle());
+		}
+		if (Cast<ABlackMinimaxPlayer>(Players[1]))
+		{
+			GetWorldTimerManager().ClearTimer(*Cast<ABlackMinimaxPlayer>(Players[1])->GetTimerHandle());
+		}
+	}
+
+	Players[0]->DestroyPlayer();	Players[1]->DestroyPlayer();	Players.Empty();
 
 	auto* WhitePlayer = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
 	auto* BlackPlayer = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());

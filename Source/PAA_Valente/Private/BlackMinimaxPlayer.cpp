@@ -45,6 +45,11 @@ bool ABlackMinimaxPlayer::GetThinkingStatus() const
 	return bThinking;
 }
 
+void ABlackMinimaxPlayer::DestroyPlayer()
+{
+	this->Destroy();
+}
+
 void ABlackMinimaxPlayer::SetTeam(EColor TeamColor)
 {
 	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());

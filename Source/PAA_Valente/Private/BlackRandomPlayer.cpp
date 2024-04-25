@@ -44,6 +44,11 @@ bool ABlackRandomPlayer::GetThinkingStatus() const
 	return bThinking;
 }
 
+void ABlackRandomPlayer::DestroyPlayer()
+{
+	this->Destroy();
+}
+
 void ABlackRandomPlayer::SetTeam(EColor TeamColor)
 {
 	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());

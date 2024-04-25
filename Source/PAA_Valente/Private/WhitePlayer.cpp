@@ -208,6 +208,11 @@ bool AWhitePlayer::GetThinkingStatus() const
 	return false;
 }
 
+void AWhitePlayer::DestroyPlayer()
+{
+	this->Destroy();
+}
+
 void AWhitePlayer::SetTeam(EColor TeamColor)
 {
 	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());

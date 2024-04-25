@@ -52,30 +52,21 @@ void AChessboard::ResetField()
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	
-	// Reset everything
-	if (!GameMode->Players[1]->GetThinkingStatus())
+	HistoryOfMoves.Empty();
+	if (CPC->MainHUDWidget)
 	{
-		HistoryOfMoves.Empty();
-		if (CPC->MainHUDWidget)
-		{
-			CPC->MainHUDWidget->DestroyButtons();
-		}
-
-		FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-		GeneratePositionsFromString(GeneratingString);
-		HistoryOfMoves.Add(GeneratingString);
-
-		SetTilesOwners();
-
-		GameMode->ResetVariablesForRematch();
-		AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-		HumanPlayer->OnTurn();
+		CPC->MainHUDWidget->DestroyButtons();
 	}
-	else
-	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Shhh! Black is thinking... Reset later."));
-		GameInstance->SetNotificationMessage(TEXT("Shhh! Black is thinking... Reset later."));
-	}
+
+	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+	GeneratePositionsFromString(GeneratingString);
+	HistoryOfMoves.Add(GeneratingString);
+
+	SetTilesOwners();
+
+	GameMode->ResetVariablesForRematch();
+	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+	HumanPlayer->OnTurn();
 }
 
 void AChessboard::GenerateField()

@@ -43,6 +43,7 @@ public:
 	virtual void OnTurn() override;
 	virtual void OnWin() override;
 	virtual bool GetThinkingStatus() const override;
+	virtual void DestroyPlayer() override;
 
 	void SetTeam(EColor TeamColor);
 	FTimerHandle* GetTimerHandle();

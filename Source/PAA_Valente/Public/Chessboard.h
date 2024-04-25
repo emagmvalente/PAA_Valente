@@ -61,8 +61,6 @@ public:
 	// Called when an instance of this class is placed (in editor) or spawned
 	virtual void OnConstruction(const FTransform& Transform) override;
 
-	// remove all signs from the field
-	UFUNCTION(BlueprintCallable)
 	void ResetField();
 
 	// generate an empty game field
