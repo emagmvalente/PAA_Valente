@@ -70,19 +70,18 @@ void ABlackMinimaxPlayer::OnTurn()
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Minimax) Turn"));
 
-	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
-
+	// Set thinking state to avoid replay when black's moving
 	bThinking = true;
 
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
 			// Declarations
-			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+			AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
 			// Find enemy team attributes
-			TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameModeCallback->CB->BlackPieces : &GameModeCallback->CB->WhitePieces;
+			TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameMode->CB->BlackPieces : &GameMode->CB->WhitePieces;
 			EColor EnemyColor = (AllyColor == EColor::W) ? EColor::B : EColor::W;
 			EOccupantColor EnemyOccupantColor = (AllyColor == EColor::W) ? EOccupantColor::B : EOccupantColor::W;
 
@@ -90,10 +89,10 @@ void ABlackMinimaxPlayer::OnTurn()
 			ATile* BestTile = FindBestMove();
 
 			// Getting previous tile
-			ATile* PreviousTilePtr = GameModeCallback->CB->TileMap[BestPiece->GetVirtualPosition()];
+			ATile* PreviousTilePtr = GameMode->CB->TileMap[BestPiece->GetVirtualPosition()];
 			FVector2D OldPosition = BestPiece->GetVirtualPosition();
 			// Getting the new tile and the new position
-			FVector TilePositioning = GameModeCallback->CB->GetRelativeLocationByXYPosition(BestTile->GetGridPosition().X, BestTile->GetGridPosition().Y);
+			FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(BestTile->GetGridPosition().X, BestTile->GetGridPosition().Y);
 			TilePositioning.Z = 10.0f;
 
 			// If it's an eating move, then delete the white piece
@@ -131,8 +130,8 @@ void ABlackMinimaxPlayer::OnTurn()
 			BestTile->SetOccupantColor(AllyOccupantColor);
 
 			// Generate the FEN string and add it to the history of moves for replays
-			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
-			GameModeCallback->CB->HistoryOfMoves.Add(LastMove);
+			FString LastMove = GameMode->CB->GenerateStringFromPositions();
+			GameMode->CB->HistoryOfMoves.Add(LastMove);
 
 			// Create dinamically the move button
 			if (MainHUD)
@@ -146,7 +145,7 @@ void ABlackMinimaxPlayer::OnTurn()
 			bThinking = false;
 			if (!Cast<APiecePawn>(BestPiece) || Cast<APiecePawn>(BestPiece)->GetVirtualPosition().X != 0)
 			{
-				GameModeCallback->TurnPlayer();
+				GameMode->TurnPlayer();
 			}
 
 		}, 3, false);
@@ -318,11 +317,11 @@ int32 ABlackMinimaxPlayer::Mini(int32 Depth, int32 Alpha, int32 Beta)
 	return Min;
 }
 
+// Maxi should be commented as Mini
 int32 ABlackMinimaxPlayer::Maxi(int32 Depth, int32 Alpha, int32 Beta)
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
-	// Find enemy team attributes
 	TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameMode->CB->BlackPieces : &GameMode->CB->WhitePieces;
 	EColor EnemyColor = (AllyColor == EColor::W) ? EColor::B : EColor::W;
 	EOccupantColor EnemyOccupantColor = (AllyColor == EColor::W) ? EOccupantColor::B : EOccupantColor::W;

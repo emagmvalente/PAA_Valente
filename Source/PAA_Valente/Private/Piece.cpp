@@ -94,7 +94,7 @@ void APiece::DecolorPossibleMoves()
 	UMaterialInterface* LoadBlackMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Black"));
 
 	// Decolor every tile, it's a little bit rudimental but it's the best way to decolor
-	for (ATile* Tile : GameMode->CB->GetTileArray())
+	for (ATile* Tile : GameMode->CB->TileArray)
 	{
 		FVector2D TilePosition = Tile->GetGridPosition();
 		if ((static_cast<int>(TilePosition.X) + static_cast<int>(TilePosition.Y)) % 2 == 0)

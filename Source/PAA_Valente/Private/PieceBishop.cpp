@@ -50,8 +50,8 @@ void APieceBishop::PossibleMoves()
 
 		// For every direction check if the tile is occupied, if not add a possible move.
 		// If a piece interrupts a path, then check the color.
-		// If white -> break
-		// If black -> add in moves
+		// If ally -> break
+		// If enemy -> add in moves
 		for (const FVector2D& Direction : Directions)
 		{
 			FVector2D NextPosition = VirtualPosition + Direction;

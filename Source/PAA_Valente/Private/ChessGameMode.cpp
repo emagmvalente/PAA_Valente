@@ -23,18 +23,16 @@ AChessGameMode::AChessGameMode()
 	FieldSize = 8;
 	TurnFlag = 0;
 	MovesWithoutCaptureOrPawnMove = 0;
+	bOnMenu = false;
 }
 
 void AChessGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	auto* WhitePlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
-	auto* BlackPlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+	bOnMenu = true;
 
-	Players.Add(WhitePlayer);
-	Players.Add(BlackPlayer);
-
+	// Chessboard creation
 	if (CBClass != nullptr)
 	{
 		CB = GetWorld()->SpawnActor<AChessboard>(CBClass);
@@ -45,12 +43,16 @@ void AChessGameMode::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("Chessboard is null"));
 	}
 
-	WhitePlayer->SetTeam(EColor::W);
-	BlackPlayer->SetTeam(EColor::B);
+	// To make the autoplay effect, only for the menu, first player will be spawned as a random player
+	auto* WhitePlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+	auto* BlackPlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+	Players.Add(WhitePlayer);	WhitePlayer->SetTeam(EColor::W);
+	Players.Add(BlackPlayer);	BlackPlayer->SetTeam(EColor::B);
 
 	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
 	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
 
+	// Create a "HumanPlayer" that cannot play, but can see the chessboard
 	auto Camera = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
 	Camera->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
@@ -61,7 +63,6 @@ void AChessGameMode::BeginPlay()
 void AChessGameMode::TurnPlayer()
 {
 	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-
 	GameInstance->SetNotificationMessage(TEXT(""));
 
 	// Draw case
@@ -86,7 +87,7 @@ void AChessGameMode::TurnPlayer()
 			GameInstance->SetNotificationMessage(TEXT("Check!"));
 		}
 
-		// Pass the turn
+		// Anyway pass the turn
 		TurnFlag = (TurnFlag == 0) ? 1 : 0;
 		Players[TurnFlag]->OnTurn();
 	}
@@ -103,14 +104,14 @@ int32 AChessGameMode::GetTurnFlag() const
 	return TurnFlag;
 }
 
-void AChessGameMode::SpawnHumanAndRandom()
+void AChessGameMode::SpawnHumanAndAI(bool bSpawnMinimax)
 {
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 
-	// If white's random, then it's the menu screen
-	if (Cast<ABlackRandomPlayer>(Players[0]))
+	// Menu case: clear every timer and destroy the camera
+	if (bOnMenu)
 	{
-		// Clear every timer
+		bOnMenu = false;
 		auto* AI1 = Cast<ABlackRandomPlayer>(Players[0]);
 		GetWorldTimerManager().ClearTimer(*AI1->GetTimerHandle());
 		auto* AI2 = Cast<ABlackRandomPlayer>(Players[1]);
@@ -120,6 +121,7 @@ void AChessGameMode::SpawnHumanAndRandom()
 
 		Camera->Destroy();
 	}
+	// Else: clear every timer
 	else
 	{
 		if (Cast<ABlackRandomPlayer>(Players[1]))
@@ -134,67 +136,24 @@ void AChessGameMode::SpawnHumanAndRandom()
 	
 	Players[0]->DestroyPlayer();	Players[1]->DestroyPlayer();	Players.Empty();
 
+	// Human creation
 	auto* WhitePlayer = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
-	auto* BlackPlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
-
 	Players.Add(WhitePlayer);
-	Players.Add(BlackPlayer);
-
 	WhitePlayer->SetTeam(EColor::W);
-	BlackPlayer->SetTeam(EColor::B);
 
-	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
-	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
-
-	WhitePlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
-
-	CB->ResetField();
-
-	TArray<UUserWidget*> FoundWidgets;
-	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
-	CPC->MainHUDWidget = Cast<UMainHUD>(FoundWidgets[0]);
-
-	WhitePlayer->OnTurn();
-}
-
-void AChessGameMode::SpawnHumanAndMinimax()
-{
-	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
-
-	// If white's random, then it's the menu screen
-	if (Cast<ABlackRandomPlayer>(Players[0]))
+	// Black creation
+	if (bSpawnMinimax)
 	{
-		auto* AI1 = Cast<ABlackRandomPlayer>(Players[0]);
-		GetWorldTimerManager().ClearTimer(*AI1->GetTimerHandle());
-		auto* AI2 = Cast<ABlackRandomPlayer>(Players[1]);
-		GetWorldTimerManager().ClearTimer(*AI2->GetTimerHandle());
-
-		auto Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-
-		Camera->Destroy();
+		auto* BlackPlayer = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
+		Players.Add(BlackPlayer);
+		BlackPlayer->SetTeam(EColor::B);
 	}
 	else
 	{
-		if (Cast<ABlackRandomPlayer>(Players[1]))
-		{
-			GetWorldTimerManager().ClearTimer(*Cast<ABlackRandomPlayer>(Players[1])->GetTimerHandle());
-		}
-		if (Cast<ABlackMinimaxPlayer>(Players[1]))
-		{
-			GetWorldTimerManager().ClearTimer(*Cast<ABlackMinimaxPlayer>(Players[1])->GetTimerHandle());
-		}
+		auto* BlackPlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+		Players.Add(BlackPlayer);
+		BlackPlayer->SetTeam(EColor::B);
 	}
-
-	Players[0]->DestroyPlayer();	Players[1]->DestroyPlayer();	Players.Empty();
-
-	auto* WhitePlayer = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
-	auto* BlackPlayer = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
-
-	Players.Add(WhitePlayer);
-	Players.Add(BlackPlayer);
-
-	WhitePlayer->SetTeam(EColor::W);
-	BlackPlayer->SetTeam(EColor::B);
 
 	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
 	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
@@ -217,14 +176,13 @@ bool AChessGameMode::VerifyCheck()
 	ATile* EnemyKingTile = (TurnFlag == 0) ? CB->TileMap[CB->Kings[1]->GetVirtualPosition()] : 
 											 CB->TileMap[CB->Kings[0]->GetVirtualPosition()];
 
-	TArray<APiece*> AllyPieces = (TurnFlag == 0) ? CB->WhitePieces : CB->BlackPieces;
+	TArray<APiece*>* AllyPieces = (TurnFlag == 0) ? &CB->WhitePieces : &CB->BlackPieces;
 
-	for (APiece* AllyPiece : AllyPieces)
+	for (APiece* AllyPiece : *AllyPieces)
 	{
 		AllyPiece->PossibleMoves();
 		AllyPiece->FilterOnlyLegalMoves();
 
-		// Check detection
 		if (AllyPiece->Moves.Contains(EnemyKingTile))
 		{
 			return true;
@@ -236,9 +194,9 @@ bool AChessGameMode::VerifyCheck()
 
 bool AChessGameMode::VerifyCheckmate()
 {
-	TArray<APiece*> EnemyPieces = (TurnFlag == 0) ? CB->BlackPieces : CB->WhitePieces;
+	TArray<APiece*>* EnemyPieces = (TurnFlag == 0) ? &CB->BlackPieces : &CB->WhitePieces;
 
-	for (APiece* EnemyPiece : EnemyPieces)
+	for (APiece* EnemyPiece : *EnemyPieces)
 	{
 		EnemyPiece->PossibleMoves();
 		EnemyPiece->FilterOnlyLegalMoves();

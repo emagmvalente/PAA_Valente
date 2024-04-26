@@ -39,7 +39,6 @@ void APieceKing::PossibleMoves()
 {
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	
 	if (GameMode->CB->TileMap.Contains(VirtualPosition))
 	{
 		// Emptying from old moves (if there are any)

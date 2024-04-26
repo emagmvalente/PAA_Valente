@@ -71,18 +71,11 @@ public:
 
 	void SetTilesOwners();
 
-	// return a (x,y) position given a hit (click) on a field tile
-	FVector2D GetPosition(const FHitResult& Hit);
-
-	// Con "Relative Position" si intende la posizione nella griglia, con "Position" si intende la posizione nello spazio di Unreal
-
 	// return a relative position given (x,y) position
 	FVector GetRelativeLocationByXYPosition(const int32 InX, const int32 InY) const;
 
 	// return (x,y) position given a relative position
 	FVector2D GetXYPositionByRelativeLocation(const FVector& Location) const;
-
-	TArray<ATile*> GetTileArray() const;
 
 protected:
 	// Called when the game starts or when spawned

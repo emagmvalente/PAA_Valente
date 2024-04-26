@@ -68,19 +68,19 @@ void ABlackRandomPlayer::OnTurn()
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
+	// Set thinking state to avoid replay when black's moving
 	bThinking = true;
 
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
 			// Declarations
-			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+			AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
 			// Find enemy team attributes
-			TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameModeCallback->CB->BlackPieces : &GameModeCallback->CB->WhitePieces;
+			TArray<APiece*>* EnemyPieces = (AllyColor == EColor::W) ? &GameMode->CB->BlackPieces : &GameMode->CB->WhitePieces;
 			EColor EnemyColor = (AllyColor == EColor::W) ? EColor::B : EColor::W;
 			EOccupantColor EnemyOccupantColor = (AllyColor == EColor::W) ? EOccupantColor::B : EOccupantColor::W;
 
@@ -98,13 +98,13 @@ void ABlackRandomPlayer::OnTurn()
 			} while (ChosenPiece->Moves.Num() == 0);
 
 			// Getting previous tile
-			ATile* PreviousTilePtr = GameModeCallback->CB->TileMap[ChosenPiece->GetVirtualPosition()];
+			ATile* PreviousTilePtr = GameMode->CB->TileMap[ChosenPiece->GetVirtualPosition()];
 			FVector2D OldPosition = ChosenPiece->GetVirtualPosition();
 
 			// Getting the new tile and the new position
 			int32 RandIdx1 = FMath::Rand() % ChosenPiece->Moves.Num();
 			ATile* DestinationTile = ChosenPiece->Moves[RandIdx1];
-			FVector TilePositioning = GameModeCallback->CB->GetRelativeLocationByXYPosition(DestinationTile->GetGridPosition().X, DestinationTile->GetGridPosition().Y);
+			FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(DestinationTile->GetGridPosition().X, DestinationTile->GetGridPosition().Y);
 			TilePositioning.Z = 10.0f;
 
 			// If it's an eating move, then delete the white piece
@@ -142,8 +142,8 @@ void ABlackRandomPlayer::OnTurn()
 			DestinationTile->SetOccupantColor(AllyOccupantColor);
 
 			// Generate the FEN string and add it to the history of moves for replays
-			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
-			GameModeCallback->CB->HistoryOfMoves.Add(LastMove);
+			FString LastMove = GameMode->CB->GenerateStringFromPositions();
+			GameMode->CB->HistoryOfMoves.Add(LastMove);
 
 			// Create dinamically the move button
 			if (MainHUD)
@@ -157,7 +157,7 @@ void ABlackRandomPlayer::OnTurn()
 			bThinking = false;
 			if (!Cast<APiecePawn>(ChosenPiece) || Cast<APiecePawn>(ChosenPiece)->GetVirtualPosition().X != 0)
 			{
-				GameModeCallback->TurnPlayer();
+				GameMode->TurnPlayer();
 			}
 
 
