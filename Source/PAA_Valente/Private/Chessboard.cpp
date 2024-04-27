@@ -20,9 +20,9 @@ AChessboard::AChessboard()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-	Size = 8;
+	FieldSize = 8;
 	TileSize = 120;
-	Kings.SetNum(2);
+	KingsArray.SetNum(2);
 }
 
 void AChessboard::OnConstruction(const FTransform& Transform)
@@ -74,9 +74,9 @@ void AChessboard::GenerateField()
 	UMaterialInterface* LoadWhiteMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_White"));
 	UMaterialInterface* LoadBlackMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Black"));
 
-	for (int32 x = 0; x < Size; x++)
+	for (int32 x = 0; x < FieldSize; x++)
 	{
-		for (int32 y = 0; y < Size; y++)
+		for (int32 y = 0; y < FieldSize; y++)
 		{
 			FVector Location = AChessboard::GetRelativeLocationByXYPosition(x, y);
 			ATile* Obj = GetWorld()->SpawnActor<ATile>(TileClass, Location, FRotator::ZeroRotator);
@@ -112,17 +112,17 @@ FString AChessboard::GenerateStringFromPositions()
 		int32 EmptyCount = 0;
 		for (int32 Col = 0; Col < 8; ++Col)
 		{
-			ATile** CurrentTile = TileMap.Find(FVector2D(Row, Col));
+			ATile* CurrentTile = TileMap[FVector2D(Row, Col)];
 
 			// White piece case
-			if ((*CurrentTile)->GetOccupantColor() == EOccupantColor::W)
+			if (CurrentTile->GetOccupantColor() == EOccupantColor::W)
 			{
 				for (int32 i = 0; i < WhitePieces.Num(); ++i)
 				{
 					FVector Location(Row, Col, 10.f);
 					APiece* PieceFound = WhitePieces[i];
 
-					if (Cast<APiecePawn>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					if (PieceFound->IsA<APiecePawn>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -132,7 +132,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('P');
 						break;
 					}
-					else if (Cast<APieceKing>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceKing>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -143,7 +143,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('K');
 						break;
 					}
-					else if (Cast<APieceKnight>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceKnight>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -153,7 +153,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('N');
 						break;
 					}
-					else if (Cast<APieceQueen>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceQueen>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -163,7 +163,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('Q');
 						break;
 					}
-					else if (Cast<APieceRook>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceRook>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -173,7 +173,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('R');
 						break;
 					}
-					else if (Cast<APieceBishop>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceBishop>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -187,14 +187,14 @@ FString AChessboard::GenerateStringFromPositions()
 			}
 
 			// Black piece case
-			else if ((*CurrentTile)->GetOccupantColor() == EOccupantColor::B)
+			else if (CurrentTile->GetOccupantColor() == EOccupantColor::B)
 			{
 				for (int32 i = 0; i < BlackPieces.Num(); ++i)
 				{
 					FVector Location(Row, Col, 10.f);
 					APiece* PieceFound = BlackPieces[i];
 
-					if (Cast<APiecePawn>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					if (PieceFound->IsA<APiecePawn>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -204,7 +204,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('p');
 						break;
 					}
-					else if (Cast<APieceKing>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceKing>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -214,7 +214,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('k');
 						break;
 					}
-					else if (Cast<APieceKnight>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceKnight>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -224,7 +224,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('n');
 						break;
 					}
-					else if (Cast<APieceQueen>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceQueen>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -234,7 +234,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('q');
 						break;
 					}
-					else if (Cast<APieceRook>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceRook>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -244,7 +244,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('r');
 						break;
 					}
-					else if (Cast<APieceBishop>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceBishop>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -392,7 +392,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APieceKing>(KingBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::W);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
-				Kings[0] = (Obj);
+				KingsArray[0] = (Obj);
 				WhitePieces.Add(Obj);
 				break;
 
@@ -447,7 +447,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetColor(EColor::B);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackKing);
-				Kings[1] = (Obj);
+				KingsArray[1] = (Obj);
 				BlackPieces.Add(Obj); 
 				break;
 

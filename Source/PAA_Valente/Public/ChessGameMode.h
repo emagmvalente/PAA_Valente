@@ -40,13 +40,12 @@ public:
 	TSubclassOf<AChessboard> CBClass;
 	UPROPERTY(VisibleAnywhere)
 	AChessboard* CB;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 FieldSize;
 
 	// Logic and Utilities - METHODS
 	void TurnPlayer();
 	void ResetVariablesForRematch();
 	int32 GetTurnFlag() const;
+	bool GetOnMenu() const;
 	UFUNCTION(BlueprintCallable)
 	void SpawnHumanAndAI(bool bSpawnMinimax);
 

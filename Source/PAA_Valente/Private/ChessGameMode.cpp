@@ -20,7 +20,6 @@ AChessGameMode::AChessGameMode()
 {
 	DefaultPawnClass = AWhitePlayer::StaticClass();
 	PlayerControllerClass = AChessPlayerController::StaticClass();
-	FieldSize = 8;
 	TurnFlag = 0;
 	MovesWithoutCaptureOrPawnMove = 0;
 	bOnMenu = false;
@@ -31,12 +30,12 @@ void AChessGameMode::BeginPlay()
 	Super::BeginPlay();
 
 	bOnMenu = true;
+	const int32 FieldSize = 8;
 
 	// Chessboard creation
 	if (CBClass != nullptr)
 	{
 		CB = GetWorld()->SpawnActor<AChessboard>(CBClass);
-		CB->Size = FieldSize;
 	}
 	else
 	{
@@ -104,9 +103,15 @@ int32 AChessGameMode::GetTurnFlag() const
 	return TurnFlag;
 }
 
+bool AChessGameMode::GetOnMenu() const
+{
+	return bOnMenu;
+}
+
 void AChessGameMode::SpawnHumanAndAI(bool bSpawnMinimax)
 {
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
+	const int32 FieldSize = 8;
 
 	// Menu case: clear every timer and destroy the camera
 	if (bOnMenu)
@@ -173,12 +178,12 @@ void AChessGameMode::SpawnHumanAndAI(bool bSpawnMinimax)
 
 bool AChessGameMode::VerifyCheck()
 {
-	ATile* EnemyKingTile = (TurnFlag == 0) ? CB->TileMap[CB->Kings[1]->GetVirtualPosition()] : 
-											 CB->TileMap[CB->Kings[0]->GetVirtualPosition()];
+	ATile* EnemyKingTile = (TurnFlag == 0) ? CB->TileMap[CB->KingsArray[1]->GetVirtualPosition()] :
+											 CB->TileMap[CB->KingsArray[0]->GetVirtualPosition()];
 
-	TArray<APiece*>* AllyPieces = (TurnFlag == 0) ? &CB->WhitePieces : &CB->BlackPieces;
+	TArray<APiece*> AllyPieces = (TurnFlag == 0) ? CB->WhitePieces : CB->BlackPieces;
 
-	for (APiece* AllyPiece : *AllyPieces)
+	for (APiece* AllyPiece : AllyPieces)
 	{
 		AllyPiece->PossibleMoves();
 		AllyPiece->FilterOnlyLegalMoves();
@@ -194,9 +199,9 @@ bool AChessGameMode::VerifyCheck()
 
 bool AChessGameMode::VerifyCheckmate()
 {
-	TArray<APiece*>* EnemyPieces = (TurnFlag == 0) ? &CB->BlackPieces : &CB->WhitePieces;
+	TArray<APiece*> EnemyPieces = (TurnFlag == 0) ? CB->BlackPieces : CB->WhitePieces;
 
-	for (APiece* EnemyPiece : *EnemyPieces)
+	for (APiece* EnemyPiece : EnemyPieces)
 	{
 		EnemyPiece->PossibleMoves();
 		EnemyPiece->FilterOnlyLegalMoves();

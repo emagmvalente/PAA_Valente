@@ -10,14 +10,11 @@
 
 class APiece;
 
-// macro declaration for a dynamic multicast delegate
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReset);
-
 UCLASS()
 class PAA_VALENTE_API AChessboard : public AActor
 {
 	GENERATED_BODY()
-	
+
 public:
 	// Keeps track of the chessboard's tiles
 	UPROPERTY(Transient)
@@ -26,7 +23,6 @@ public:
 	// Array of white pieces and black pieces currently on the board
 	TArray<APiece*> WhitePieces;
 	TArray<APiece*> BlackPieces;
-	TArray<APiece*> Kings;
 
 	// History of old moves for replays
 	TArray<FString> HistoryOfMoves;
@@ -34,10 +30,6 @@ public:
 	// Given a position returns a tile
 	UPROPERTY(Transient)
 	TMap<FVector2D, ATile*> TileMap;
-
-	// size of field
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 Size;
 
 	// TSubclassOf template class that provides UClass type safety
 	UPROPERTY(EditDefaultsOnly)
@@ -54,6 +46,8 @@ public:
 	// tile size
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float CBFrameSize;
+
+	TArray<APiece*> KingsArray;
 
 	// Sets default values for this actor's properties
 	AChessboard();
@@ -80,5 +74,5 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	int32 FieldSize;
 };

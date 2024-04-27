@@ -51,7 +51,7 @@ void ABlackRandomPlayer::DestroyPlayer()
 
 void ABlackRandomPlayer::SetTeam(EColor TeamColor)
 {
-	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
+	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 
 	AllyColor = TeamColor;
 	AllyOccupantColor = (TeamColor == EColor::W) ? EOccupantColor::W : EOccupantColor::B;

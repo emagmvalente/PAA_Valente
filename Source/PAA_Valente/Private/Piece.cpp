@@ -53,7 +53,6 @@ void APiece::ColorPossibleMoves()
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
 	
-	
 	UMaterialInterface* LoadE = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_E"));
 	UMaterialInterface* LoadW = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_W"));
 	UMaterialInterface* LoadB = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_B"));
@@ -123,12 +122,12 @@ void APiece::FilterOnlyLegalMoves()
 		// Assignments
 		if (Color == EColor::W)
 		{
-			KingTile = GameMode->CB->TileMap[GameMode->CB->Kings[0]->VirtualPosition];
+			KingTile = GameMode->CB->TileMap[GameMode->CB->KingsArray[0]->VirtualPosition];
 			EnemyPieces = GameMode->CB->BlackPieces;
 		}
 		else if (Color == EColor::B)
 		{
-			KingTile = GameMode->CB->TileMap[GameMode->CB->Kings[1]->VirtualPosition];
+			KingTile = GameMode->CB->TileMap[GameMode->CB->KingsArray[1]->VirtualPosition];
 			EnemyPieces = GameMode->CB->WhitePieces;
 		}
 
