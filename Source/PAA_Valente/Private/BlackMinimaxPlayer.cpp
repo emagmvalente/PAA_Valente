@@ -120,7 +120,10 @@ void ABlackMinimaxPlayer::OnTurn()
 			{
 				if (Cast<APiecePawn>(BestPiece)->GetIsFirstMove())
 				{
+					// To comunicate the first move
 					Cast<APiecePawn>(BestPiece)->PawnMovedForTheFirstTime();
+					// To comunicate a general move for 50 moves rule
+					GameMode->APawnHasMoved();
 				}
 				Cast<APiecePawn>(BestPiece)->Promote();
 			}

@@ -148,7 +148,10 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 			{
 				if (Cast<APiecePawn>(SelectedPieceToMove)->GetIsFirstMove())
 				{
+					// To comunicate the first move
 					Cast<APiecePawn>(SelectedPieceToMove)->PawnMovedForTheFirstTime();
+					// To comunicate a general move for 50 moves rule
+					GameMode->APawnHasMoved();
 				}
 				Cast<APiecePawn>(SelectedPieceToMove)->Promote();
 			}

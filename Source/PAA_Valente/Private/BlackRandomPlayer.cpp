@@ -132,7 +132,10 @@ void ABlackRandomPlayer::OnTurn()
 			{
 				if (Cast<APiecePawn>(ChosenPiece)->GetIsFirstMove())
 				{
+					// To comunicate the first move
 					Cast<APiecePawn>(ChosenPiece)->PawnMovedForTheFirstTime();
+					// To comunicate a general move for 50 moves rule
+					GameMode->APawnHasMoved();
 				}
 				Cast<APiecePawn>(ChosenPiece)->Promote();
 			}

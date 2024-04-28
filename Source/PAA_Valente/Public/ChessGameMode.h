@@ -21,6 +21,7 @@ class PAA_VALENTE_API AChessGameMode : public AGameModeBase
 	int32 TurnFlag;
 	int32 MovesWithoutCaptureOrPawnMove;
 	bool bOnMenu;
+	bool bPawnMoved;
 
 public:
 
@@ -43,11 +44,11 @@ public:
 
 	// Logic and Utilities - METHODS
 	void TurnPlayer();
-	void ResetVariablesForRematch();
 	int32 GetTurnFlag() const;
 	bool GetOnMenu() const;
 	UFUNCTION(BlueprintCallable)
 	void SpawnHumanAndAI(bool bSpawnMinimax);
+	void APawnHasMoved();
 
 	// Winning / Draw / Losing - METHODS
 	bool VerifyCheck();

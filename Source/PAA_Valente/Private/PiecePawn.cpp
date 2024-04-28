@@ -50,7 +50,7 @@ void APiecePawn::Promote()
 	}
 
 	// If it's black, chose randomly
-	else if ((Color == EColor::B && VirtualPosition.X == 0) || Color == EColor::W && VirtualPosition.X == 7 && !Cast<AWhitePlayer>(GameMode->Players[0]))
+	else if ((Color == EColor::B && VirtualPosition.X == 0) || (Color == EColor::W && VirtualPosition.X == 7 && !Cast<AWhitePlayer>(GameMode->Players[0])))
 	{
 		GameMode->PawnToPromote = this;
 		int32 RandIdx0 = FMath::Rand() % 4;

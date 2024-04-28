@@ -39,10 +39,10 @@ void AChessboard::BeginPlay()
 	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
 	GeneratePositionsFromString(GeneratingString);
+	SetTilesOwners();
+
 	// Using FEN notation for the replay mechanic too
 	HistoryOfMoves.Add(GeneratingString);
-
-	SetTilesOwners();
 }
 
 void AChessboard::ResetField()
@@ -63,10 +63,6 @@ void AChessboard::ResetField()
 	HistoryOfMoves.Add(GeneratingString);
 
 	SetTilesOwners();
-
-	GameMode->ResetVariablesForRematch();
-	AWhitePlayer* WhitePlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	WhitePlayer->OnTurn();
 }
 
 void AChessboard::GenerateField()
@@ -464,12 +460,12 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 
 void AChessboard::SetTilesOwners()
 {
-	TArray<APiece*>* AllPieces = &WhitePieces;
-	AllPieces->Append(BlackPieces);
+	TArray<APiece*> AllPieces = WhitePieces;
+	AllPieces.Append(BlackPieces);
 
 	for (ATile* Tile : TileArray)
 	{
-		for (APiece* Piece : *AllPieces)
+		for (APiece* Piece : AllPieces)
 		{
 			if (Piece->GetActorLocation() == FVector(Tile->GetActorLocation().X, Tile->GetActorLocation().Y, 10.f))
 			{
@@ -485,6 +481,7 @@ void AChessboard::SetTilesOwners()
 			}
 		}
 	}
+	AllPieces.Empty();
 }
 
 FVector AChessboard::GetRelativeLocationByXYPosition(const int32 InX, const int32 InY) const

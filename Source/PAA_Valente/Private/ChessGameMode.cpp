@@ -23,6 +23,7 @@ AChessGameMode::AChessGameMode()
 	TurnFlag = 0;
 	MovesWithoutCaptureOrPawnMove = 0;
 	bOnMenu = false;
+	bPawnMoved = false;
 }
 
 void AChessGameMode::BeginPlay()
@@ -42,7 +43,7 @@ void AChessGameMode::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("Chessboard is null"));
 	}
 
-	// To make the autoplay effect, only for the menu, first player will be spawned as a random player
+	// To make the autoplay effect, only for the menu, the first player will be spawned as a random player
 	auto* WhitePlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 	auto* BlackPlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 	Players.Add(WhitePlayer);	WhitePlayer->SetTeam(EColor::W);
@@ -92,12 +93,6 @@ void AChessGameMode::TurnPlayer()
 	}
 }
 
-void AChessGameMode::ResetVariablesForRematch()
-{
-	TurnFlag = 0;
-	MovesWithoutCaptureOrPawnMove = 0;
-}
-
 int32 AChessGameMode::GetTurnFlag() const
 {
 	return TurnFlag;
@@ -108,12 +103,14 @@ bool AChessGameMode::GetOnMenu() const
 	return bOnMenu;
 }
 
+// Note: as we spawn a human and an AI, we could spawn two AIs, but it wouldn't be that funny to play...
 void AChessGameMode::SpawnHumanAndAI(bool bSpawnMinimax)
 {
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
+	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	const int32 FieldSize = 8;
 
-	// Menu case: clear every timer and destroy the camera
+	// Menu case: clear every timer and destroy the camera, then get the HUD reference
 	if (bOnMenu)
 	{
 		bOnMenu = false;
@@ -125,10 +122,16 @@ void AChessGameMode::SpawnHumanAndAI(bool bSpawnMinimax)
 		auto Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 
 		Camera->Destroy();
+
+		TArray<UUserWidget*> FoundWidgets;
+		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
+		CPC->MainHUDWidget = Cast<UMainHUD>(FoundWidgets[0]);
 	}
-	// Else: clear every timer
+	// Else: clear every timer and reset any type of notification
 	else
 	{
+		GameInstance->SetNotificationMessage(TEXT(""));
+
 		if (Cast<ABlackRandomPlayer>(Players[1]))
 		{
 			GetWorldTimerManager().ClearTimer(*Cast<ABlackRandomPlayer>(Players[1])->GetTimerHandle());
@@ -165,17 +168,20 @@ void AChessGameMode::SpawnHumanAndAI(bool bSpawnMinimax)
 
 	WhitePlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
+	// Reset actual gamefield and restore variables
 	CB->ResetField();
-
-	TArray<UUserWidget*> FoundWidgets;
-	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
-	CPC->MainHUDWidget = Cast<UMainHUD>(FoundWidgets[0]);
+	TurnFlag = 0;
+	MovesWithoutCaptureOrPawnMove = 0;
 
 	WhitePlayer->OnTurn();
 }
 
-// Winning / Draw / Losing
+void AChessGameMode::APawnHasMoved()
+{
+	bPawnMoved = true;
+}
 
+// Winning / Draw / Losing
 bool AChessGameMode::VerifyCheck()
 {
 	ATile* EnemyKingTile = (TurnFlag == 0) ? CB->TileMap[CB->KingsArray[1]->GetVirtualPosition()] :
@@ -219,7 +225,7 @@ bool AChessGameMode::VerifyDraw()
 	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 
 	// TODO: Dead Positions
-	if (CheckThreeOccurrences() || KingvsKing() || /*FiftyMovesRule() ||*/ Stalemate())
+	if (CheckThreeOccurrences() || KingvsKing() || FiftyMovesRule() || Stalemate())
 	{
 		// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
 		GameInstance->SetTurnMessage(TEXT("Draw!"));
@@ -232,7 +238,7 @@ bool AChessGameMode::CheckThreeOccurrences()
 {
 	TMap<FString, int32> CountMap;
 
-	// Conta quante volte ogni elemento appare nell'array
+	// Counts how many times the string is in the array
 	for (FString Occurency : CB->HistoryOfMoves) {
 		if (!CountMap.Contains(Occurency)) {
 			CountMap.Add(Occurency, 1);
@@ -242,7 +248,7 @@ bool AChessGameMode::CheckThreeOccurrences()
 		}
 	}
 
-	// Verifica se uno qualsiasi degli elementi appare tre volte
+	// See if any of the strings appear three times
 	for (const auto& Pair : CountMap) {
 		if (Pair.Value >= 3) {
 			return true;
@@ -262,7 +268,6 @@ bool AChessGameMode::KingvsKing()
 
 bool AChessGameMode::FiftyMovesRule()
 {
-	/*
 	// If the number reaches 50, then it's a draw situation
 	if (MovesWithoutCaptureOrPawnMove >= 50)
 	{
@@ -301,28 +306,15 @@ bool AChessGameMode::FiftyMovesRule()
 		}
 	}
 
-	// Pawn movement check
-	for (APiece* WhitePawn : CB->WhitePieces)
+	// Pawn moved check
+	if (bPawnMoved)
 	{
-		if (Cast<APiecePawn>(WhitePawn) && Cast<APiecePawn>(WhitePawn)->GetTurnsWithoutMoving() > 0)
-		{
-			bWasMovedAPawn = true;
-			break;
-		}
-	}
-	if (!bWasMovedAPawn)
-	{
-		for (APiece* BlackPawn : CB->BlackPieces)
-		{
-			if (Cast<APiecePawn>(BlackPawn) && Cast<APiecePawn>(BlackPawn)->GetTurnsWithoutMoving() > 0)
-			{
-				bWasMovedAPawn = true;
-				break;
-			}
-		}
+		bPawnMoved = false;
+		MovesWithoutCaptureOrPawnMove = 0;
+		return false;
 	}
 
-	if ((NumberOfPiecesNow == NumberOfPiecesInPreviousMove) && !bWasMovedAPawn)
+	if (NumberOfPiecesNow == NumberOfPiecesInPreviousMove)
 	{
 		MovesWithoutCaptureOrPawnMove++;
 	}
@@ -330,7 +322,6 @@ bool AChessGameMode::FiftyMovesRule()
 	{
 		MovesWithoutCaptureOrPawnMove = 0;
 	}
-	*/
 
 	return false;
 }
