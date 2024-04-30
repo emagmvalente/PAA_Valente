@@ -4,6 +4,8 @@
 #include "BlackRandomPlayer.h"
 #include "Piece.h"
 #include "PiecePawn.h"
+#include "PieceRook.h"
+#include "PieceKing.h"
 #include "EngineUtils.h"
 #include "MainHUD.h"
 #include "ChessPlayerController.h"
@@ -122,22 +124,40 @@ void ABlackRandomPlayer::OnTurn()
 					}
 				}
 			}
+			else if (ChosenPiece->IsA<APieceKing>() && DestinationTile->GetOccupantColor() == AllyOccupantColor)
+			{
+				APiece* RookToCastleWith = nullptr;
+				for (APiece* Rook : Cast<APieceKing>(ChosenPiece)->Rooks)
+				{
+					if (Rook->GetVirtualPosition() == DestinationTile->GetGridPosition())
+					{
+						RookToCastleWith = Rook;
+						break;
+					}
+				}
+				bThinking = false;
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Il nero arrocca"));
+				Cast<APieceKing>(ChosenPiece)->PerformCastling(RookToCastleWith);
+				return;
+			}
 
 			// Moving the piece
 			ChosenPiece->SetActorLocation(TilePositioning);
 			ChosenPiece->SetVirtualPosition(DestinationTile->GetGridPosition());
 
-			// Promote procedure
+			// First move procedure
+			if (!ChosenPiece->GetWasMoved())
+			{
+				// To comunicate the first move
+				ChosenPiece->SetWasMoved(true);
+			}
+
+			// Pawn tie / promote check procedure
 			if (ChosenPiece->IsA<APiecePawn>())
 			{
-				if (Cast<APiecePawn>(ChosenPiece)->GetIsFirstMove())
-				{
-					// To comunicate the first move
-					Cast<APiecePawn>(ChosenPiece)->PawnMovedForTheFirstTime();
-					// To comunicate a general move for 50 moves rule
-					GameMode->APawnHasMoved();
-				}
 				Cast<APiecePawn>(ChosenPiece)->Promote();
+				// To comunicate a general move for 50 moves rule
+				GameMode->APawnHasMoved();
 			}
 
 			// Setting the actual tile occupied by a black, setting the old one empty

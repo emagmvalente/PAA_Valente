@@ -6,6 +6,8 @@
 #include "PiecePawn.h"
 #include "ChessGameMode.h"
 #include "ChessPlayerController.h"
+#include "PieceKing.h"
+#include "PieceRook.h"
 #include "MainHUD.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
@@ -71,12 +73,28 @@ void AWhitePlayer::PieceSelection()
 			// Ally Piece
 			if (PieceClicked->GetColor() == AllyColor)
 			{
-				// Save the piece
-				SelectedPieceToMove = PieceClicked;
+				if (SelectedPieceToMove && SelectedPieceToMove->IsA<APieceKing>() && PieceClicked->IsA<APieceRook>())
+				{
+					
+					if (SelectedPieceToMove->Moves.Contains(GameMode->CB->TileMap[PieceClicked->GetVirtualPosition()]))
+					{
+						// Deleting possible old colorations
+						PieceClicked->DecolorPossibleMoves();
+						IsMyTurn = false;
+						Cast<APieceKing>(SelectedPieceToMove)->PerformCastling(PieceClicked);
+						SelectedPieceToMove = nullptr;
+					}
+				}
+				if (IsMyTurn)
+				{
 
-				// Deleting possible old colorations
-				PieceClicked->DecolorPossibleMoves();
-				PieceClicked->ColorPossibleMoves();
+					// Deleting possible old colorations
+					PieceClicked->DecolorPossibleMoves();
+
+					// Save the piece
+					SelectedPieceToMove = PieceClicked;
+					PieceClicked->ColorPossibleMoves();
+				}
 			}
 			// Enemy Piece
 			else if (PieceClicked->GetColor() == EnemyColor && SelectedPieceToMove != nullptr)
@@ -108,12 +126,8 @@ void AWhitePlayer::PieceSelection()
 
 	else if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() != LastMoveDone))
 	{
-		if (SelectedPieceToMove)
-		{
-			SelectedPieceToMove->DecolorPossibleMoves();
-		}
-		GameMode->CB->GeneratePositionsFromString(LastMoveDone);
-		GameMode->CB->SetTilesOwners();
+		UMainHUD* MainHUD = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController())->MainHUDWidget;
+		MainHUD->ButtonArray.Last()->ButtonOnClickFunction();
 	}
 }
 
@@ -122,7 +136,11 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 	// Declarations
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	FVector2D OldPosition = SelectedPieceToMove->GetVirtualPosition();
-	ATile* PreviousTile = GameMode->CB->TileMap[OldPosition];
+	ATile* PreviousTile = *GameMode->CB->TileMap.Find(OldPosition);
+	if (PreviousTile == nullptr)
+	{
+		return;
+	}
 	UMainHUD* MainHUD = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController())->MainHUDWidget;
 
 	// Find enemy team attributes
@@ -143,16 +161,17 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 			SelectedPieceToMove->SetActorLocation(ActorPositioning);
 			SelectedPieceToMove->SetVirtualPosition(CurrTile->GetGridPosition());
 
+			if (!SelectedPieceToMove->GetWasMoved())
+			{
+				// To comunicate the first move
+				SelectedPieceToMove->SetWasMoved(true);
+			}
+
 			// Pawn tie / promote check procedure
 			if (SelectedPieceToMove->IsA<APiecePawn>())
-			{
-				if (Cast<APiecePawn>(SelectedPieceToMove)->GetIsFirstMove())
-				{
-					// To comunicate the first move
-					Cast<APiecePawn>(SelectedPieceToMove)->PawnMovedForTheFirstTime();
-					// To comunicate a general move for 50 moves rule
-					GameMode->APawnHasMoved();
-				}
+			{	
+				// To comunicate a general move for 50 moves rule
+				GameMode->APawnHasMoved();
 				Cast<APiecePawn>(SelectedPieceToMove)->Promote();
 			}
 		}

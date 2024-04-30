@@ -16,6 +16,9 @@ UOldMovesButtons::UOldMovesButtons(const FObjectInitializer& ObjectInitializer)
 {
 	AssociatedString = FString("");
 	MoveDone = ObjectInitializer.CreateDefaultSubobject<UTextBlock>(this, TEXT("MoveDone"));
+
+	WhiteCastleConditions.SetNum(3);
+	BlackCastleConditions.SetNum(3);
 }
 
 void UOldMovesButtons::ButtonOnClickFunction()
@@ -23,12 +26,30 @@ void UOldMovesButtons::ButtonOnClickFunction()
 	// Recreating the chessboard in its old state
 	if (AssociatedString != FString("") && !GameMode->Players[1]->GetThinkingStatus())
 	{
-		if (HumanPlayer && HumanPlayer->GetSelectedPieceToMove())
-		{
-			HumanPlayer->GetSelectedPieceToMove()->DecolorPossibleMoves();
-		}
+		GameMode->CB->KingsArray[0]->DecolorPossibleMoves();
 		GameMode->CB->GeneratePositionsFromString(AssociatedString);
 		GameMode->CB->SetTilesOwners();
+
+		GameMode->CB->KingsArray[0]->SetWasMoved(WhiteCastleConditions[0]);
+
+		if (Cast<APieceKing>(GameMode->CB->KingsArray[0])->Rooks[0])
+		{
+			Cast<APieceKing>(GameMode->CB->KingsArray[0])->Rooks[0]->SetWasMoved(WhiteCastleConditions[1]);
+		}
+		if (Cast<APieceKing>(GameMode->CB->KingsArray[0])->Rooks[1])
+		{
+			Cast<APieceKing>(GameMode->CB->KingsArray[0])->Rooks[1]->SetWasMoved(WhiteCastleConditions[2]);
+		}
+		
+		GameMode->CB->KingsArray[1]->SetWasMoved(BlackCastleConditions[0]);
+		if (Cast<APieceKing>(GameMode->CB->KingsArray[1])->Rooks[0])
+		{
+			Cast<APieceKing>(GameMode->CB->KingsArray[1])->Rooks[0]->SetWasMoved(BlackCastleConditions[1]);
+		}
+		if (Cast<APieceKing>(GameMode->CB->KingsArray[1])->Rooks[1])
+		{
+			Cast<APieceKing>(GameMode->CB->KingsArray[1])->Rooks[1]->SetWasMoved(BlackCastleConditions[2]);
+		}
 	}
 	// If the black player is moving, replay is not allowed
 	else if (GameMode->Players[1]->GetThinkingStatus())
@@ -78,6 +99,76 @@ void UOldMovesButtons::CreateText(APiece* PieceMoved, bool bItWasACapture, FVect
 	MoveDone->SetColorAndOpacity(FLinearColor::Black);
 
 	AddChild(MoveDone);
+}
+
+void UOldMovesButtons::CreateCastleText(bool IsLong)
+{
+	if (IsLong)
+	{
+		MoveDone->SetText(FText::FromString("O-O-O"));
+	}
+	else
+	{
+		MoveDone->SetText(FText::FromString("O-O"));
+	}
+	MoveDone->SetColorAndOpacity(FLinearColor::Black);
+
+	AddChild(MoveDone);
+}
+
+void UOldMovesButtons::SaveCastleConditions()
+{
+	// White
+	if (GameMode->CB->KingsArray[0]->GetWasMoved())
+	{
+		WhiteCastleConditions[0] = true;
+	}
+	else
+	{
+		WhiteCastleConditions[0] = false;
+	}
+	if (Cast<APieceKing>(GameMode->CB->KingsArray[0])->Rooks[0] && Cast<APieceKing>(GameMode->CB->KingsArray[0])->Rooks[0]->GetWasMoved())
+	{
+		WhiteCastleConditions[1] = true;
+	}
+	else
+	{
+		WhiteCastleConditions[1] = false;
+	}
+	if (Cast<APieceKing>(GameMode->CB->KingsArray[0])->Rooks[1] && Cast<APieceKing>(GameMode->CB->KingsArray[0])->Rooks[1]->GetWasMoved())
+	{
+		WhiteCastleConditions[2] = true;
+	}
+	else
+	{
+		WhiteCastleConditions[2] = false;
+	}
+
+	// Black
+	if (GameMode->CB->KingsArray[1]->GetWasMoved())
+	{
+		BlackCastleConditions[0] = true;
+	}
+	else
+	{
+		BlackCastleConditions[0] = false;
+	}
+	if (Cast<APieceKing>(GameMode->CB->KingsArray[1])->Rooks[0] && Cast<APieceKing>(GameMode->CB->KingsArray[1])->Rooks[0]->GetWasMoved())
+	{
+		BlackCastleConditions[1] = true;
+	}
+	else
+	{
+		BlackCastleConditions[1] = false;
+	}
+	if (Cast<APieceKing>(GameMode->CB->KingsArray[1])->Rooks[1] && Cast<APieceKing>(GameMode->CB->KingsArray[1])->Rooks[1]->GetWasMoved())
+	{
+		BlackCastleConditions[2] = true;
+	}
+	else
+	{
+		BlackCastleConditions[2] = false;
+	}
 }
 
 TCHAR UOldMovesButtons::PieceParsing(APiece* PieceToParse)

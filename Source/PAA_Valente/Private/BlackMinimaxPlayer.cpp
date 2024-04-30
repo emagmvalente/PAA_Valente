@@ -115,17 +115,19 @@ void ABlackMinimaxPlayer::OnTurn()
 			BestPiece->SetActorLocation(TilePositioning);
 			BestPiece->SetVirtualPosition(BestTile->GetGridPosition());
 
+			// Promote procedure
+			if (!BestPiece->GetWasMoved())
+			{
+				// To comunicate the first move
+				BestPiece->SetWasMoved(true);
+			}
+
 			// Pawn tie / promote check procedure
 			if (BestPiece->IsA<APiecePawn>())
 			{
-				if (Cast<APiecePawn>(BestPiece)->GetIsFirstMove())
-				{
-					// To comunicate the first move
-					Cast<APiecePawn>(BestPiece)->PawnMovedForTheFirstTime();
-					// To comunicate a general move for 50 moves rule
-					GameMode->APawnHasMoved();
-				}
 				Cast<APiecePawn>(BestPiece)->Promote();
+				// To comunicate a general move for 50 moves rule
+				GameMode->APawnHasMoved();
 			}
 
 			// Setting the actual tile occupied by a black, setting the old one empty

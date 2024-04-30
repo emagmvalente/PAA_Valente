@@ -20,6 +20,7 @@ class PAA_VALENTE_API UMainHUD : public UUserWidget
 
 public:
 	void AddButton(FString AssociatedString, APiece* PieceMoved, bool bItWasACapture, FVector2D NewPosition, FVector2D OldPosition);
+	void AddRookButton(FString AssociatedString, bool IsLong);
 	void DestroyButtons();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))

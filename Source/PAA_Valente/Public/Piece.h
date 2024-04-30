@@ -28,6 +28,7 @@ protected:
 	int32 PieceValue;
 	EColor Color;
 	FVector2D VirtualPosition;
+	bool bWasMoved;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -55,8 +56,10 @@ public:
 	int32 GetPieceValue() const;
 	EColor GetColor() const;
 	FVector2D GetVirtualPosition() const;
+	bool GetWasMoved() const;
 
 	void SetColor(EColor NewColor);
 	void SetVirtualPosition(FVector2D PositionToVirtualize);
+	void SetWasMoved(bool MovedState);
 
 };

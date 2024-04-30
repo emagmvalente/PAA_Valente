@@ -21,6 +21,9 @@ class PAA_VALENTE_API UOldMovesButtons : public UButton
 
 	FString AssociatedString;
 
+	TArray<bool> WhiteCastleConditions;
+	TArray<bool> BlackCastleConditions;
+
 public:
 
 	AChessGameMode* GameMode;
@@ -35,6 +38,8 @@ public:
 	void SetAssociatedString(FString& AssociatedStringToPrint);
 
 	void CreateText(APiece* PieceMoved, bool bItWasACapture, FVector2D NewPosition, FVector2D OldPosition);
+	void CreateCastleText(bool IsLong);
+	void SaveCastleConditions();
 	TCHAR PieceParsing(APiece* PieceToParse);
 	FString LocationParsing(FVector2D& Location);
 };

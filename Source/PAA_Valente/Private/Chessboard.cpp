@@ -38,11 +38,11 @@ void AChessboard::BeginPlay()
 	// Using FEN notation to generate every piece
 	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
-	GeneratePositionsFromString(GeneratingString);
-	SetTilesOwners();
-
 	// Using FEN notation for the replay mechanic too
 	HistoryOfMoves.Add(GeneratingString);
+
+	GeneratePositionsFromString(GeneratingString);
+	SetTilesOwners();
 }
 
 void AChessboard::ResetField()
@@ -59,8 +59,9 @@ void AChessboard::ResetField()
 	}
 
 	FString GeneratingString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-	GeneratePositionsFromString(GeneratingString);
 	HistoryOfMoves.Add(GeneratingString);
+
+	GeneratePositionsFromString(GeneratingString);
 
 	SetTilesOwners();
 }
@@ -293,25 +294,27 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 	WhitePieces.Empty();
 	BlackPieces.Empty();
 
-	// Skin declarations
-	UMaterialInterface* LoadBlackBishop = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BBishop"));
-	UMaterialInterface* LoadBlackPawn = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BPawn"));
-	UMaterialInterface* LoadBlackKing = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKing"));
-	UMaterialInterface* LoadBlackQueen = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BQueen"));
-	UMaterialInterface* LoadBlackKnight = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKnight"));
-	UMaterialInterface* LoadBlackRook = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BRook"));
-
-	// Blueprint declarations
+	// Blueprints
 	UBlueprint* PawnsBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Pawn"));
-	UBlueprint* BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
-	UBlueprint* KingBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_King"));
-	UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
 	UBlueprint* KnightBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Knight"));
+	UBlueprint* BishopBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Bishop"));
 	UBlueprint* RookBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Rook"));
+	UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
+	UBlueprint* KingBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_King"));
+
+	// Skin
+	UMaterialInterface* LoadBlackPawn = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BPawn"));
+	UMaterialInterface* LoadBlackKnight = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKnight"));
+	UMaterialInterface* LoadBlackBishop = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BBishop"));
+	UMaterialInterface* LoadBlackRook = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BRook"));
+	UMaterialInterface* LoadBlackQueen = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BQueen"));
+	UMaterialInterface* LoadBlackKing = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKing"));
 
 	// Rows and Columns indexes
 	int32 Row = 7;
 	int32 Col = 0;
+
+	TArray<APiece*> TempRook;
 
 	// Loop through each character in the FEN string
 	for (int32 i = 0; i < String.Len(); ++i)
@@ -351,7 +354,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				if (Row != 1)
 				{
-					Cast<APiecePawn>(Obj)->PawnMovedForTheFirstTime();
+					Obj->SetWasMoved(true);
 				}
 				WhitePieces.Add(Obj);
 				break;
@@ -374,6 +377,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj = GetWorld()->SpawnActor<APieceRook>(RookBlueprint->GeneratedClass, Location, FRotator::ZeroRotator);
 				Obj->SetColor(EColor::W);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
+				TempRook.Add(Obj);
 				WhitePieces.Add(Obj);
 				break;
 
@@ -400,7 +404,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				if (Row != 6)
 				{
-					Cast<APiecePawn>(Obj)->PawnMovedForTheFirstTime();
+					Obj->SetWasMoved(true);
 				}
 				Obj->ChangeMaterial(LoadBlackPawn);
 				BlackPieces.Add(Obj);
@@ -427,6 +431,7 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 				Obj->SetColor(EColor::B);
 				Obj->SetVirtualPosition(FVector2D(Row, Col));
 				Obj->ChangeMaterial(LoadBlackRook); 
+				TempRook.Add(Obj);
 				BlackPieces.Add(Obj);
 				break;
 
@@ -454,6 +459,32 @@ void AChessboard::GeneratePositionsFromString(FString& String)
 
 			// Move to the next column
 			++Col; 
+		}
+	}
+
+	for (APiece* Piece : TempRook)
+	{
+		if (Piece->IsA<APieceRook>() && Piece->GetColor() == EColor::B)
+		{
+			if (Piece->GetVirtualPosition() == FVector2D(7, 0))
+			{
+				Cast<APieceKing>(KingsArray[1])->Rooks[0] = Piece;
+			}
+			else if (Piece->GetVirtualPosition() == FVector2D(7, 7))
+			{
+				Cast<APieceKing>(KingsArray[1])->Rooks[1] = Piece;
+			}
+		}
+		else if (Piece->IsA<APieceRook>() && Piece->GetColor() == EColor::W)
+		{
+			if (Piece->GetVirtualPosition() == FVector2D(0, 0))
+			{
+				Cast<APieceKing>(KingsArray[0])->Rooks[0] = Piece;
+			}
+			else if (Piece->GetVirtualPosition() == FVector2D(0, 7))
+			{
+				Cast<APieceKing>(KingsArray[0])->Rooks[1] = Piece;
+			}
 		}
 	}
 }

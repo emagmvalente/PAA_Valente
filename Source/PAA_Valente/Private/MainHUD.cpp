@@ -19,9 +19,28 @@ void UMainHUD::AddButton(FString AssociatedString, APiece* PieceMoved, bool bItW
         NewButton->GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
         NewButton->HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
         NewButton->GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-        NewButton->SetAssociatedString(NewButton->GameMode->CB->HistoryOfMoves.Last());
         NewButton->CreateText(PieceMoved, bItWasACapture, PieceMoved->GetVirtualPosition(), OldPosition);
         NewButton->SetAssociatedString(AssociatedString);
+        NewButton->SaveCastleConditions();
+
+        ButtonArray.Add(NewButton);
+
+        ScrollBox->AddChild(NewButton);
+    }
+}
+
+void UMainHUD::AddRookButton(FString AssociatedString, bool IsLong)
+{
+    UOldMovesButtons* NewButton = NewObject<UOldMovesButtons>(this);
+    if (NewButton)
+    {
+        NewButton->OnClicked.AddDynamic(NewButton, &UOldMovesButtons::ButtonOnClickFunction);
+        NewButton->GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+        NewButton->HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+        NewButton->GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+        NewButton->CreateCastleText(IsLong);
+        NewButton->SetAssociatedString(AssociatedString);
+        NewButton->SaveCastleConditions();
 
         ButtonArray.Add(NewButton);
 

@@ -140,6 +140,8 @@ void AChessGameMode::SpawnHumanAndAI(bool bSpawnMinimax)
 		{
 			GetWorldTimerManager().ClearTimer(*Cast<ABlackMinimaxPlayer>(Players[1])->GetTimerHandle());
 		}
+
+		CB->KingsArray[0]->DecolorPossibleMoves();
 	}
 	
 	Players[0]->DestroyPlayer();	Players[1]->DestroyPlayer();	Players.Empty();

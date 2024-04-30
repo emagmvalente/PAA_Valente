@@ -15,6 +15,8 @@ APiece::APiece()
 	PieceValue = 0;
 	VirtualPosition.X = -1;
 	VirtualPosition.Y = -1;
+
+	bWasMoved = false;
 }
 
 // Called when the game starts or when spawned
@@ -57,7 +59,6 @@ void APiece::ColorPossibleMoves()
 	UMaterialInterface* LoadW = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_W"));
 	UMaterialInterface* LoadB = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_B"));
 
-	
 	for (ATile* Tile : GameMode->CB->TileArray)
 	{
 		if (Tile->GetOccupantColor() == EOccupantColor::E)
@@ -155,7 +156,7 @@ void APiece::FilterOnlyLegalMoves()
 
 					// Checking if the piece is a king, if yes then any move is equal to moving the king tile, 
 					// so don't consider "the king tile" but consinder "the move"
-					if (Cast<APieceKing>(this))
+					if (this->IsA<APieceKing>())
 					{
 						if (EnemyPiece->Moves.Contains(Move))
 						{
@@ -206,6 +207,11 @@ FVector2D APiece::GetVirtualPosition() const
 	return VirtualPosition;
 }
 
+bool APiece::GetWasMoved() const
+{
+	return bWasMoved;
+}
+
 void APiece::SetColor(EColor NewColor)
 {
 	Color = NewColor;
@@ -214,4 +220,9 @@ void APiece::SetColor(EColor NewColor)
 void APiece::SetVirtualPosition(FVector2D PositionToVirtualize)
 {
 	VirtualPosition = PositionToVirtualize;
+}
+
+void APiece::SetWasMoved(bool MovedState)
+{
+	bWasMoved = MovedState;
 }

@@ -24,7 +24,6 @@ APiecePawn::APiecePawn()
 	StaticMeshComponent->SetupAttachment(Scene);
 
 	PieceValue = 1;
-	bIsFirstMove = true;
 }
 
 // Called when the game starts or when spawned
@@ -116,7 +115,7 @@ void APiecePawn::PossibleMoves()
 					if (GameMode->CB->TileMap.Contains(NextPosition))
 					{
 						NextTile = GameMode->CB->TileMap[NextPosition];
-						if (NextTile != nullptr && Direction == Directions[0] && bIsFirstMove && NextTile->GetOccupantColor() == EOccupantColor::E)
+						if (NextTile != nullptr && Direction == Directions[0] && !bWasMoved && NextTile->GetOccupantColor() == EOccupantColor::E)
 						{
 							Moves.Add(NextTile);
 						}
@@ -133,14 +132,4 @@ void APiecePawn::PossibleMoves()
 			}
 		}
 	}
-}
-
-void APiecePawn::PawnMovedForTheFirstTime()
-{
-	bIsFirstMove = false;
-}
-
-bool APiecePawn::GetIsFirstMove() const
-{
-	return bIsFirstMove;
 }
