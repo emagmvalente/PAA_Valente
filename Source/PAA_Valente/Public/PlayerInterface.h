@@ -26,5 +26,7 @@ public:
 	virtual void OnTurn() {};
 	virtual void OnWin() {};
 	virtual bool GetThinkingStatus() const { return false; };
+	virtual void DestroyPlayer() {};
+	FTimerHandle TimerHandle;
 
 };

@@ -38,6 +38,7 @@ public:
 	virtual void OnTurn() override;
 	virtual void OnWin() override;
 	virtual bool GetThinkingStatus() const override;
+	virtual void DestroyPlayer() override;
 
 	int32 Maxi(int32 Depth, int32 Alpha, int32 Beta);
 	int32 Mini(int32 Depth, int32 Alpha, int32 Beta);

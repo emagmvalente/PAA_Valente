@@ -45,13 +45,15 @@ bool ABlackRandomPlayer::GetThinkingStatus() const
 	return bThinking;
 }
 
+void ABlackRandomPlayer::DestroyPlayer()
+{
+	this->Destroy();
+}
+
 void ABlackRandomPlayer::OnTurn()
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Random) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Random) Turn"));
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-
-	FTimerHandle TimerHandle;
 
 	bThinking = true;
 
@@ -112,6 +114,7 @@ void ABlackRandomPlayer::OnTurn()
 				{
 					Cast<APiecePawn>(ChosenPiece)->PawnMovedForTheFirstTime();
 				}
+				GameModeCallback->SetPawnMoved(true);
 				Cast<APiecePawn>(ChosenPiece)->Promote();
 			}
 

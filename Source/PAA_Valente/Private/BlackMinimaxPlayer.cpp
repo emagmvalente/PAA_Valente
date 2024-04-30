@@ -45,14 +45,15 @@ bool ABlackMinimaxPlayer::GetThinkingStatus() const
 	return bThinking;
 }
 
+void ABlackMinimaxPlayer::DestroyPlayer()
+{
+	this->Destroy();
+}
+
 void ABlackMinimaxPlayer::OnTurn()
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
 	GameInstance->SetTurnMessage(TEXT("AI (Minimax) Turn"));
-
-	AChessGameMode* GameMode = (AChessGameMode*)(GetWorld()->GetAuthGameMode());
-
-	FTimerHandle TimerHandle;
 
 	bThinking = true;
 
@@ -100,6 +101,7 @@ void ABlackMinimaxPlayer::OnTurn()
 				{
 					Cast<APiecePawn>(BestPiece)->PawnMovedForTheFirstTime();
 				}
+				GameModeCallback->SetPawnMoved(true);
 				Cast<APiecePawn>(BestPiece)->Promote();
 			}
 

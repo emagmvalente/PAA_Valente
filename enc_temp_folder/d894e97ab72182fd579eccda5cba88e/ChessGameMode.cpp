@@ -104,6 +104,13 @@ void AChessGameMode::SpawnPlayers(bool SpawnMinimax)
 		TArray<UUserWidget*> FoundWidgets;
 		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
 		CPC->MainHUDWidget = Cast<UMainHUD>(FoundWidgets[0]);
+
+		auto* WhitePlayer = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
+		Players.Add(WhitePlayer);
+
+		float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
+		FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
+		WhitePlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 	}
 	else
 	{
@@ -111,18 +118,9 @@ void AChessGameMode::SpawnPlayers(bool SpawnMinimax)
 
 		TurnFlag = 0;
 		MovesWithoutCaptureOrPawnMove = 0;
-		Players[0]->DestroyPlayer();
 		Players[1]->DestroyPlayer();
-		Players.Empty();
 		CB->ResetField();
 	}
-
-	auto* WhitePlayer = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
-	Players.Add(WhitePlayer);
-
-	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
-	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
-	WhitePlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
 	if (SpawnMinimax)
 	{
