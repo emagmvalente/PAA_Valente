@@ -23,10 +23,6 @@ public:
 	void DestroyButtons();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	UButton* ResetButton;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* ResetText;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UScrollBox* ScrollBox;
 
 	TArray<UOldMovesButtons*> ButtonArray;

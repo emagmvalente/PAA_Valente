@@ -15,15 +15,17 @@
 #include "EngineUtils.h"
 #include "ChessPlayerController.h"
 #include "MainHUD.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 AChessGameMode::AChessGameMode()
 {
 	DefaultPawnClass = AWhitePlayer::StaticClass();
 	PlayerControllerClass = AChessPlayerController::StaticClass();
 	FieldSize = 8;
-	bIsBlackThinking = false;
 	TurnFlag = 0;
 	MovesWithoutCaptureOrPawnMove = 0;
+	bPawnMoved = false;
+	bOnMenu = true;
 }
 
 // OK
@@ -31,39 +33,28 @@ void AChessGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-
-	// Random Player
-	auto* AI = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
-
-	// MiniMax Player
-	//auto* AI = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
-
+	// Chessboard creation
 	if (CBClass != nullptr)
 	{
 		CB = GetWorld()->SpawnActor<AChessboard>(CBClass);
-		CB->Size = FieldSize;
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("Chessboard is null"));
 	}
 
+	// Create a "HumanPlayer" that cannot play, but can see the chessboard
 	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
 	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
-	HumanPlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
+	auto* Camera = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
+	Camera->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
 
-	HumanPlayer->OnTurn();
+	// Note: HUD logic is almost entirely managed in blueprint
 }
 
 // Logic and Utilities
-// OK
 void AChessGameMode::TurnPlayer()
 {
-	AWhitePlayer* HumanPlayer = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
-	ABlackRandomPlayer* AIPlayer = Cast<ABlackRandomPlayer>(*TActorIterator<ABlackRandomPlayer>(GetWorld()));
-	//ABlackMinimaxPlayer* AIPlayer = Cast<ABlackMinimaxPlayer>(*TActorIterator<ABlackMinimaxPlayer>(GetWorld()));
-
 	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 
 	GameInstance->SetNotificationMessage(TEXT(""));
@@ -78,14 +69,7 @@ void AChessGameMode::TurnPlayer()
 	else if (VerifyCheck() && VerifyCheckmate())
 	{
 		GameInstance->SetNotificationMessage(TEXT("Checkmate!"));
-		if (TurnFlag == 0)
-		{
-			HumanPlayer->OnWin();
-		}
-		else if (TurnFlag == 1)
-		{
-			AIPlayer->OnWin();
-		}
+		Players[TurnFlag]->OnWin();
 	}
 
 	// Turn passing
@@ -97,24 +81,62 @@ void AChessGameMode::TurnPlayer()
 			GameInstance->SetNotificationMessage(TEXT("Check!"));
 		}
 
-		// Anyway, pass the turn
-		if (TurnFlag == 0)
-		{
-			TurnFlag++;
-			AIPlayer->OnTurn();
-		}
-		else if (TurnFlag == 1)
-		{
-			TurnFlag--;
-			HumanPlayer->OnTurn();
-		}
+		// Pass the turn
+		TurnFlag = (TurnFlag == 0) ? 1 : 0;
+		Players[TurnFlag]->OnTurn();
 	}
 }
 
-void AChessGameMode::ResetVariablesForRematch()
+void AChessGameMode::SetPawnMoved(bool NewStatus)
 {
-	TurnFlag = 0;
-	MovesWithoutCaptureOrPawnMove = 0;
+	bPawnMoved = NewStatus;
+}
+
+void AChessGameMode::SpawnPlayers(bool SpawnMinimax)
+{
+	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
+	if (bOnMenu)
+	{
+		bOnMenu = false;
+		auto* Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+		Camera->Destroy();
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(Players[1]->TimerHandle);
+
+		// Reset variables
+		TurnFlag = 0;
+		MovesWithoutCaptureOrPawnMove = 0;
+		GameInstance->SetNotificationMessage(TEXT(""));
+		CB->Kings[0]->DecolorPossibleMoves();
+		Players[0]->DestroyPlayer();
+		Players[1]->DestroyPlayer();
+		Players.Empty();
+		CB->ResetField();
+	}
+
+	// Respawn players
+	auto* WhitePlayer = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
+	Players.Add(WhitePlayer);
+
+	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
+	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
+	WhitePlayer->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
+
+	if (SpawnMinimax)
+	{
+		// In this branch, StartGame() is managed in blueprint
+		auto* BlackPlayer = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
+		Players.Add(BlackPlayer);
+	}
+	else
+	{
+		auto* BlackPlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
+		Players.Add(BlackPlayer);
+		StartGame();
+	}
 }
 
 int32 AChessGameMode::GetTurnFlag() const
@@ -122,25 +144,30 @@ int32 AChessGameMode::GetTurnFlag() const
 	return TurnFlag;
 }
 
+bool AChessGameMode::GetOnMenu() const
+{
+	return bOnMenu;
+}
+
+void AChessGameMode::StartGame()
+{
+	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
+
+	TArray<UUserWidget*> FoundWidgets;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
+	CPC->MainHUDWidget = Cast<UMainHUD>(FoundWidgets[0]);
+
+	Players[0]->OnTurn();
+}
+
 // Winning / Draw / Losing
 
 bool AChessGameMode::VerifyCheck()
 {
-	ATile* EnemyKingTile = nullptr;
-	TArray<APiece*> AllyPieces;
+	ATile* EnemyKingTile = (TurnFlag == 0) ? CB->TileMap[CB->Kings[1]->GetVirtualPosition()] : 
+											 CB->TileMap[CB->Kings[0]->GetVirtualPosition()];
 
-	// If human turn
-	if (TurnFlag == 0)
-	{
-		EnemyKingTile = CB->TileMap[CB->Kings[1]->GetVirtualPosition()];
-		AllyPieces = CB->WhitePieces;
-	}
-	// If AI turn
-	else if (TurnFlag == 1)
-	{
-		EnemyKingTile = CB->TileMap[CB->Kings[0]->GetVirtualPosition()];
-		AllyPieces = CB->BlackPieces;
-	}
+	TArray<APiece*> AllyPieces = (TurnFlag == 0) ? CB->WhitePieces : CB->BlackPieces;
 
 	for (APiece* AllyPiece : AllyPieces)
 	{
@@ -159,16 +186,7 @@ bool AChessGameMode::VerifyCheck()
 
 bool AChessGameMode::VerifyCheckmate()
 {
-	TArray<APiece*> EnemyPieces;
-
-	if (TurnFlag == 0)
-	{
-		EnemyPieces = CB->BlackPieces;
-	}
-	else if (TurnFlag == 1)
-	{
-		EnemyPieces = CB->WhitePieces;
-	}
+	TArray<APiece*> EnemyPieces = (TurnFlag == 0) ? CB->BlackPieces : CB->WhitePieces;
 
 	for (APiece* EnemyPiece : EnemyPieces)
 	{
@@ -187,8 +205,7 @@ bool AChessGameMode::VerifyDraw()
 {
 	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 
-	// TODO: Dead Positions
-	if (CheckThreeOccurrences() || KingvsKing() || /*FiftyMovesRule() ||*/ Stalemate())
+	if (CheckThreeOccurrences() || KingvsKing() || FiftyMovesRule() || Stalemate())
 	{
 		// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
 		GameInstance->SetTurnMessage(TEXT("Draw!"));
@@ -231,7 +248,6 @@ bool AChessGameMode::KingvsKing()
 
 bool AChessGameMode::FiftyMovesRule()
 {
-	/*
 	// If the number reaches 50, then it's a draw situation
 	if (MovesWithoutCaptureOrPawnMove >= 50)
 	{
@@ -241,7 +257,6 @@ bool AChessGameMode::FiftyMovesRule()
 	// Declarations
 	int32 NumberOfPiecesInPreviousMove = 0;
 	int32 NumberOfPiecesNow = 0;
-	bool bWasMovedAPawn = false;
 	FString ActualMove = CB->HistoryOfMoves.Last();
 	FString PreviousMove = FString("");
 	if (CB->HistoryOfMoves.Num() > 1)
@@ -270,28 +285,15 @@ bool AChessGameMode::FiftyMovesRule()
 		}
 	}
 
-	// Pawn movement check
-	for (APiece* WhitePawn : CB->WhitePieces)
+	// Pawn moved check
+	if (bPawnMoved)
 	{
-		if (Cast<APiecePawn>(WhitePawn) && Cast<APiecePawn>(WhitePawn)->GetTurnsWithoutMoving() > 0)
-		{
-			bWasMovedAPawn = true;
-			break;
-		}
-	}
-	if (!bWasMovedAPawn)
-	{
-		for (APiece* BlackPawn : CB->BlackPieces)
-		{
-			if (Cast<APiecePawn>(BlackPawn) && Cast<APiecePawn>(BlackPawn)->GetTurnsWithoutMoving() > 0)
-			{
-				bWasMovedAPawn = true;
-				break;
-			}
-		}
+		bPawnMoved = false;
+		MovesWithoutCaptureOrPawnMove = 0;
+		return false;
 	}
 
-	if ((NumberOfPiecesNow == NumberOfPiecesInPreviousMove) && !bWasMovedAPawn)
+	if (NumberOfPiecesNow == NumberOfPiecesInPreviousMove)
 	{
 		MovesWithoutCaptureOrPawnMove++;
 	}
@@ -299,7 +301,6 @@ bool AChessGameMode::FiftyMovesRule()
 	{
 		MovesWithoutCaptureOrPawnMove = 0;
 	}
-	*/
 
 	return false;
 }
@@ -314,6 +315,9 @@ bool AChessGameMode::Stalemate()
 }
 
 // Pawn Promotion
+// Every function works in this way:
+// - Destroy pawn
+// - Respawn the wanted piece
 void AChessGameMode::PromoteToQueen()
 {
 	UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
@@ -322,6 +326,7 @@ void AChessGameMode::PromoteToQueen()
 	FVector Location = PawnToPromote->GetActorLocation();
 	FVector2D Location2D = PawnToPromote->GetVirtualPosition();
 
+	// If white then remove the widget and spawn the wanted piece
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
 		PawnPromotionWidgetInstance->RemoveFromParent();
@@ -334,6 +339,7 @@ void AChessGameMode::PromoteToQueen()
 		Obj->SetVirtualPosition(Location2D);
 		CB->WhitePieces.Add(Obj);
 	}
+	// If black then spawn the wanted piece
 	else if (PawnToPromote->GetColor() == EColor::B)
 	{
 		UMaterialInterface* LoadBlackQueen = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BQueen"));
@@ -433,7 +439,6 @@ void AChessGameMode::PromoteToKnight()
 	FVector Location = PawnToPromote->GetActorLocation();
 	FVector2D Location2D = PawnToPromote->GetVirtualPosition();
 
-	// If white then remove the widget and spawn the wanted piece
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
 		PawnPromotionWidgetInstance->RemoveFromParent();
@@ -446,7 +451,6 @@ void AChessGameMode::PromoteToKnight()
 		Obj->SetVirtualPosition(Location2D);
 		CB->WhitePieces.Add(Obj);
 	}
-	// If black then spawn the wanted piece
 	else if (PawnToPromote->GetColor() == EColor::B)
 	{
 		UMaterialInterface* LoadBlackKnight = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKnight"));

@@ -59,7 +59,7 @@ void AWhitePlayer::PieceSelection()
 	FHitResult Hit = FHitResult(ForceInit);
 	GetWorld()->GetFirstPlayerController()->GetHitResultUnderCursor(ECollisionChannel::ECC_Pawn, true, Hit);
 
-	if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() == LastMoveDone))
+	if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() == LastMoveDone) && !GameMode->GetOnMenu())
 	{
 		if (APiece* PieceClicked = Cast<APiece>(Hit.GetActor()))
 		{
@@ -101,14 +101,10 @@ void AWhitePlayer::PieceSelection()
 		}
 	}
 
-	else if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() != LastMoveDone))
+	else if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() != LastMoveDone) && !GameMode->GetOnMenu())
 	{
-		if (SelectedPieceToMove)
-		{
-			SelectedPieceToMove->DecolorPossibleMoves();
-		}
-		GameMode->CB->GeneratePositionsFromString(LastMoveDone);
-		GameMode->CB->SetTilesOwners();
+		UMainHUD* MainHUD = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController())->MainHUDWidget;
+		MainHUD->ButtonArray.Last()->ButtonOnClickFunction();
 	}
 }
 
@@ -120,7 +116,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 	ATile* PreviousTile = GameMode->CB->TileMap[OldPosition];
 	UMainHUD* MainHUD = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController())->MainHUDWidget;
 
-	if (CurrTile->GetOccupantColor() == EOccupantColor::E)
+	if (CurrTile->GetOccupantColor() == EOccupantColor::E && !GameMode->GetOnMenu())
 	{
 		// If a tile is clicked, decolor possible moves
 		SelectedPieceToMove->DecolorPossibleMoves();
@@ -140,6 +136,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 				{
 					Cast<APiecePawn>(SelectedPieceToMove)->PawnMovedForTheFirstTime();
 				}
+				GameMode->SetPawnMoved(true);
 				Cast<APiecePawn>(SelectedPieceToMove)->Promote();
 			}
 		}
@@ -164,7 +161,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 
 			// Turn ending
 			IsMyTurn = false;
-			if (!Cast<APiecePawn>(SelectedPieceToMove) || Cast<APiecePawn>(SelectedPieceToMove)->GetVirtualPosition().X != 7)
+			if (!SelectedPieceToMove->IsA<APiecePawn>() || Cast<APiecePawn>(SelectedPieceToMove)->GetVirtualPosition().X != 7)
 			{
 				SelectedPieceToMove = nullptr;
 				GameMode->TurnPlayer();
@@ -179,6 +176,11 @@ APiece* AWhitePlayer::GetSelectedPieceToMove() const
 	return SelectedPieceToMove;
 }
 
+void AWhitePlayer::Deselect()
+{
+	SelectedPieceToMove = nullptr;
+}
+
 void AWhitePlayer::OnTurn()
 {
 	IsMyTurn = true;
@@ -191,4 +193,14 @@ void AWhitePlayer::OnWin()
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("You Win!"));
 	GameInstance->SetTurnMessage(TEXT("Human Wins!"));
 	GameInstance->IncrementScoreHumanPlayer();
+}
+
+bool AWhitePlayer::GetThinkingStatus() const
+{
+	return false;
+}
+
+void AWhitePlayer::DestroyPlayer()
+{
+	this->Destroy();
 }

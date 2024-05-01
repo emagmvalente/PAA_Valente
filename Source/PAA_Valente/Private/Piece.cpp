@@ -53,7 +53,7 @@ void APiece::ColorPossibleMoves()
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
 	
-	
+	/*
 	UMaterialInterface* LoadE = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_E"));
 	UMaterialInterface* LoadW = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_W"));
 	UMaterialInterface* LoadB = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_B"));
@@ -74,6 +74,7 @@ void APiece::ColorPossibleMoves()
 			Tile->ChangeMaterial(LoadB);
 		}
 	}
+	*/
 
 	for (ATile* Move : Moves)
 	{
@@ -97,7 +98,8 @@ void APiece::DecolorPossibleMoves()
 	for (ATile* Tile : GameMode->CB->GetTileArray())
 	{
 		FVector2D TilePosition = Tile->GetGridPosition();
-		if ((static_cast<int>(TilePosition.X) + static_cast<int>(TilePosition.Y)) % 2 == 0)
+		int32 IndexSum = TilePosition.X + TilePosition.Y;
+		if (IndexSum % 2 == 0)
 		{
 			Tile->ChangeMaterial(LoadBlackMaterial);
 		}
@@ -156,7 +158,7 @@ void APiece::FilterOnlyLegalMoves()
 
 					// Checking if the piece is a king, if yes then any move is equal to moving the king tile, 
 					// so don't consider "the king tile" but consinder "the move"
-					if (Cast<APieceKing>(this))
+					if (this->IsA<APieceKing>())
 					{
 						if (EnemyPiece->Moves.Contains(Move))
 						{

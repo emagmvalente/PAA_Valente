@@ -7,11 +7,12 @@
 #include "ChessGameInstance.h"
 #include "ChessGameMode.h"
 #include "Piece.h"
+#include "PlayerInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "BlackRandomPlayer.generated.h"
 
 UCLASS()
-class PAA_VALENTE_API ABlackRandomPlayer : public APawn
+class PAA_VALENTE_API ABlackRandomPlayer : public APawn, public IPlayerInterface
 {
 	GENERATED_BODY()
 
@@ -25,6 +26,7 @@ protected:
 	virtual void BeginPlay() override;
 	
 	bool bIsACapture;
+	bool bThinking;
 
 public:
 	// Called every frame
@@ -33,7 +35,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void OnTurn();
-	void OnWin();
+	virtual void OnTurn() override;
+	virtual void OnWin() override;
+	virtual bool GetThinkingStatus() const override;
+	virtual void DestroyPlayer() override;
 
 };

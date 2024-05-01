@@ -21,17 +21,15 @@ UOldMovesButtons::UOldMovesButtons(const FObjectInitializer& ObjectInitializer)
 void UOldMovesButtons::ButtonOnClickFunction()
 {
 	// Recreating the chessboard in its old state
-	if (AssociatedString != FString("") && !GameMode->bIsBlackThinking)
+	if (AssociatedString != FString("") && !GameMode->Players[1]->GetThinkingStatus())
 	{
-		if (HumanPlayer->GetSelectedPieceToMove())
-		{
-			HumanPlayer->GetSelectedPieceToMove()->DecolorPossibleMoves();
-		}
+		GameMode->CB->Kings[0]->DecolorPossibleMoves();
+		Cast<AWhitePlayer>(GameMode->Players[0])->Deselect();
 		GameMode->CB->GeneratePositionsFromString(AssociatedString);
 		GameMode->CB->SetTilesOwners();
 	}
 	// If the black player is moving, replay is not allowed
-	else if (GameMode->bIsBlackThinking)
+	else if (GameMode->Players[1]->GetThinkingStatus())
 	{
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Shhh! Black is thinking... Replay later."));
 		GameInstance->SetNotificationMessage(TEXT("Shhh! Black is thinking... Replay later."));
@@ -53,7 +51,7 @@ void UOldMovesButtons::CreateText(APiece* PieceMoved, bool bItWasACapture, FVect
 	if (bItWasACapture)
 	{
 		// In algebraic notation, pawn doesn't have a letter, so it will be used his location
-		if (Cast<APiecePawn>(PieceMoved))
+		if (PieceMoved->IsA<APiecePawn>())
 		{
 			FString OldPositionString = LocationParsing(OldPosition);
 			TCHAR OldPositionChar = OldPositionString[0];
@@ -82,23 +80,23 @@ void UOldMovesButtons::CreateText(APiece* PieceMoved, bool bItWasACapture, FVect
 
 TCHAR UOldMovesButtons::PieceParsing(APiece* PieceToParse)
 {
-	if (Cast<APieceKing>(PieceToParse))
+	if (PieceToParse->IsA<APieceKing>())
 	{
 		return 'K';
 	}
-	else if (Cast<APieceQueen>(PieceToParse))
+	else if (PieceToParse->IsA<APieceQueen>())
 	{
 		return 'Q';
 	}
-	else if (Cast<APieceRook>(PieceToParse))
+	else if (PieceToParse->IsA<APieceRook>())
 	{
 		return 'R';
 	}
-	else if (Cast<APieceBishop>(PieceToParse))
+	else if (PieceToParse->IsA<APieceBishop>())
 	{
 		return 'B';
 	}
-	else if (Cast<APieceKnight>(PieceToParse))
+	else if (PieceToParse->IsA<APieceKnight>())
 	{
 		return 'N';
 	}
@@ -110,15 +108,15 @@ FString UOldMovesButtons::LocationParsing(FVector2D& Location)
 {
 	FString ResultantString = FString("");
 
-	if (Location.X >= 0 && Location.X <= 7)
+	if (Location.Y >= 0 && Location.Y <= 7)
 	{
-		ResultantString.AppendChar('a' + Location.X);
+		ResultantString.AppendChar('a' + Location.Y);
 	}
 
-	int32 LocationYRoundedToIntPlusOne = FMath::RoundToInt(Location.Y) + 1;
-	FString YPosition = FString::FromInt(LocationYRoundedToIntPlusOne);
+	int32 LocationXRoundedToIntPlusOne = FMath::RoundToInt(Location.X) + 1;
+	FString XPosition = FString::FromInt(LocationXRoundedToIntPlusOne);
 
-	ResultantString.Append(YPosition);
+	ResultantString.Append(XPosition);
 
 	return ResultantString;
 }
