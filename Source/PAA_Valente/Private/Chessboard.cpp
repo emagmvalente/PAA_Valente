@@ -118,7 +118,7 @@ FString AChessboard::GenerateStringFromPositions()
 					FVector Location(Row, Col, 10.f);
 					APiece* PieceFound = WhitePieces[i];
 
-					if (Cast<APiecePawn>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					if (PieceFound->IsA<APiecePawn>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -128,7 +128,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('P');
 						break;
 					}
-					else if (Cast<APieceKing>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceKing>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -139,7 +139,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('K');
 						break;
 					}
-					else if (Cast<APieceKnight>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceKnight>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -149,7 +149,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('N');
 						break;
 					}
-					else if (Cast<APieceQueen>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceQueen>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -159,7 +159,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('Q');
 						break;
 					}
-					else if (Cast<APieceRook>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceRook>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -169,7 +169,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('R');
 						break;
 					}
-					else if (Cast<APieceBishop>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceBishop>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -190,7 +190,7 @@ FString AChessboard::GenerateStringFromPositions()
 					FVector Location(Row, Col, 10.f);
 					APiece* PieceFound = BlackPieces[i];
 
-					if (Cast<APiecePawn>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					if (PieceFound->IsA<APiecePawn>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -200,7 +200,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('p');
 						break;
 					}
-					else if (Cast<APieceKing>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceKing>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -210,7 +210,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('k');
 						break;
 					}
-					else if (Cast<APieceKnight>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceKnight>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -220,7 +220,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('n');
 						break;
 					}
-					else if (Cast<APieceQueen>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceQueen>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -230,7 +230,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('q');
 						break;
 					}
-					else if (Cast<APieceRook>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceRook>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{
@@ -240,7 +240,7 @@ FString AChessboard::GenerateStringFromPositions()
 						ResultantString.AppendChar('r');
 						break;
 					}
-					else if (Cast<APieceBishop>(PieceFound) && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
+					else if (PieceFound->IsA<APieceBishop>() && PieceFound->GetVirtualPosition() == FVector2D(Location.X, Location.Y))
 					{
 						if (EmptyCount > 0)
 						{

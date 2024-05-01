@@ -103,12 +103,8 @@ void AWhitePlayer::PieceSelection()
 
 	else if (Hit.bBlockingHit && IsMyTurn && (GameMode->CB->GenerateStringFromPositions() != LastMoveDone) && !GameMode->GetOnMenu())
 	{
-		if (SelectedPieceToMove)
-		{
-			SelectedPieceToMove->DecolorPossibleMoves();
-		}
-		GameMode->CB->GeneratePositionsFromString(LastMoveDone);
-		GameMode->CB->SetTilesOwners();
+		UMainHUD* MainHUD = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController())->MainHUDWidget;
+		MainHUD->ButtonArray.Last()->ButtonOnClickFunction();
 	}
 }
 
@@ -165,7 +161,7 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 
 			// Turn ending
 			IsMyTurn = false;
-			if (!Cast<APiecePawn>(SelectedPieceToMove) || Cast<APiecePawn>(SelectedPieceToMove)->GetVirtualPosition().X != 7)
+			if (!SelectedPieceToMove->IsA<APiecePawn>() || Cast<APiecePawn>(SelectedPieceToMove)->GetVirtualPosition().X != 7)
 			{
 				SelectedPieceToMove = nullptr;
 				GameMode->TurnPlayer();
@@ -178,6 +174,11 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 APiece* AWhitePlayer::GetSelectedPieceToMove() const
 {
 	return SelectedPieceToMove;
+}
+
+void AWhitePlayer::Deselect()
+{
+	SelectedPieceToMove = nullptr;
 }
 
 void AWhitePlayer::OnTurn()

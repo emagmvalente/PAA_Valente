@@ -50,6 +50,8 @@ public:
 	void SpawnPlayers(bool SpawnMinimax);
 	int32 GetTurnFlag() const;
 	bool GetOnMenu() const;
+	UFUNCTION(BlueprintCallable)
+	void StartGame();
 
 	// Winning / Draw / Losing - METHODS
 	bool VerifyCheck();

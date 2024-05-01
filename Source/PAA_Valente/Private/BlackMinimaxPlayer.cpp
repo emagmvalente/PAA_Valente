@@ -50,6 +50,11 @@ void ABlackMinimaxPlayer::DestroyPlayer()
 	this->Destroy();
 }
 
+void ABlackMinimaxPlayer::SetDepth(int32 Depth)
+{
+	MinimaxDepth = (Depth < 3) ? Depth : 0;
+}
+
 void ABlackMinimaxPlayer::OnTurn()
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI (Minimax) Turn"));
@@ -60,29 +65,29 @@ void ABlackMinimaxPlayer::OnTurn()
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
 		{
 			// Declarations
-			AChessGameMode* GameModeCallback = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
+			AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 			AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
 			UMainHUD* MainHUD = CPC->MainHUDWidget;
 
 			ATile* BestTile = FindBestMove();
 
 			// Getting previous tile
-			ATile** PreviousTilePtr = GameModeCallback->CB->TileMap.Find(BestPiece->GetVirtualPosition());
+			ATile** PreviousTilePtr = GameMode->CB->TileMap.Find(BestPiece->GetVirtualPosition());
 			FVector2D OldPosition = BestPiece->GetVirtualPosition();
 
 			// Getting the new tile and the new position
-			FVector TilePositioning = GameModeCallback->CB->GetRelativeLocationByXYPosition(BestTile->GetGridPosition().X, BestTile->GetGridPosition().Y);
+			FVector TilePositioning = GameMode->CB->GetRelativeLocationByXYPosition(BestTile->GetGridPosition().X, BestTile->GetGridPosition().Y);
 			TilePositioning.Z = 10.0f;
 
 			// If it's an eating move, then delete the white piece
 			if (BestTile->GetOccupantColor() == EOccupantColor::W)
 			{
 				// Search the white piece who occupies the tile and capture it
-				for (APiece* WhitePiece : GameModeCallback->CB->WhitePieces)
+				for (APiece* WhitePiece : GameMode->CB->WhitePieces)
 				{
 					if (WhitePiece->GetActorLocation() == TilePositioning)
 					{
-						GameModeCallback->CB->WhitePieces.Remove(WhitePiece);
+						GameMode->CB->WhitePieces.Remove(WhitePiece);
 						WhitePiece->Destroy();
 						bIsACapture = true;
 						break;
@@ -101,7 +106,7 @@ void ABlackMinimaxPlayer::OnTurn()
 				{
 					Cast<APiecePawn>(BestPiece)->PawnMovedForTheFirstTime();
 				}
-				GameModeCallback->SetPawnMoved(true);
+				GameMode->SetPawnMoved(true);
 				Cast<APiecePawn>(BestPiece)->Promote();
 			}
 
@@ -110,8 +115,8 @@ void ABlackMinimaxPlayer::OnTurn()
 			BestTile->SetOccupantColor(EOccupantColor::B);
 
 			// Generate the FEN string and add it to the history of moves for replays
-			FString LastMove = GameModeCallback->CB->GenerateStringFromPositions();
-			GameModeCallback->CB->HistoryOfMoves.Add(LastMove);
+			FString LastMove = GameMode->CB->GenerateStringFromPositions();
+			GameMode->CB->HistoryOfMoves.Add(LastMove);
 
 			// Create dinamically the move button
 			if (MainHUD)
@@ -123,9 +128,9 @@ void ABlackMinimaxPlayer::OnTurn()
 
 			// Turn ending
 			bThinking = false;
-			if (!Cast<APiecePawn>(BestPiece) || Cast<APiecePawn>(BestPiece)->GetVirtualPosition().X != 0)
+			if (!BestPiece->IsA<APiecePawn>() || Cast<APiecePawn>(BestPiece)->GetVirtualPosition().X != 0)
 			{
-				GameModeCallback->TurnPlayer();
+				GameMode->TurnPlayer();
 			}
 
 		}, 3, false);
@@ -178,7 +183,7 @@ ATile* ABlackMinimaxPlayer::FindBestMove()
 			BlackPiece->SetVirtualPosition(Move->GetGridPosition());
 
 			// Call Maxi
-			int32 MoveVal = Maxi(1, -9999, 9999);
+			int32 MoveVal = Maxi(MinimaxDepth, -9999, 9999);
 
 			// Undo move
 			StartTile->SetOccupantColor(EOccupantColor::B);
@@ -360,63 +365,135 @@ int32 ABlackMinimaxPlayer::Maxi(int32 Depth, int32 Alpha, int32 Beta)
 int32 ABlackMinimaxPlayer::Evaluate()
 {
 	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
-	int32 Result = 0;
-
-	// Check / Win / Lose case
-	if (GameMode->VerifyCheck())
+	
+	// White on Check
+	bool bWhiteOnCheck = false;
+	for (APiece* BlackPiece : GameMode->CB->BlackPieces)
 	{
-		if (GameMode->GetTurnFlag() == 0)
+		BlackPiece->PossibleMoves();
+		BlackPiece->FilterOnlyLegalMoves();
+
+		if (BlackPiece->Moves.Contains(GameMode->CB->TileMap[GameMode->CB->Kings[0]->GetVirtualPosition()]))
 		{
-			if (GameMode->VerifyCheckmate())
-			{
-				Result = 100;
-			}
-			Result = 10;
-		}
-		if (GameMode->GetTurnFlag() == 1)
-		{
-			if (GameMode->VerifyCheckmate())
-			{
-				Result = -100;
-			}
-			Result = -10;
+			bWhiteOnCheck = true;
+			break;
 		}
 	}
 
-	// Draw case
-	else if (GameMode->VerifyDraw())
+	// Black on Check
+	bool bBlackOnCheck = false;
+	for (APiece* WhitePiece : GameMode->CB->WhitePieces)
 	{
-		Result = 0;
+		WhitePiece->PossibleMoves();
+		WhitePiece->FilterOnlyLegalMoves();
+
+		if (WhitePiece->Moves.Contains(GameMode->CB->TileMap[GameMode->CB->Kings[1]->GetVirtualPosition()]))
+		{
+			bBlackOnCheck = true;
+			break;
+		}
+	}
+
+	// White on Checkmate
+	bool bWhiteOnCheckmate = true;
+	for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+	{
+		if (WhitePiece->Moves.Num() > 0)
+		{
+			bWhiteOnCheckmate = false;
+			break;
+		}
+	}
+
+	// Black on Checkmate
+	bool bBlackOnCheckmate = true;
+	for (APiece* BlackPiece : GameMode->CB->BlackPieces)
+	{
+		if (BlackPiece->Moves.Num() > 0)
+		{
+			bBlackOnCheckmate = false;
+			break;
+		}
+	}
+
+	if (bWhiteOnCheck && bWhiteOnCheckmate)
+	{
+		return -100000;
+	}
+	else if (bWhiteOnCheck && !bWhiteOnCheckmate)
+	{
+		return -10000;
+	}
+	if (bBlackOnCheck && bBlackOnCheckmate)
+	{
+		return 100000;
+	}
+	else if (bBlackOnCheck && !bBlackOnCheckmate)
+	{
+		return 10000;
 	}
 
 	// Normal move case
-	else
+	int32 RemainingPiecesValues = 0;
+	int32 MobilityValues = 0;
+	int32 CenterControlValue = 0;
+	int32 RiskyMove = 0;
+
+	for (APiece* WhitePiece : GameMode->CB->WhitePieces)
 	{
-		int32 RemainingPiecesValues = 0;
-		int32 MobilityValues = 0;
-		int32 CenterControlValue = 0;
-
-		for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+		if (WhitePiece->GetVirtualPosition() == FVector2D(-1, -1))
 		{
-			RemainingPiecesValues += WhitePiece->GetPieceValue();
-
-			WhitePiece->PossibleMoves();
-			WhitePiece->FilterOnlyLegalMoves();
-
-			MobilityValues += WhitePiece->Moves.Num();
+			continue;
 		}
+
+		RemainingPiecesValues += WhitePiece->GetPieceValue();
+
+		WhitePiece->PossibleMoves();
+		WhitePiece->FilterOnlyLegalMoves();
+
 		for (APiece* BlackPiece : GameMode->CB->BlackPieces)
 		{
-			RemainingPiecesValues -= BlackPiece->GetPieceValue();
-
 			BlackPiece->PossibleMoves();
 			BlackPiece->FilterOnlyLegalMoves();
 
-			MobilityValues -= BlackPiece->Moves.Num();
+			if (BlackPiece->Moves.Contains(GameMode->CB->TileMap[WhitePiece->GetVirtualPosition()]))
+			{
+				RiskyMove -= WhitePiece->GetPieceValue();
+				break;
+			}
 		}
 
-		Result = (RemainingPiecesValues * 10 + MobilityValues * 5) / (10 + 5);
+		MobilityValues += WhitePiece->Moves.Num();
 	}
+
+	for (APiece* BlackPiece : GameMode->CB->BlackPieces)
+	{
+		if (BlackPiece->GetVirtualPosition() == FVector2D(-1, -1))
+		{
+			continue;
+		}
+
+		RemainingPiecesValues -= BlackPiece->GetPieceValue();
+
+		BlackPiece->PossibleMoves();
+		BlackPiece->FilterOnlyLegalMoves();
+
+		for (APiece* WhitePiece : GameMode->CB->WhitePieces)
+		{
+			WhitePiece->PossibleMoves();
+			WhitePiece->FilterOnlyLegalMoves();
+
+			if (WhitePiece->Moves.Contains(GameMode->CB->TileMap[BlackPiece->GetVirtualPosition()]))
+			{
+				RiskyMove += BlackPiece->GetPieceValue();
+				break;
+			}
+		}
+
+		MobilityValues -= BlackPiece->Moves.Num();
+	}
+
+	int32 Result = (RemainingPiecesValues * 10 + MobilityValues * 5 + RiskyMove * 5) / (10 + 5 + 5);
 
 	return Result;
 }

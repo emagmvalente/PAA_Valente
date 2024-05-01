@@ -27,6 +27,7 @@ protected:
 	bool bIsACapture;
 	bool bThinking;
 	APiece* BestPiece;
+	int32 MinimaxDepth;
 
 public:	
 	// Called every frame
@@ -39,6 +40,9 @@ public:
 	virtual void OnWin() override;
 	virtual bool GetThinkingStatus() const override;
 	virtual void DestroyPlayer() override;
+
+	UFUNCTION(BlueprintCallable)
+	void SetDepth(int32 Depth);
 
 	int32 Maxi(int32 Depth, int32 Alpha, int32 Beta);
 	int32 Mini(int32 Depth, int32 Alpha, int32 Beta);

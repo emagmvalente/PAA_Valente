@@ -133,9 +133,8 @@ void AChessGameMode::SpawnPlayers(bool SpawnMinimax)
 	{
 		auto* BlackPlayer = GetWorld()->SpawnActor<ABlackRandomPlayer>(FVector(), FRotator());
 		Players.Add(BlackPlayer);
+		StartGame();
 	}
-
-	Players[0]->OnTurn();
 }
 
 int32 AChessGameMode::GetTurnFlag() const
@@ -146,6 +145,11 @@ int32 AChessGameMode::GetTurnFlag() const
 bool AChessGameMode::GetOnMenu() const
 {
 	return bOnMenu;
+}
+
+void AChessGameMode::StartGame()
+{
+	Players[0]->OnTurn();
 }
 
 // Winning / Draw / Losing
@@ -194,7 +198,7 @@ bool AChessGameMode::VerifyDraw()
 	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 
 	// TODO: Dead Positions
-	if (CheckThreeOccurrences() || KingvsKing() || /*FiftyMovesRule() ||*/ Stalemate())
+	if (CheckThreeOccurrences() || KingvsKing() || FiftyMovesRule() || Stalemate())
 	{
 		// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
 		GameInstance->SetTurnMessage(TEXT("Draw!"));

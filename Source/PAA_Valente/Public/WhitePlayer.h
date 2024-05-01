@@ -46,6 +46,7 @@ public:
 	void TileSelection(ATile* CurrTile);
 
 	APiece* GetSelectedPieceToMove() const;
+	void Deselect();
 
 	virtual void OnTurn() override;
 	virtual void OnWin() override;
