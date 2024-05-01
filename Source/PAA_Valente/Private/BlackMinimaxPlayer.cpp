@@ -16,7 +16,9 @@ ABlackMinimaxPlayer::ABlackMinimaxPlayer()
 	PrimaryActorTick.bCanEverTick = true;
 	GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	bIsACapture = false;
+	bThinking = false;
 	BestPiece = nullptr;
+	MinimaxDepth = 0;
 }
 
 // Called when the game starts or when spawned
@@ -52,6 +54,7 @@ void ABlackMinimaxPlayer::DestroyPlayer()
 
 void ABlackMinimaxPlayer::SetDepth(int32 Depth)
 {
+	// Capped at 2 because of Minimax's heaviness
 	MinimaxDepth = (Depth < 3) ? Depth : 0;
 }
 
@@ -434,9 +437,17 @@ int32 ABlackMinimaxPlayer::Evaluate()
 	}
 
 	// Normal move case
+	// This is a variable that keeps track of how many pieces are there, if there are more whites than blacks
+	// then will return a positive number, else a negative
 	int32 RemainingPiecesValues = 0;
+
+	// This is a variabile that keeps track of how much a team can move, same logic of before about the result
 	int32 MobilityValues = 0;
+
+	// This is a variabile that keeps track of how much a team is controlling the center of the chessboard, same logic of before about the result 
 	int32 CenterControlValue = 0;
+
+	// This is a variabile that keeps track of how much a team is doing risky moves, same logic of before about the result
 	int32 RiskyMove = 0;
 
 	for (APiece* WhitePiece : GameMode->CB->WhitePieces)
@@ -464,6 +475,7 @@ int32 ABlackMinimaxPlayer::Evaluate()
 		}
 
 		MobilityValues += WhitePiece->Moves.Num();
+		CenterControlValue = (WhitePiece->GetVirtualPosition().X == 3 || WhitePiece->GetVirtualPosition().X == 4) ? 10 : 0;
 	}
 
 	for (APiece* BlackPiece : GameMode->CB->BlackPieces)
@@ -491,9 +503,11 @@ int32 ABlackMinimaxPlayer::Evaluate()
 		}
 
 		MobilityValues -= BlackPiece->Moves.Num();
+		CenterControlValue = (BlackPiece->GetVirtualPosition().X == 3 || BlackPiece->GetVirtualPosition().X == 4) ? -10 : 0;
 	}
 
-	int32 Result = (RemainingPiecesValues * 10 + MobilityValues * 5 + RiskyMove * 5) / (10 + 5 + 5);
+	// Weighted average
+	int32 Result = ((RemainingPiecesValues * 10) + (MobilityValues * 5) + (RiskyMove * 5) + (CenterControlValue * 1)) / (10 + 5 + 5 + 1);
 
 	return Result;
 }

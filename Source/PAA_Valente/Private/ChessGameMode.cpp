@@ -43,16 +43,16 @@ void AChessGameMode::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("Chessboard is null"));
 	}
 
+	// Create a "HumanPlayer" that cannot play, but can see the chessboard
 	float CameraPosX = ((CB->TileSize * FieldSize) / 2) - (CB->TileSize / 2);
 	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
-
-	// Create a "HumanPlayer" that cannot play, but can see the chessboard
 	auto* Camera = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
 	Camera->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
+
+	// Note: HUD logic is almost entirely managed in blueprint
 }
 
 // Logic and Utilities
-// OK
 void AChessGameMode::TurnPlayer()
 {
 	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
@@ -94,29 +94,30 @@ void AChessGameMode::SetPawnMoved(bool NewStatus)
 
 void AChessGameMode::SpawnPlayers(bool SpawnMinimax)
 {
-	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
+	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
 	if (bOnMenu)
 	{
 		bOnMenu = false;
 		auto* Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
 		Camera->Destroy();
-
-		TArray<UUserWidget*> FoundWidgets;
-		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
-		CPC->MainHUDWidget = Cast<UMainHUD>(FoundWidgets[0]);
 	}
 	else
 	{
 		GetWorldTimerManager().ClearTimer(Players[1]->TimerHandle);
 
+		// Reset variables
 		TurnFlag = 0;
 		MovesWithoutCaptureOrPawnMove = 0;
+		GameInstance->SetNotificationMessage(TEXT(""));
+		CB->Kings[0]->DecolorPossibleMoves();
 		Players[0]->DestroyPlayer();
 		Players[1]->DestroyPlayer();
 		Players.Empty();
 		CB->ResetField();
 	}
 
+	// Respawn players
 	auto* WhitePlayer = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
 	Players.Add(WhitePlayer);
 
@@ -126,6 +127,7 @@ void AChessGameMode::SpawnPlayers(bool SpawnMinimax)
 
 	if (SpawnMinimax)
 	{
+		// In this branch, StartGame() is managed in blueprint
 		auto* BlackPlayer = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
 		Players.Add(BlackPlayer);
 	}
@@ -149,6 +151,12 @@ bool AChessGameMode::GetOnMenu() const
 
 void AChessGameMode::StartGame()
 {
+	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
+
+	TArray<UUserWidget*> FoundWidgets;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UMainHUD::StaticClass());
+	CPC->MainHUDWidget = Cast<UMainHUD>(FoundWidgets[0]);
+
 	Players[0]->OnTurn();
 }
 
@@ -197,7 +205,6 @@ bool AChessGameMode::VerifyDraw()
 {
 	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 
-	// TODO: Dead Positions
 	if (CheckThreeOccurrences() || KingvsKing() || FiftyMovesRule() || Stalemate())
 	{
 		// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Draw!"));
@@ -308,6 +315,9 @@ bool AChessGameMode::Stalemate()
 }
 
 // Pawn Promotion
+// Every function works in this way:
+// - Destroy pawn
+// - Respawn the wanted piece
 void AChessGameMode::PromoteToQueen()
 {
 	UBlueprint* QueenBlueprint = LoadObject<UBlueprint>(nullptr, TEXT("/Game/Blueprints/BP_Queen"));
@@ -316,6 +326,7 @@ void AChessGameMode::PromoteToQueen()
 	FVector Location = PawnToPromote->GetActorLocation();
 	FVector2D Location2D = PawnToPromote->GetVirtualPosition();
 
+	// If white then remove the widget and spawn the wanted piece
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
 		PawnPromotionWidgetInstance->RemoveFromParent();
@@ -328,6 +339,7 @@ void AChessGameMode::PromoteToQueen()
 		Obj->SetVirtualPosition(Location2D);
 		CB->WhitePieces.Add(Obj);
 	}
+	// If black then spawn the wanted piece
 	else if (PawnToPromote->GetColor() == EColor::B)
 	{
 		UMaterialInterface* LoadBlackQueen = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BQueen"));
@@ -427,7 +439,6 @@ void AChessGameMode::PromoteToKnight()
 	FVector Location = PawnToPromote->GetActorLocation();
 	FVector2D Location2D = PawnToPromote->GetVirtualPosition();
 
-	// If white then remove the widget and spawn the wanted piece
 	if (PawnToPromote->GetColor() == EColor::W)
 	{
 		PawnPromotionWidgetInstance->RemoveFromParent();
@@ -440,7 +451,6 @@ void AChessGameMode::PromoteToKnight()
 		Obj->SetVirtualPosition(Location2D);
 		CB->WhitePieces.Add(Obj);
 	}
-	// If black then spawn the wanted piece
 	else if (PawnToPromote->GetColor() == EColor::B)
 	{
 		UMaterialInterface* LoadBlackKnight = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_BKnight"));
