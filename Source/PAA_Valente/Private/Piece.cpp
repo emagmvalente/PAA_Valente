@@ -52,29 +52,6 @@ void APiece::ColorPossibleMoves()
 
 	UMaterialInterface* LoadYellowMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Yellow"));
 	UMaterialInterface* LoadRedMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Red"));
-	
-	/*
-	UMaterialInterface* LoadE = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_E"));
-	UMaterialInterface* LoadW = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_W"));
-	UMaterialInterface* LoadB = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_B"));
-
-	
-	for (ATile* Tile : GameMode->CB->TileArray)
-	{
-		if (Tile->GetOccupantColor() == EOccupantColor::E)
-		{
-			Tile->ChangeMaterial(LoadE);
-		}
-		else if (Tile->GetOccupantColor() == EOccupantColor::W)
-		{
-			Tile->ChangeMaterial(LoadW);
-		}
-		else if (Tile->GetOccupantColor() == EOccupantColor::B)
-		{
-			Tile->ChangeMaterial(LoadB);
-		}
-	}
-	*/
 
 	for (ATile* Move : Moves)
 	{
@@ -95,7 +72,7 @@ void APiece::DecolorPossibleMoves()
 	UMaterialInterface* LoadBlackMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_Black"));
 
 	// Decolor every tile, it's a little bit rudimental but it's the best way to decolor
-	for (ATile* Tile : GameMode->CB->GetTileArray())
+	for (ATile* Tile : GameMode->CB->TileArray)
 	{
 		FVector2D TilePosition = Tile->GetGridPosition();
 		int32 IndexSum = TilePosition.X + TilePosition.Y;

@@ -25,7 +25,6 @@ public:
 
 	AChessGameMode* GameMode;
 	UChessGameInstance* GameInstance;
-	AWhitePlayer* HumanPlayer;
 
 	UOldMovesButtons(const FObjectInitializer& ObjectInitializer);
 
@@ -34,6 +33,7 @@ public:
 
 	void SetAssociatedString(FString& AssociatedStringToPrint);
 
+	// Text creation functions
 	void CreateText(APiece* PieceMoved, bool bItWasACapture, FVector2D NewPosition, FVector2D OldPosition);
 	TCHAR PieceParsing(APiece* PieceToParse);
 	FString LocationParsing(FVector2D& Location);

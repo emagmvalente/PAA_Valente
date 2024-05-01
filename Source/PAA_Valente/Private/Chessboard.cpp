@@ -48,9 +48,7 @@ void AChessboard::BeginPlay()
 void AChessboard::ResetField()
 {
 	// Declaration
-	AChessGameMode* GameMode = Cast<AChessGameMode>(GetWorld()->GetAuthGameMode());
 	AChessPlayerController* CPC = Cast<AChessPlayerController>(GetWorld()->GetFirstPlayerController());
-	UChessGameInstance* GameInstance = Cast<UChessGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	
 	HistoryOfMoves.Empty();
 	if (CPC->MainHUDWidget)
@@ -515,11 +513,6 @@ void AChessboard::SetTilesOwners()
 	}
 }
 
-FVector2D AChessboard::GetPosition(const FHitResult& Hit)
-{
-	return Cast<ATile>(Hit.GetActor())->GetGridPosition();
-}
-
 FVector AChessboard::GetRelativeLocationByXYPosition(const int32 InX, const int32 InY) const
 {
 	return TileSize * FVector(InX, InY, 0);
@@ -530,9 +523,4 @@ FVector2D AChessboard::GetXYPositionByRelativeLocation(const FVector& Location) 
 	const double x = Location[0] / TileSize;
 	const double y = Location[1] / TileSize;
 	return FVector2D(x, y);
-}
-
-TArray<ATile*> AChessboard::GetTileArray() const
-{
-	return TileArray;
 }

@@ -34,7 +34,6 @@ protected:
 
 public:	
 	TArray<ATile*> Moves;
-	//TArray<ATile*> EatablePiecesPosition;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -42,20 +41,20 @@ public:
 	// ChangeMaterial changes the skin of the piece (Default: White)
 	void ChangeMaterial(UMaterialInterface* NewMaterial);
 
-	// Returns piece's relative position with Z = 10.f
-	//FVector RelativePosition() const;
-	//FVector2D Relative2DPosition() const;
-
+	// ONLY FOR HUMAN PLAYER: Color and decolor tiles where the piece can move
 	void ColorPossibleMoves();
 	void DecolorPossibleMoves();
 
+	// Calculate moves and filter them to legal
 	virtual void PossibleMoves() {};
 	void FilterOnlyLegalMoves();
 
+	// Getters
 	int32 GetPieceValue() const;
 	EColor GetColor() const;
 	FVector2D GetVirtualPosition() const;
 
+	// Setters
 	void SetColor(EColor NewColor);
 	void SetVirtualPosition(FVector2D PositionToVirtualize);
 

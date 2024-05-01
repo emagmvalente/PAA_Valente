@@ -42,12 +42,14 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// Click functions
 	void PieceSelection();
 	void TileSelection(ATile* CurrTile);
 
-	APiece* GetSelectedPieceToMove() const;
+	// Sets the selected piece to move as a nullptr, used in old moves buttons to avoid to carry a pointer to a deleted piece
 	void Deselect();
 
+	// Interface's methods
 	virtual void OnTurn() override;
 	virtual void OnWin() override;
 	virtual bool GetThinkingStatus() const override;

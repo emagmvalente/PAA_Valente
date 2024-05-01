@@ -171,11 +171,6 @@ void AWhitePlayer::TileSelection(ATile* CurrTile)
 	}
 }
 
-APiece* AWhitePlayer::GetSelectedPieceToMove() const
-{
-	return SelectedPieceToMove;
-}
-
 void AWhitePlayer::Deselect()
 {
 	SelectedPieceToMove = nullptr;

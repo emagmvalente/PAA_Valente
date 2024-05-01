@@ -28,7 +28,8 @@ AChessGameMode::AChessGameMode()
 	bOnMenu = true;
 }
 
-// OK
+// Note: Menu HUD logic is almost entirely managed in blueprint
+
 void AChessGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -48,8 +49,6 @@ void AChessGameMode::BeginPlay()
 	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
 	auto* Camera = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
 	Camera->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
-
-	// Note: HUD logic is almost entirely managed in blueprint
 }
 
 // Logic and Utilities
@@ -106,11 +105,13 @@ void AChessGameMode::SpawnPlayers(bool SpawnMinimax)
 	{
 		GetWorldTimerManager().ClearTimer(Players[1]->TimerHandle);
 
-		// Reset variables
+		// Reset game variables
 		TurnFlag = 0;
 		MovesWithoutCaptureOrPawnMove = 0;
 		GameInstance->SetNotificationMessage(TEXT(""));
 		CB->Kings[0]->DecolorPossibleMoves();
+
+		// Recreate players and recreate the chessboard
 		Players[0]->DestroyPlayer();
 		Players[1]->DestroyPlayer();
 		Players.Empty();
@@ -127,7 +128,7 @@ void AChessGameMode::SpawnPlayers(bool SpawnMinimax)
 
 	if (SpawnMinimax)
 	{
-		// In this branch, StartGame() is managed in blueprint
+		// In this scope, StartGame() is managed in blueprint because of the difficulty selection HUD
 		auto* BlackPlayer = GetWorld()->SpawnActor<ABlackMinimaxPlayer>(FVector(), FRotator());
 		Players.Add(BlackPlayer);
 	}
@@ -218,7 +219,7 @@ bool AChessGameMode::CheckThreeOccurrences()
 {
 	TMap<FString, int32> CountMap;
 
-	// Conta quante volte ogni elemento appare nell'array
+	// Counts how many times the string is in the array
 	for (FString Occurency : CB->HistoryOfMoves) {
 		if (!CountMap.Contains(Occurency)) {
 			CountMap.Add(Occurency, 1);
@@ -228,7 +229,7 @@ bool AChessGameMode::CheckThreeOccurrences()
 		}
 	}
 
-	// Verifica se uno qualsiasi degli elementi appare tre volte
+	// See if any of the strings appear three times
 	for (const auto& Pair : CountMap) {
 		if (Pair.Value >= 3) {
 			return true;

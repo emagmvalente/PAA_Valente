@@ -3,15 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ChessboardFrame.h"
 #include "Tile.h"
 #include "GameFramework/Actor.h"
 #include "Chessboard.generated.h"
 
 class APiece;
-
-// macro declaration for a dynamic multicast delegate
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReset);
 
 UCLASS()
 class PAA_VALENTE_API AChessboard : public AActor
@@ -47,44 +43,30 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float TileSize;
 
-	// TSubclassOf template class that provides UClass type safety
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AChessboardFrame> CBFrameClass;
-
-	// tile size
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float CBFrameSize;
-
 	// Sets default values for this actor's properties
 	AChessboard();
 
 	// Called when an instance of this class is placed (in editor) or spawned
 	virtual void OnConstruction(const FTransform& Transform) override;
 
-	// remove all signs from the field
+	// Remove everything from the field
 	UFUNCTION(BlueprintCallable)
 	void ResetField();
 
-	// generate an empty game field
+	// Generate a game field with pieces
 	void GenerateField();
 
+	// FEN methods
 	FString GenerateStringFromPositions();
 	void GeneratePositionsFromString(FString& String);
 
 	void SetTilesOwners();
 
-	// return a (x,y) position given a hit (click) on a field tile
-	FVector2D GetPosition(const FHitResult& Hit);
-
-	// Con "Relative Position" si intende la posizione nella griglia, con "Position" si intende la posizione nello spazio di Unreal
-
-	// return a relative position given (x,y) position
+	// Return a relative position given (x,y) position
 	FVector GetRelativeLocationByXYPosition(const int32 InX, const int32 InY) const;
 
-	// return (x,y) position given a relative position
+	// Return (x,y) position given a relative position
 	FVector2D GetXYPositionByRelativeLocation(const FVector& Location) const;
-
-	TArray<ATile*> GetTileArray() const;
 
 protected:
 	// Called when the game starts or when spawned
