@@ -49,7 +49,6 @@ void AChessGameMode::BeginPlay()
 	FVector CameraPos(CameraPosX, CameraPosX, 1200.0f);
 	auto* Camera = GetWorld()->SpawnActor<AWhitePlayer>(FVector(), FRotator());
 	Camera->SetActorLocationAndRotation(CameraPos, FRotationMatrix::MakeFromX(FVector(0, 0, -1)).Rotator());
-	Players.Add(Camera);
 }
 
 // Logic and Utilities
@@ -99,7 +98,8 @@ void AChessGameMode::SpawnPlayers(bool SpawnMinimax)
 	if (bOnMenu)
 	{
 		bOnMenu = false;
-		Players[0]->DestroyPlayer();
+		auto* Camera = Cast<AWhitePlayer>(*TActorIterator<AWhitePlayer>(GetWorld()));
+		Camera->Destroy();
 	}
 	else
 	{

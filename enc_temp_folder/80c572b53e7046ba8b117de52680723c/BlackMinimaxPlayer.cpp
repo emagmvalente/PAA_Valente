@@ -54,8 +54,8 @@ void ABlackMinimaxPlayer::DestroyPlayer()
 
 void ABlackMinimaxPlayer::SetDepth(int32 Depth)
 {
-	// Capped at 3 because of Minimax's heaviness
-	MinimaxDepth = (Depth < 4) ? Depth : 0;
+	// Capped at 2 because of Minimax's heaviness
+	MinimaxDepth = (Depth < 3) ? Depth : 0;
 }
 
 void ABlackMinimaxPlayer::OnTurn()
@@ -421,23 +421,6 @@ int32 ABlackMinimaxPlayer::Evaluate()
 			bBlackOnCheckmate = false;
 			break;
 		}
-	}
-
-	if (bWhiteOnCheck && bWhiteOnCheckmate)
-	{
-		return -100000;
-	}
-	else if (bWhiteOnCheck && !bWhiteOnCheckmate)
-	{
-		return -10000;
-	}
-	if (bBlackOnCheck && bBlackOnCheckmate)
-	{
-		return 100000;
-	}
-	else if (bBlackOnCheck && !bBlackOnCheckmate)
-	{
-		return 10000;
 	}
 
 	// Normal move case
